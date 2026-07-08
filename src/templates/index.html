@@ -23,6 +23,19 @@
             border-radius: 10px; padding: 16px; }
     .card h2 { margin: 0 0 10px; font-size: 15px; color: var(--accent); }
     input[type=file] { width: 100%; font-size: 13px; color: var(--muted); }
+    button.add { background: transparent; color: var(--accent); border: 1px dashed var(--accent);
+                 padding: 9px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+    button.add:hover { background: rgba(56,189,248,.1); }
+    .hint { color: var(--muted); font-size: 12px; margin: 8px 0 4px; }
+    .filelist { list-style: none; margin: 8px 0 0; padding: 0; }
+    .filelist li { display: flex; justify-content: space-between; align-items: center; gap: 8px;
+                   background: #0b1220; border: 1px solid var(--line); border-radius: 7px;
+                   padding: 6px 10px; margin-top: 6px; font-size: 12px; }
+    .filelist .nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .filelist .tam { color: var(--muted); flex: 0 0 auto; }
+    .filelist .rm { background: none; border: 0; color: var(--bad); cursor: pointer;
+                    font-size: 15px; line-height: 1; padding: 0 2px; flex: 0 0 auto; }
+    .filelist .vazio { color: var(--muted); border: 0; background: none; padding: 0; }
     .actions { margin: 20px 0; display: flex; gap: 12px; align-items: center; }
     button { background: var(--accent); color: #04263a; border: 0; font-weight: 600;
              padding: 11px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; }
@@ -65,12 +78,18 @@
         <div class="card">
           <h2>1. Documento(s) de Projeto</h2>
           <p class="muted" style="font-size:13px">Objetivos, indicadores, plano de trabalho, entregáveis previstos.</p>
-          <input type="file" name="projeto" multiple accept=".pdf,.docx,.txt,.md" required>
+          <input id="inpProjeto" type="file" name="projeto" multiple accept=".pdf,.docx,.txt,.md" hidden>
+          <button type="button" class="add" data-alvo="projeto">+ Adicionar arquivos</button>
+          <p class="hint">Pode selecionar vários (PDF, DOCX, TXT, MD).</p>
+          <ul class="filelist" id="listaProjeto"></ul>
         </div>
         <div class="card">
           <h2>2. Prestação de Contas Técnica</h2>
-          <p class="muted" style="font-size:13px">Entregáveis efetivamente realizados/apresentados.</p>
-          <input type="file" name="prestacao" multiple accept=".pdf,.docx,.txt,.md" required>
+          <p class="muted" style="font-size:13px">Entregáveis realizados + evidências. <strong>Aceita múltiplos documentos.</strong></p>
+          <input id="inpPrestacao" type="file" name="prestacao" multiple accept=".pdf,.docx,.txt,.md" hidden>
+          <button type="button" class="add" data-alvo="prestacao">+ Adicionar arquivos</button>
+          <p class="hint">Pode selecionar vários (PDF, DOCX, TXT, MD).</p>
+          <ul class="filelist" id="listaPrestacao"></ul>
         </div>
       </div>
       <div class="actions">
@@ -214,9 +233,80 @@
       window.__ultimaAnalise = d;
     }
 
+    // ---- Multi-arquivo acumulável (add incremental + remover) ----
+    const inputs = {
+      projeto: document.getElementById('inpProjeto'),
+      prestacao: document.getElementById('inpPrestacao'),
+    };
+    const listas = {
+      projeto: document.getElementById('listaProjeto'),
+      prestacao: document.getElementById('listaPrestacao'),
+    };
+
+    function fmtTam(b) {
+      if (b < 1024) return b + ' B';
+      if (b < 1048576) return (b / 1024).toFixed(0) + ' KB';
+      return (b / 1048576).toFixed(1) + ' MB';
+    }
+
+    function renderLista(alvo) {
+      const ul = listas[alvo];
+      const files = inputs[alvo].files;
+      ul.innerHTML = '';
+      if (!files.length) {
+        ul.innerHTML = '<li class="vazio">Nenhum arquivo.</li>';
+        return;
+      }
+      Array.from(files).forEach((f, idx) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="nome" title="${esc(f.name)}">${esc(f.name)}</span>
+          <span class="tam">${fmtTam(f.size)}</span>
+          <button type="button" class="rm" title="Remover">✕</button>`;
+        li.querySelector('.rm').addEventListener('click', () => removeArquivo(alvo, idx));
+        ul.appendChild(li);
+      });
+    }
+
+    function addArquivos(alvo, novos) {
+      const dt = new DataTransfer();
+      Array.from(inputs[alvo].files).forEach(f => dt.items.add(f));
+      const existentes = new Set(Array.from(inputs[alvo].files).map(f => f.name + f.size));
+      Array.from(novos).forEach(f => {
+        if (!existentes.has(f.name + f.size)) dt.items.add(f);  // evita duplicados
+      });
+      inputs[alvo].files = dt.files;
+      renderLista(alvo);
+    }
+
+    function removeArquivo(alvo, idx) {
+      const dt = new DataTransfer();
+      Array.from(inputs[alvo].files).forEach((f, i) => { if (i !== idx) dt.items.add(f); });
+      inputs[alvo].files = dt.files;
+      renderLista(alvo);
+    }
+
+    document.querySelectorAll('button.add').forEach(btn => {
+      const alvo = btn.dataset.alvo;
+      btn.addEventListener('click', () => {
+        const tmp = document.createElement('input');
+        tmp.type = 'file';
+        tmp.multiple = true;
+        tmp.accept = '.pdf,.docx,.txt,.md';
+        tmp.addEventListener('change', () => addArquivos(alvo, tmp.files));
+        tmp.click();
+      });
+    });
+    renderLista('projeto');
+    renderLista('prestacao');
+
     form.addEventListener('submit', async (ev) => {
       ev.preventDefault();
       errEl.style.display = 'none';
+      if (!inputs.projeto.files.length || !inputs.prestacao.files.length) {
+        errEl.textContent = 'Erro: adicione ao menos um arquivo de Projeto e um de Prestação.';
+        errEl.style.display = 'block';
+        return;
+      }
       resultEl.style.display = 'none';
       btn.disabled = true;
       statusEl.textContent = 'Extraindo texto e consultando o modelo… (pode levar ~30s)';

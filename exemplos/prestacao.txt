@@ -1,0 +1,10 @@
+PRESTACAO DE CONTAS TECNICA — Relatorio Final
+Projeto: Plataforma de Monitoramento de Qualidade da Agua em Microbacias
+
+1. Arquitetura: documento "Arquitetura_v2.pdf" entregue (E1).
+2. Prototipo: 3 prototipos construidos, testados com pH e turbidez.
+   Sensor de oxigenio dissolvido nao validado (E2).
+3. Plataforma web: dashboard com pH e turbidez. Uptime 88%.
+4. Campo: 3 das 5 estacoes instaladas. Relatorio de validacao em elaboracao.
+5. Producao: 1 artigo submetido ao SBES 2024.
+6. Equipe: 2 bolsistas de graduacao.

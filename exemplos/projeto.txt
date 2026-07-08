@@ -1,0 +1,19 @@
+PROJETO DE PESQUISA — Edital FAPES nº 00/2024
+Titulo: Plataforma de Monitoramento de Qualidade da Agua em Microbacias
+
+1. OBJETIVOS
+Desenvolver plataforma IoT para coleta e analise de parametros de qualidade
+da agua (pH, turbidez, oxigenio dissolvido) em microbacias do ES.
+
+2. INDICADORES E METAS
+- IND-1: Estacoes de monitoramento instaladas. Meta: 5.
+- IND-2: Artigos cientificos submetidos. Meta: 2.
+- IND-3: Bolsistas de graduacao. Meta: 3.
+- IND-4: Uptime da plataforma. Meta: >= 95%.
+
+3. ENTREGAVEIS PREVISTOS
+- E1: Documento de arquitetura do sistema.
+- E2: Prototipo funcional de estacao de monitoramento.
+- E3: Plataforma web com dashboard de indicadores.
+- E4: Relatorio de validacao em campo com dados de 5 estacoes.
+- E5: Dois artigos cientificos submetidos.
