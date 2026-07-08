@@ -83,6 +83,27 @@ Formatos: `.pdf`, `.docx`, `.txt`, `.md`.
   (APROVAR / APROVAR COM RESSALVAS / DILIGÊNCIA / REPROVAR).
 - **HTML**: parecer técnico institucional, autocontido, pronto p/ impressão (A4).
 
+## Deploy no Render (teste)
+
+O projeto já vem com `render.yaml` (Blueprint) + `wsgi.py` (gunicorn).
+
+1. Push do repositório no GitHub (já feito).
+2. Render → **New** → **Blueprint** → conecte o repo
+   `paulossjunior/prestacao-tecnica-fapes`. O Render lê o `render.yaml`.
+3. Em **Environment**, defina o secret **`MISTRAL_API_KEY`** (não vai no git).
+4. **Create** → build (`pip install`) + start
+   (`gunicorn wsgi:app --bind 0.0.0.0:$PORT --timeout 180`).
+5. Acesse a URL pública `https://<seu-serviço>.onrender.com`.
+
+Deploy rápido:
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/paulossjunior/prestacao-tecnica-fapes)
+
+Observações:
+- Plano **free** hiberna após inatividade (primeiro acesso demora ~30-60s).
+- `--timeout 180`: a análise via Mistral leva ~30-60s; timeout curto derruba a requisição.
+- **PDF**: no Render não há navegador headless; o `--pdf` do CLI não roda lá. Na web,
+  gere o **relatório HTML** e use "Imprimir → Salvar como PDF" do navegador.
+
 ## Configuração (`.env`)
 
 | Var | Padrão | Uso |

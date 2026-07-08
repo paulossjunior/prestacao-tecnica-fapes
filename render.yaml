@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: prestacao-tecnica-fapes
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # timeout alto: a análise via Mistral pode levar ~30-60s por requisição.
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 180
+    envVars:
+      - key: MISTRAL_API_KEY
+        sync: false            # definir manualmente no dashboard (secret)
+      - key: MISTRAL_MODEL
+        value: mistral-large-latest
+      - key: PYTHON_VERSION
+        value: "3.12.8"
