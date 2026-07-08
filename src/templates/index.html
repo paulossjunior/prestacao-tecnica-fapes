@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Avaliação Técnica — Prestação de Contas (FAPES/IFES)</title>
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --line: #334155; --txt: #e2e8f0;
+      --muted: #94a3b8; --accent: #38bdf8;
+      --ok: #22c55e; --warn: #eab308; --bad: #ef4444; --info: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+           background: var(--bg); color: var(--txt); line-height: 1.5; }
+    header { padding: 24px; border-bottom: 1px solid var(--line); }
+    header h1 { margin: 0 0 4px; font-size: 20px; }
+    header p { margin: 0; color: var(--muted); font-size: 14px; }
+    main { max-width: 980px; margin: 0 auto; padding: 24px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: var(--card); border: 1px solid var(--line);
+            border-radius: 10px; padding: 16px; }
+    .card h2 { margin: 0 0 10px; font-size: 15px; color: var(--accent); }
+    input[type=file] { width: 100%; font-size: 13px; color: var(--muted); }
+    .actions { margin: 20px 0; display: flex; gap: 12px; align-items: center; }
+    button { background: var(--accent); color: #04263a; border: 0; font-weight: 600;
+             padding: 11px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    #status { color: var(--muted); font-size: 14px; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px;
+             font-size: 12px; font-weight: 700; }
+    .b-ATENDIDO, .b-APROVAR { background: var(--ok); color: #052e13; }
+    .b-PARCIAL, .b-APROVAR.ressalvas, .b-DILIGÊNCIA { background: var(--warn); color: #422006; }
+    .b-NÃO { background: var(--bad); color: #450a0a; }
+    .b-EVID { background: var(--info); color: #f1f5f9; }
+    .result { margin-top: 24px; display: none; }
+    .kpi { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+    .meter { flex: 1; min-width: 200px; height: 12px; background: var(--line);
+             border-radius: 999px; overflow: hidden; }
+    .meter > div { height: 100%; background: linear-gradient(90deg,var(--bad),var(--warn),var(--ok)); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line);
+             vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    section.block { margin-top: 24px; }
+    section.block h3 { font-size: 15px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+    ul { margin: 8px 0; padding-left: 20px; }
+    li { margin: 4px 0; }
+    .muted { color: var(--muted); }
+    .err { background: #450a0a; border: 1px solid var(--bad); color: #fecaca;
+           padding: 12px; border-radius: 8px; margin-top: 16px; }
+    details { margin-top: 24px; } summary { cursor: pointer; color: var(--muted); }
+    pre { background: #0b1220; padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Avaliação Técnica — Prestação de Contas</h1>
+    <p>Compara o <strong>previsto</strong> (projeto) com o <strong>realizado</strong> (prestação) e emite parecer. Contexto FAPES/IFES.</p>
+  </header>
+  <main>
+    <form id="form">
+      <div class="grid">
+        <div class="card">
+          <h2>1. Documento(s) de Projeto</h2>
+          <p class="muted" style="font-size:13px">Objetivos, indicadores, plano de trabalho, entregáveis previstos.</p>
+          <input type="file" name="projeto" multiple accept=".pdf,.docx,.txt,.md" required>
+        </div>
+        <div class="card">
+          <h2>2. Prestação de Contas Técnica</h2>
+          <p class="muted" style="font-size:13px">Entregáveis efetivamente realizados/apresentados.</p>
+          <input type="file" name="prestacao" multiple accept=".pdf,.docx,.txt,.md" required>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="submit" id="btn">Analisar</button>
+        <span id="status"></span>
+      </div>
+    </form>
+
+    <div id="err" class="err" style="display:none"></div>
+
+    <div id="result" class="result">
+      <div style="text-align:right; margin-bottom:12px">
+        <button type="button" id="btnRelatorio">Gerar relatório HTML</button>
+        <span id="statusRel" class="muted" style="font-size:13px"></span>
+      </div>
+      <div class="card">
+        <div class="kpi">
+          <div>
+            <div class="muted" style="font-size:12px">PARECER</div>
+            <span id="parecer" class="badge"></span>
+          </div>
+          <div style="flex:1">
+            <div class="muted" style="font-size:12px">CONFORMIDADE GERAL: <span id="grauTxt"></span>%</div>
+            <div class="meter"><div id="grauBar" style="width:0%"></div></div>
+          </div>
+        </div>
+        <p id="resumo"></p>
+        <p class="muted"><strong>Justificativa:</strong> <span id="justificativa"></span></p>
+      </div>
+
+      <section class="block">
+        <h3>Entregáveis</h3>
+        <div style="overflow:auto">
+          <table id="tblEntregaveis">
+            <thead><tr>
+              <th>ID</th><th>Status</th><th>Previsto</th><th>Realizado</th>
+              <th>Evidência</th><th>Lacunas</th><th>Recomendação</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="block">
+        <h3>Indicadores</h3>
+        <div style="overflow:auto">
+          <table id="tblIndicadores">
+            <thead><tr><th>Nome</th><th>Meta</th><th>Reportado</th><th>Atingido</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="block">
+        <h3>Cronograma</h3>
+        <p><strong>No prazo:</strong> <span id="cronOk" class="muted"></span></p>
+        <p><strong>Atrasadas:</strong> <span id="cronAtraso" class="muted"></span></p>
+        <p class="muted" id="cronObs"></p>
+      </section>
+
+      <div class="grid">
+        <section class="block card"><h3>Pontos de Melhoria</h3><ul id="melhoria"></ul></section>
+        <section class="block card"><h3>Pendências Críticas</h3><ul id="pendencias"></ul></section>
+      </div>
+
+      <details>
+        <summary>JSON completo</summary>
+        <pre id="rawJson"></pre>
+      </details>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById('form');
+    const btn = document.getElementById('btn');
+    const statusEl = document.getElementById('status');
+    const errEl = document.getElementById('err');
+    const resultEl = document.getElementById('result');
+
+    const esc = s => String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+    function statusBadge(s) {
+      s = String(s || '');
+      let cls = 'b-EVID';
+      if (s === 'ATENDIDO') cls = 'b-ATENDIDO';
+      else if (s === 'PARCIAL') cls = 'b-PARCIAL';
+      else if (s.startsWith('NÃO ATENDIDO')) cls = 'b-NÃO';
+      return `<span class="badge ${cls}">${esc(s)}</span>`;
+    }
+
+    function parecerBadge(p) {
+      p = String(p || '');
+      let cls = 'b-EVID';
+      if (p === 'APROVAR') cls = 'b-APROVAR';
+      else if (p === 'APROVAR COM RESSALVAS') cls = 'b-PARCIAL';
+      else if (p === 'DILIGÊNCIA') cls = 'b-DILIGÊNCIA';
+      else if (p === 'REPROVAR') cls = 'b-NÃO';
+      return `<span class="badge ${cls}">${esc(p)}</span>`;
+    }
+
+    function render(d) {
+      document.getElementById('parecer').outerHTML =
+        `<span id="parecer">${parecerBadge(d.parecer)}</span>`;
+      const grau = Number(d.grau_conformidade_geral) || 0;
+      document.getElementById('grauTxt').textContent = grau;
+      document.getElementById('grauBar').style.width = grau + '%';
+      document.getElementById('resumo').textContent = d.resumo_executivo || '';
+      document.getElementById('justificativa').textContent = d.justificativa_parecer || '';
+
+      const tbE = document.querySelector('#tblEntregaveis tbody');
+      tbE.innerHTML = (d.entregaveis || []).map(e => `<tr>
+        <td>${esc(e.id)}</td>
+        <td>${statusBadge(e.status)}</td>
+        <td>${esc(e.descricao_prevista)}</td>
+        <td>${esc(e.descricao_realizada)}</td>
+        <td>${esc(e.evidencia)}</td>
+        <td>${esc(e.lacunas)}</td>
+        <td>${esc(e.recomendacao)}</td>
+      </tr>`).join('') || '<tr><td colspan="7" class="muted">—</td></tr>';
+
+      const tbI = document.querySelector('#tblIndicadores tbody');
+      tbI.innerHTML = (d.indicadores || []).map(i => `<tr>
+        <td>${esc(i.nome)}</td>
+        <td>${esc(i.meta_prevista)}</td>
+        <td>${esc(i.valor_reportado)}</td>
+        <td>${esc(i.atingido)}</td>
+      </tr>`).join('') || '<tr><td colspan="4" class="muted">—</td></tr>';
+
+      const c = d.cronograma || {};
+      document.getElementById('cronOk').textContent = (c.etapas_no_prazo || []).join(', ') || '—';
+      document.getElementById('cronAtraso').textContent = (c.etapas_atrasadas || []).join(', ') || '—';
+      document.getElementById('cronObs').textContent = c.observacoes || '';
+
+      document.getElementById('melhoria').innerHTML =
+        (d.pontos_de_melhoria || []).map(x => `<li>${esc(x)}</li>`).join('') || '<li class="muted">—</li>';
+      document.getElementById('pendencias').innerHTML =
+        (d.pendencias_criticas || []).map(x => `<li>${esc(x)}</li>`).join('') || '<li class="muted">—</li>';
+
+      document.getElementById('rawJson').textContent = JSON.stringify(d, null, 2);
+      resultEl.style.display = 'block';
+      window.__ultimaAnalise = d;
+    }
+
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      errEl.style.display = 'none';
+      resultEl.style.display = 'none';
+      btn.disabled = true;
+      statusEl.textContent = 'Extraindo texto e consultando o modelo… (pode levar ~30s)';
+      try {
+        const res = await fetch('/analisar', { method: 'POST', body: new FormData(form) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.erro || ('HTTP ' + res.status));
+        render(data);
+        statusEl.textContent = 'Concluído.';
+      } catch (e) {
+        errEl.textContent = 'Erro: ' + e.message;
+        errEl.style.display = 'block';
+        statusEl.textContent = '';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // Gera o parecer técnico em HTML (via Mistral) e abre em nova aba.
+    document.getElementById('btnRelatorio').addEventListener('click', async () => {
+      const d = window.__ultimaAnalise;
+      const relBtn = document.getElementById('btnRelatorio');
+      const relStatus = document.getElementById('statusRel');
+      if (!d) { relStatus.textContent = 'Analise primeiro.'; return; }
+      relBtn.disabled = true;
+      relStatus.textContent = 'Gerando relatório… (~20s)';
+      try {
+        const res = await fetch('/relatorio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(d),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.erro || ('HTTP ' + res.status));
+        }
+        const html = await res.text();
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        relStatus.textContent = 'Relatório aberto em nova aba.';
+      } catch (e) {
+        relStatus.textContent = 'Erro: ' + e.message;
+      } finally {
+        relBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

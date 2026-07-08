@@ -1,0 +1,17 @@
+# Segredos — NUNCA versionar
+.env
+
+# Ambiente virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# SO
+.DS_Store
+
+# Dumps de crash do navegador headless (geração de PDF)
+crash-dumps/
