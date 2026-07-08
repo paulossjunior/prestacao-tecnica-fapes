@@ -61,6 +61,16 @@
     ul { margin: 8px 0; padding-left: 20px; }
     li { margin: 4px 0; }
     .muted { color: var(--muted); }
+    .docs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 680px) { .docs { grid-template-columns: 1fr; } }
+    .doc { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--card); }
+    .doc-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .doc-nome { font-weight: 700; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .doc-nat { color: var(--muted); font-size: 12px; margin: 2px 0 6px; }
+    .doc-row { font-size: 12px; margin-top: 5px; }
+    .doc-lbl { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
+    .b-PROJ { background: #1e40af; color: #dbeafe; }
+    .b-PREST { background: #6b21a8; color: #ede9fe; }
     .err { background: #450a0a; border: 1px solid var(--bad); color: #fecaca;
            padding: 12px; border-radius: 8px; margin-top: 16px; }
     details { margin-top: 24px; } summary { cursor: pointer; color: var(--muted); }
@@ -155,6 +165,11 @@
         <section class="block card"><h3>Pendências Críticas</h3><ul id="pendencias"></ul></section>
       </div>
 
+      <section class="block" id="secArquivos" style="display:none">
+        <h3>Análise por documento <span id="qtdArquivos" class="muted"></span></h3>
+        <div id="docs" class="docs"></div>
+      </section>
+
       <details>
         <summary>JSON completo</summary>
         <pre id="rawJson"></pre>
@@ -227,6 +242,33 @@
         (d.pontos_de_melhoria || []).map(x => `<li>${esc(x)}</li>`).join('') || '<li class="muted">—</li>';
       document.getElementById('pendencias').innerHTML =
         (d.pendencias_criticas || []).map(x => `<li>${esc(x)}</li>`).join('') || '<li class="muted">—</li>';
+
+      // Análise por documento (só com múltiplos arquivos)
+      const arquivos = d.analise_por_arquivo || [];
+      const secArq = document.getElementById('secArquivos');
+      if (arquivos.length > 1) {
+        document.getElementById('qtdArquivos').textContent = `(${arquivos.length} arquivos)`;
+        document.getElementById('docs').innerHTML = arquivos.map(a => {
+          const conj = String(a.conjunto || '').toUpperCase();
+          const cls = conj.startsWith('PROJ') ? 'b-PROJ' : 'b-PREST';
+          const itens = (a.itens_relacionados || [])
+            .map(x => `<span class="badge b-EVID">${esc(x)}</span>`).join(' ') || '—';
+          return `<div class="doc">
+            <div class="doc-head">
+              <span class="doc-nome" title="${esc(a.arquivo)}">📄 ${esc(a.arquivo)}</span>
+              <span class="badge ${cls}">${esc(conj || '—')}</span>
+            </div>
+            <div class="doc-nat">${esc(a.natureza)}</div>
+            <p>${esc(a.resumo)}</p>
+            <div class="doc-row"><span class="doc-lbl">Itens:</span> ${itens}</div>
+            <div class="doc-row"><span class="doc-lbl">Trechos:</span> ${esc(a.trechos_relevantes)}</div>
+            <div class="doc-row"><span class="doc-lbl">Obs:</span> ${esc(a.observacoes)}</div>
+          </div>`;
+        }).join('');
+        secArq.style.display = 'block';
+      } else {
+        secArq.style.display = 'none';
+      }
 
       document.getElementById('rawJson').textContent = JSON.stringify(d, null, 2);
       resultEl.style.display = 'block';

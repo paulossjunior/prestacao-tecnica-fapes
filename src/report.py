@@ -117,6 +117,33 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
         <ul>{_lista(pendencias, 'crit')}</ul>
       </div>""" if pendencias else ""
 
+    # ---- Análise por arquivo (só aparece com múltiplos documentos) ----
+    por_arquivo = d.get("analise_por_arquivo", []) or []
+    por_arquivo_html = ""
+    if len(por_arquivo) > 1:
+        cards = []
+        for a in por_arquivo:
+            conj = str(a.get("conjunto", "")).strip().upper()
+            conj_cor = ("#1d4ed8", "#dbeafe") if conj.startswith("PROJ") else ("#7c3aed", "#ede9fe")
+            itens = a.get("itens_relacionados", []) or []
+            itens_html = " ".join(_chip(x, ("#334155", "#e2e8f0")) for x in itens) or '<span class="muted">—</span>'
+            cards.append(f"""
+              <div class="doc">
+                <div class="doc-head">
+                  <span class="doc-nome">📄 {_e(a.get('arquivo'))}</span>
+                  {_chip(conj or '—', conj_cor)}
+                </div>
+                <div class="doc-nat">{_e(a.get('natureza'))}</div>
+                <p class="doc-res">{_e(a.get('resumo'))}</p>
+                <div class="doc-row"><span class="doc-lbl">Itens relacionados:</span> {itens_html}</div>
+                <div class="doc-row"><span class="doc-lbl">Trechos:</span> {_e(a.get('trechos_relevantes'))}</div>
+                <div class="doc-row"><span class="doc-lbl">Observações:</span> {_e(a.get('observacoes'))}</div>
+              </div>""")
+        por_arquivo_html = (
+            f'<h2>Análise por documento ({len(por_arquivo)} arquivos)</h2>'
+            f'<div class="docs">{"".join(cards)}</div>'
+        )
+
     return f"""<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -177,6 +204,18 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
   .alert-title {{ font-weight:800; color:#991b1b; margin-bottom:4px; }}
   .crit {{ color:#7f1d1d; }}
   .muted {{ color:var(--muted); }}
+  .docs {{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }}
+  .doc {{ border:1px solid var(--line); border-radius:12px; padding:14px;
+    background:#fff; break-inside:avoid; }}
+  .doc-head {{ display:flex; justify-content:space-between; align-items:center;
+    gap:8px; margin-bottom:2px; }}
+  .doc-nome {{ font-weight:700; font-size:12px; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap; }}
+  .doc-nat {{ color:var(--muted); font-size:11px; margin-bottom:6px; }}
+  .doc-res {{ margin:6px 0; }}
+  .doc-row {{ font-size:11px; margin-top:5px; }}
+  .doc-lbl {{ color:var(--muted); font-weight:600; text-transform:uppercase;
+    letter-spacing:.04em; font-size:10px; }}
   .foot {{ margin-top:22px; padding:16px; border:1px solid var(--line);
     border-radius:12px; background:#fff; }}
   .foot .badge {{ display:inline-block; padding:5px 14px; border-radius:999px;
@@ -188,7 +227,7 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
     h2 {{ break-after:avoid; }}
   }}
   @media (max-width:640px) {{ .tiles{{grid-template-columns:repeat(2,1fr)}}
-    .cols{{grid-template-columns:1fr}} .hero{{flex-direction:column}} }}
+    .cols,.docs{{grid-template-columns:1fr}} .hero{{flex-direction:column}} }}
 </style></head>
 <body><div class="page">
   <div class="kicker">FAPES / IFES · Parecer Técnico</div>
@@ -239,6 +278,8 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
 
   <h2>Pontos de melhoria</h2>
   <ul>{_lista(melhorias)}</ul>
+
+  {por_arquivo_html}
 
   <div class="foot">
     <div class="kicker">Parecer final</div>

@@ -61,6 +61,17 @@ estruturada em JSON (e nada além do JSON), no formato:
   },
   "pontos_de_melhoria": ["...", "..."],
   "pendencias_criticas": ["itens que impedem aprovação"],
+  "analise_por_arquivo": [
+    {
+      "arquivo": "nome exato do arquivo (do cabeçalho --- ARQUIVO: ... ---)",
+      "conjunto": "PROJETO" | "PRESTAÇÃO",
+      "natureza": "o que é o documento (relatório, nota fiscal, artigo, lista de presença, foto, etc.)",
+      "resumo": "1-2 frases do conteúdo do documento",
+      "itens_relacionados": ["E1", "E3", "IND-2"],
+      "trechos_relevantes": "citações/seções que sustentam os itens acima",
+      "observacoes": "qualidade, legibilidade, dados faltando ou inconsistências"
+    }
+  ],
   "parecer": "APROVAR" | "APROVAR COM RESSALVAS" | "DILIGÊNCIA" | "REPROVAR",
   "justificativa_parecer": "..."
 }
@@ -71,6 +82,11 @@ REGRAS:
   "NÃO EVIDENCIADO", nunca "NÃO ATENDIDO" (a diferença importa).
 - Seja específico: cite documento e trecho na "evidencia".
 - Priorize entregáveis e indicadores contratualmente exigidos.
+- Os documentos vêm rotulados com cabeçalhos "--- ARQUIVO: nome ---".
+  Em "analise_por_arquivo", inclua UM item para CADA arquivo recebido (de
+  ambos os conjuntos), atribuindo a cada um o que ele especificamente
+  comprova. As seções gerais (entregáveis, indicadores, parecer) permanecem
+  CONSOLIDADAS sobre o conjunto de todos os documentos.
 """
 
 
