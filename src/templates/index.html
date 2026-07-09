@@ -449,13 +449,10 @@
       ovTempo.textContent = '0s';
       statusEl.textContent = 'Analisando… 0s';
 
-      // Aborta com mensagem clara se passar de 5 min.
-      const ctrl = new AbortController();
-      const abort = setTimeout(() => ctrl.abort(), 300000);
-
       try {
+        // Sem limite de tempo no cliente: aguarda o servidor concluir.
         const res = await fetch('/analisar', {
-          method: 'POST', body: new FormData(form), signal: ctrl.signal,
+          method: 'POST', body: new FormData(form),
         });
         const raw = await res.text();
         let data;
@@ -469,15 +466,11 @@
         render(data);
         statusEl.textContent = `Concluído em ${Math.floor((Date.now() - t0) / 1000)}s.`;
       } catch (e) {
-        const msg = e.name === 'AbortError'
-          ? 'Tempo excedido (>5 min). Tente com menos documentos ou reduza o tamanho.'
-          : e.message;
-        errEl.textContent = 'Erro: ' + msg;
+        errEl.textContent = 'Erro: ' + e.message;
         errEl.style.display = 'block';
         statusEl.textContent = '';
       } finally {
         clearInterval(tick);
-        clearTimeout(abort);
         overlay.classList.remove('on');
         btn.disabled = false;
       }
