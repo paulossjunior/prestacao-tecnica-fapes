@@ -71,6 +71,10 @@
     .doc-lbl { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
     .b-PROJ { background: #1e40af; color: #dbeafe; }
     .b-PREST { background: #6b21a8; color: #ede9fe; }
+    .det { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-top: 12px; background: var(--card); }
+    .det-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .det-nome { font-weight: 800; font-size: 14px; }
+    .det-sub { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; margin: 14px 0 4px; }
     .err { background: #450a0a; border: 1px solid var(--bad); color: #fecaca;
            padding: 12px; border-radius: 8px; margin-top: 16px; }
     details { margin-top: 24px; } summary { cursor: pointer; color: var(--muted); }
@@ -168,6 +172,11 @@
       <section class="block" id="secArquivos" style="display:none">
         <h3>Análise por documento <span id="qtdArquivos" class="muted"></span></h3>
         <div id="docs" class="docs"></div>
+      </section>
+
+      <section class="block" id="secDetalhe" style="display:none">
+        <h3>Detalhamento das prestações de contas <span id="qtdDet" class="muted"></span></h3>
+        <div id="detalhes"></div>
       </section>
 
       <details>
@@ -270,6 +279,47 @@
         secArq.style.display = 'none';
       }
 
+      // Detalhamento por arquivo de prestação (mini-relatório)
+      const dets = d.detalhamento_prestacao || [];
+      const secDet = document.getElementById('secDetalhe');
+      if (dets.length) {
+        document.getElementById('qtdDet').textContent = `(${dets.length})`;
+        document.getElementById('detalhes').innerHTML = dets.map(det => {
+          const ents = (det.entregaveis_evidenciados || []).map(x => `<tr>
+            <td>${esc(x.id)}</td><td>${statusBadge(x.status_no_documento)}</td>
+            <td>${esc(x.valor_ou_dado)}</td><td>${esc(x.evidencia)}</td></tr>`).join('')
+            || '<tr><td colspan="4" class="muted">—</td></tr>';
+          const inds = (det.indicadores_reportados || []).map(i => `<tr>
+            <td>${esc(i.nome)}</td><td>${esc(i.valor_reportado)}</td><td>${esc(i.local)}</td></tr>`).join('')
+            || '<tr><td colspan="3" class="muted">—</td></tr>';
+          const ativ = (det.atividades_relatadas || []).map(x => `<li>${esc(x)}</li>`).join('') || '<li class="muted">—</li>';
+          const falt = (det.pendencias_ou_faltas || []).map(x => `<li>${esc(x)}</li>`).join('') || '<li class="muted">—</li>';
+          return `<div class="det">
+            <div class="det-head">
+              <span class="det-nome">📑 ${esc(det.arquivo)}</span>
+              <span class="badge b-EVID">Período: ${esc(det.periodo || '—')}</span>
+            </div>
+            <p>${esc(det.resumo_detalhado)}</p>
+            <div class="det-sub">Entregáveis evidenciados neste documento</div>
+            <div style="overflow:auto"><table>
+              <thead><tr><th>ID</th><th>Status no doc.</th><th>Valor/Dado</th><th>Evidência</th></tr></thead>
+              <tbody>${ents}</tbody></table></div>
+            <div class="det-sub">Indicadores reportados</div>
+            <div style="overflow:auto"><table>
+              <thead><tr><th>Indicador</th><th>Valor</th><th>Local</th></tr></thead>
+              <tbody>${inds}</tbody></table></div>
+            <div class="grid" style="margin-top:10px">
+              <div><div class="det-sub">Atividades relatadas</div><ul>${ativ}</ul></div>
+              <div><div class="det-sub">Pendências / faltas</div><ul>${falt}</ul></div>
+            </div>
+            <p class="muted" style="font-size:12px"><strong>Obs:</strong> ${esc(det.observacoes)}</p>
+          </div>`;
+        }).join('');
+        secDet.style.display = 'block';
+      } else {
+        secDet.style.display = 'none';
+      }
+
       document.getElementById('rawJson').textContent = JSON.stringify(d, null, 2);
       resultEl.style.display = 'block';
       window.__ultimaAnalise = d;
@@ -354,7 +404,14 @@
       statusEl.textContent = 'Extraindo texto e consultando o modelo… (pode levar ~30s)';
       try {
         const res = await fetch('/analisar', { method: 'POST', body: new FormData(form) });
-        const data = await res.json();
+        const raw = await res.text();
+        let data;
+        try { data = JSON.parse(raw); }
+        catch {
+          throw new Error(res.ok
+            ? 'Resposta vazia do servidor (pode ter reiniciado). Tente Analisar de novo.'
+            : `HTTP ${res.status}: ${(raw || 'sem corpo').slice(0, 200)}`);
+        }
         if (!res.ok) throw new Error(data.erro || ('HTTP ' + res.status));
         render(data);
         statusEl.textContent = 'Concluído.';

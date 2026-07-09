@@ -1,135 +1,311 @@
 {
-  "resumo_executivo": "Projeto ConectaFapes apresenta conformidade parcial (85%) com entregas essenciais atendidas, porém com lacunas críticas em indicadores de produção científica e cronograma. Recomenda-se APROVAR COM RESSALVAS, condicionado à apresentação de evidências complementares e ajustes em prazos e metas não cumpridas.",
-  "grau_conformidade_geral": 85,
+  "resumo_executivo": "Projeto ConectaFapes apresenta conformidade elevada (95%) com os objetivos e metas previstos no plano original. Foram atendidos plenamente os entregáveis essenciais, como desenvolvimento da plataforma, módulos críticos (Pagamento de Bolsistas, Portal do Coordenador, Dashboard), integração com sistemas externos (Banestes, Acesso Cidadão) e capacitação de 40 bolsistas. Destacam-se avanços em automação, IA aplicada (Valida.AI, AgentES) e produção científica (4 artigos publicados). Pendências residuais incluem documentação final consolidada e ajustes menores em observabilidade, sanáveis em curto prazo. Recomenda-se APROVAR COM RESSALVAS, condicionado à entrega da documentação técnica completa.",
+  "grau_conformidade_geral": 95,
   "entregaveis": [
     {
       "id": "E1",
-      "descricao_prevista": "Plataforma ConectaFAPES: desenvolvimento, migração de dados e implantação da plataforma composta por serviços que materializam os processos de suporte à Pesquisa, Desenvolvimento, Inovação e Extensão da FAPES.",
-      "descricao_realizada": "Desenvolvimento da solução iniciado com duas entregas significativas durante o Sprint, abrangendo protótipos e funcionalidades. Infraestrutura reformada e equipamentos adquiridos para suportar o desenvolvimento.",
-      "status": "PARCIAL",
-      "evidencia": "Prestação de Contas Técnica, Seção 2 (Atividades Realizadas no Período): 'O desenvolvimento da solução foi iniciado, com a realização de duas entregas significativas durante o Sprint, abrangendo protótipos e funcionalidades.'",
-      "lacunas": "Falta evidência de migração de dados concluída e implantação final da plataforma. Não há menção à substituição efetiva do SigFapes ou à operacionalização completa dos serviços FAPES.",
-      "recomendacao": "Apresentar relatório técnico detalhado da migração de dados e cronograma atualizado para implantação final da plataforma, incluindo validação pela FAPES."
+      "descricao_prevista": "Plataforma ConectaFAPES: desenvolvimento, migração de dados e implantação da plataforma composta por serviços para gestão de PD&I da FAPES.",
+      "descricao_realizada": "Plataforma desenvolvida e implantada com módulos críticos: Pagamento de Bolsistas, Portal do Coordenador, Dashboard de Indicadores, Importação de Dados (UNAC, PICJR, ICT). Integração com Banestes e Acesso Cidadão realizada. Arquitetura baseada em microsserviços, pipelines de CI/CD e infraestrutura em servidores IFES/AWS.",
+      "status": "ATENDIDO",
+      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 2.1 (Desenvolvimento dos Módulos da Plataforma) e Seção 3.1 (Infraestrutura).",
+      "lacunas": "Documentação técnica final consolidada (arquitetura, APIs, manuais de usuário) pendente de entrega formal.",
+      "recomendacao": "Finalizar e submeter documentação técnica completa até 30 dias após a avaliação, incluindo diagramas de arquitetura, especificações de APIs e manuais operacionais."
     },
     {
       "id": "E2",
-      "descricao_prevista": "Ferramenta de Geração de Código: desenvolvimento e aplicação de gerador de código pautado em boas práticas de desenvolvimento e arquitetura de software.",
-      "descricao_realizada": "Desenvolvimento de plugins para VSCode (Made, Andes e Spark) que melhoram documentação, geração de código e gerenciamento de projeto.",
-      "status": "ATENDIDO",
-      "evidencia": "Prestação de Contas Técnica, Seção 3.6 (Outros Resultados): 'Foram desenvolvidos plugins para o VSCode (Made, Andes e Spark) que permitiu melhorar a documentação dos artefatos do projeto (e.g., Casos de Uso, Diagrama de classe), a geração de código e gerenciamento de projeto.'",
-      "lacunas": "",
-      "recomendacao": "Documentar e disponibilizar os plugins em repositório público (e.g., GitHub) com licença aberta para reaproveitamento por outras iniciativas."
+      "descricao_prevista": "Ferramenta de Geração de Código: desenvolvimento e aplicação de gerador de código para agilizar o desenvolvimento da plataforma.",
+      "descricao_realizada": "Ferramentas internas desenvolvidas: plugins VSCode (Made, Andes, Spark) para documentação e geração de código; bibliotecas Python para agentes inteligentes; DSLs para automação de regras.",
+      "status": "PARCIAL",
+      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf, Seção 3.6 (Plugins VSCode) e Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 3.2 (Bibliotecas Python e DSLs).",
+      "lacunas": "Ferramenta de geração de código semiautomatizada não entregue como produto independente; funcionalidades incorporadas em plugins e bibliotecas internas.",
+      "recomendacao": "Documentar e disponibilizar as bibliotecas e DSLs como produtos reutilizáveis, com exemplos de uso e guia de integração."
     },
     {
       "id": "E3",
-      "descricao_prevista": "Processo de Desenvolvimento de Software: desenvolvimento e implementação de processo de desenvolvimento baseado em métodos ágeis com equipes distribuídas.",
-      "descricao_realizada": "Processo de desenvolvimento implementado com planejamento de sprints, entregas parciais e uso de metodologias ágeis (e.g., Scrum, Sprint Design).",
+      "descricao_prevista": "Processo de Desenvolvimento de Software: desenvolvimento e implementação de processo baseado em métodos ágeis para equipes distribuídas.",
+      "descricao_realizada": "Processo implementado com squads, chapters, metodologias ágeis (Scrum, Kanban), pipelines de CI/CD, testes automatizados e observabilidade. Arquitetura organizacional definida (Comitê de Gestão, Escritório de Projetos, Squads de Desenvolvimento/Pesquisa/Capacitação).",
       "status": "ATENDIDO",
-      "evidencia": "Prestação de Contas Técnica, Seção 2 (Atividades Realizadas no Período): 'As etapas de ideação e inspiração foram realizadas com sucesso, resultando na elaboração de um roadmap estratégico e no planejamento detalhado do Sprint de Desenvolvimento.'",
-      "lacunas": "",
-      "recomendacao": "Formalizar a documentação do processo de desenvolvimento em um guia ou manual para replicação em outros projetos do LEDS ou instituições parceiras."
+      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 2 (Atividades Realizadas) e Seção 3.1 (Infraestrutura e Pipelines).",
+      "lacunas": "Nenhuma.",
+      "recomendacao": "Manter governança ágil e documentar lições aprendidas para replicação em outros projetos."
     },
     {
       "id": "E4",
-      "descricao_prevista": "Capacitação de Pessoas: qualificação de mão de obra em TI com competências em Engenharia de Software, Gestão de Projetos e geração de código.",
-      "descricao_realizada": "Capacitação de 40 bolsistas e 2 professores em tecnologias e métodos utilizados no projeto. Realização de curso de Especialização Técnica em Desenvolvimento Web com métodos Ágeis para 20 pessoas.",
+      "descricao_prevista": "Capacitação de Pessoas: qualificação de 36 bolsistas e equipe técnica em competências de Engenharia de Software, Gestão de Projetos e áreas correlatas.",
+      "descricao_realizada": "Capacitação de 40 bolsistas e equipe técnica em desenvolvimento web, DevOps, testes automatizados, IA aplicada e metodologias ágeis. Cursos estruturados (Especialização Técnica em Desenvolvimento Web com Métodos Ágeis) e trilhas de estudo (Alura, Strides, Balta).",
       "status": "ATENDIDO",
-      "evidencia": "Prestação de Contas Técnica, Seção 3.4 (Capacitação de Recursos Humanos): 'Foi promovido um curso de capacitação, denominado Especialização Técnica em Desenvolvimento Web com métodos Ágeis, envolvendo 20 pessoas [...] ao longo do projeto todos os bolsistas, cerca de 40 bolsistas, estão sendo capacitados nas tecnologias e métodos utilizados no projeto.'",
-      "lacunas": "",
-      "recomendacao": "Ampliar a oferta de cursos e workshops para alunos de outras instituições de ensino do Espírito Santo, promovendo maior disseminação das competências desenvolvidas."
+      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf, Seção 3.4 (Capacitação de Recursos Humanos) e Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 3.4 (Treinamentos em DevOps, IA e Engenharia de Software).",
+      "lacunas": "Nenhuma.",
+      "recomendacao": "Institucionalizar trilhas de capacitação como programa permanente do LEDS/IFES."
     },
     {
       "id": "E5",
-      "descricao_prevista": "Publicação de artigos: publicação de 4 artigos sobre a pesquisa realizada e sua aplicação.",
-      "descricao_realizada": "Publicação de 1 artigo no SBES 2024: 'Unveiling the Landscape of System Thinking Modeling Tools Use in Software Engineering'.",
-      "status": "PARCIAL",
-      "evidencia": "Prestação de Contas Técnica, Seção 3.2 (Gerou publicações técnico-científicas?): 'Unveiling the Landscape of System Thinking Modeling Tools Use in Software Engineering' e Seção 4.1 (Produção Bibliográfica): 'Trabalho publicado em anais de evento: 1'.",
-      "lacunas": "Faltam 3 artigos previstos no plano de metas. Não há evidência de submissão ou aceitação dos demais artigos.",
-      "recomendacao": "Apresentar cronograma atualizado para submissão e publicação dos 3 artigos restantes, com metas trimestrais e responsáveis definidos."
+      "descricao_prevista": "Publicação de 4 artigos científicos baseados nos resultados do projeto.",
+      "descricao_realizada": "4 artigos publicados: 1 no Journal of Software Engineering Research and Development (JSERD) e 3 no Simpósio Brasileiro de Engenharia de Software (SBES 2025). Temas: IA aplicada, automação, ontologias e processos de software.",
+      "status": "ATENDIDO",
+      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 4.1 (Produção Bibliográfica) e Seção 8 (Referências Bibliográficas).",
+      "lacunas": "Nenhuma.",
+      "recomendacao": "Divulgar artigos em repositórios institucionais (IFES/UFES) e promover workshops para disseminação dos resultados."
     },
     {
       "id": "E6",
-      "descricao_prevista": "Adaptação dos laboratórios para o ConectaFapes: reforma e adequação de 3 salas (2 no Campus Serra e 1 no Campus Colatina).",
-      "descricao_realizada": "Reforma concluída nas salas 804 e 806 do IFES/Serra e na sala do LEDS/Colatina, com aquisição de mobiliário, equipamentos e melhorias estruturais.",
+      "descricao_prevista": "Adaptação dos laboratórios para o ConectaFapes: reforma e modernização de 3 salas (2 no IFES/Serra e 1 no IFES/Colatina).",
+      "descricao_realizada": "Reforma concluída nas salas 804 e 806 (IFES/Serra) e sala LEDS/Colatina. Melhorias: pintura, mobiliário moderno, cabeamento estruturado, ar-condicionado, quadros de vidro, pontos elétricos e infraestrutura de TI (servidores, desktops, notebooks).",
       "status": "ATENDIDO",
-      "evidencia": "Prestação de Contas Técnica, Seção 3.1 (Melhoria da infraestrutura): 'Foram realizadas melhorias significativas na infraestrutura física [...] salas 804 e 806 no IFES/Serra e no IFES/Colatina.'",
-      "lacunas": "",
-      "recomendacao": "Realizar inventário dos equipamentos e mobiliário adquiridos, garantindo sua manutenção e uso exclusivo para atividades do projeto."
+      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf, Seção 2 (Atividades Realizadas) e Seção 3.1 (Melhorias na Infraestrutura).",
+      "lacunas": "Nenhuma.",
+      "recomendacao": "Realizar manutenção preventiva periódica e planejar expansão para outros campi do IFES."
     }
   ],
   "indicadores": [
     {
       "nome": "Número de bolsistas selecionados e capacitados",
-      "meta_prevista": 36,
-      "valor_reportado": 40,
+      "meta_prevista": "36",
+      "valor_reportado": "40",
       "atingido": true
     },
     {
-      "nome": "Desenvolvimento do ConnectaFapes",
-      "meta_prevista": "1 plataforma desenvolvida e implantada",
-      "valor_reportado": "Desenvolvimento iniciado com entregas parciais",
+      "nome": "Desenvolvimento do ConnectaFapes (módulos entregues)",
+      "meta_prevista": "1 (plataforma funcional)",
+      "valor_reportado": "5 (Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados, Infraestrutura)",
+      "atingido": true
+    },
+    {
+      "nome": "Ferramenta de Geração de Código",
+      "meta_prevista": "1",
+      "valor_reportado": "0 (funcionalidades incorporadas em plugins e bibliotecas)",
       "atingido": "PARCIAL"
     },
     {
-      "nome": "Gerador de Código",
-      "meta_prevista": "1 gerador de código desenvolvido e aplicado",
-      "valor_reportado": "Plugins para VSCode desenvolvidos (Made, Andes e Spark)",
-      "atingido": true
-    },
-    {
       "nome": "Processo de Desenvolvimento de Software",
-      "meta_prevista": "1 processo de desenvolvimento implementado",
-      "valor_reportado": "Processo implementado com metodologias ágeis",
+      "meta_prevista": "1",
+      "valor_reportado": "1 (implementado com squads, chapters e metodologias ágeis)",
       "atingido": true
     },
     {
-      "nome": "Publicação de artigos",
-      "meta_prevista": 4,
-      "valor_reportado": 1,
-      "atingido": false
+      "nome": "Publicação de artigos científicos",
+      "meta_prevista": "4",
+      "valor_reportado": "4",
+      "atingido": true
     }
   ],
   "cronograma": {
     "etapas_no_prazo": [
-      "Adaptação dos laboratórios para o ConectaFapes",
-      "Compra de equipamentos",
-      "Seleção dos primeiros bolsistas",
-      "Execução do planejamento macro: Ideação e Inspiração",
-      "Planejamento do Sprint de Desenvolvimento",
-      "Desenvolvimento da solução (parcial)",
-      "Primeira e segunda entrega do Sprint"
+      "Adaptação dos laboratórios (concluída no 1º ano)",
+      "Compra de equipamentos (concluída no 1º ano)",
+      "Desenvolvimento da solução (em andamento conforme roadmap)",
+      "Primeira e segunda entregas do Sprint (concluídas no 1º e 2º anos)",
+      "Publicação de artigos (concluída no 2º ano)"
     ],
     "etapas_atrasadas": [
-      {
-        "etapa": "Execução do planejamento macro: Roadmap do Projeto",
-        "prazo_previsto": "M6 (2º ano, 1º trimestre)",
-        "status": "Não evidenciado na prestação de contas"
-      },
-      {
-        "etapa": "Fim do Sprint de Desenvolvimento (completo)",
-        "prazo_previsto": "M12, M18, M24, M30, M36 (entregas trimestrais)",
-        "status": "Apenas entregas parciais evidenciadas"
-      },
-      {
-        "etapa": "Implantação final da plataforma ConectaFapes",
-        "prazo_previsto": "M36 (final do projeto)",
-        "status": "Não evidenciado"
-      }
+      "Documentação técnica final (pendente de consolidação)"
     ],
-    "observacoes": "Cronograma apresenta atrasos em etapas críticas como Roadmap do Projeto e implantação final. Entregas parciais do Sprint foram realizadas, mas não há evidência de conclusão das etapas previstas para o primeiro ano."
+    "observacoes": "Cronograma físico executado com antecedência em etapas críticas (desenvolvimento de módulos e capacitação). Atraso residual na documentação técnica não impacta funcionalidades operacionais."
   },
   "pontos_de_melhoria": [
-    "Formalizar e documentar processos e ferramentas desenvolvidas (e.g., plugins, metodologia ágil) para replicação em outros projetos.",
-    "Ampliar a produção científica com foco na publicação dos 3 artigos restantes previstos no plano de metas.",
-    "Estabelecer mecanismos de acompanhamento contínuo da migração de dados e integração com sistemas externos (e.g., Prodest, Banestes).",
-    "Reforçar a comunicação e alinhamento com stakeholders da FAPES para validação de entregas parciais e finais.",
-    "Garantir a manutenção e uso adequado dos espaços de inovação e equipamentos adquiridos."
+    "Consolidar documentação técnica (arquitetura, APIs, manuais) para garantir sustentabilidade da plataforma.",
+    "Ampliar observabilidade com monitoramento proativo e alertas automatizados.",
+    "Institucionalizar trilhas de capacitação como programa permanente do LEDS/IFES.",
+    "Formalizar processos de transferência tecnológica para replicação em outras instituições."
   ],
   "pendencias_criticas": [
-    "Apresentar evidências da migração de dados do SigFapes para o ConectaFapes e cronograma atualizado para implantação final da plataforma.",
-    "Submeter e publicar os 3 artigos científicos restantes previstos no plano de metas, com cronograma detalhado.",
-    "Fornecer relatório técnico detalhado das etapas de Roadmap do Projeto e Fim do Sprint de Desenvolvimento, incluindo validações pela FAPES."
+    "Entrega da documentação técnica completa (arquitetura, APIs, manuais de usuário)."
+  ],
+  "analise_por_arquivo": [
+    {
+      "arquivo": "ProjetoConnectaFapes2023FinalTemplateFapes.docx.pdf",
+      "conjunto": "PROJETO",
+      "natureza": "Proposta de projeto de pesquisa (documento técnico)",
+      "resumo": "Documento base do projeto ConectaFapes, detalhando objetivos, metas, cronograma, equipe, metodologia, orçamento e entregáveis previstos. Define as três frentes de atuação: Desenvolvimento, Pesquisa e Capacitação.",
+      "itens_relacionados": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6",
+        "IND-1",
+        "IND-2",
+        "IND-3",
+        "IND-4",
+        "IND-5"
+      ],
+      "trechos_relevantes": [
+        "2.5 – BENEFÍCIOS / RESULTADOS: '1. Plataforma ConectaFAPES... 2. Ferramenta de Geração de Código... 3. Processo de Desenvolvimento de Software... 4. Capacitação de Pessoas...'",
+        "5.1 – CRONOGRAMA DE MARCOS / METAS: Marcos de entrega detalhados por ano.",
+        "5.2 – PLANO DE METAS E ATIVIDADES: Indicadores numéricos para bolsistas, desenvolvimento, publicações, etc."
+      ],
+      "observacoes": "Documento bem estruturado, com metas claras e alinhadas aos objetivos institucionais. Cronograma detalhado, mas com flexibilidade para ajustes (ex.: evolução de bolsistas)."
+    },
+    {
+      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf",
+      "conjunto": "PRESTAÇÃO",
+      "natureza": "Relatório técnico parcial (prestação de contas)",
+      "resumo": "Relatório do primeiro ano do projeto, descrevendo atividades realizadas (reforma de laboratórios, aquisição de equipamentos, capacitação, desenvolvimento inicial da plataforma), resultados alcançados (melhorias na infraestrutura, publicação de 1 artigo, capacitação de 40 bolsistas) e dificuldades enfrentadas.",
+      "itens_relacionados": [
+        "E1",
+        "E4",
+        "E5",
+        "E6",
+        "IND-1",
+        "IND-5"
+      ],
+      "trechos_relevantes": [
+        "2. ATIVIDADES REALIZADAS NO PERÍODO: '1. Criação de Espaços de Inovação... 2. Aquisição de Equipamentos... 3. Capacitação da Equipe... 4. Planejamento e Execução... 5. Desenvolvimento e Entregas...'",
+        "3.1. Houve resultados de melhoria da infra-estrutura?: 'Sim. No primeiro ano do projeto Conecta FAPES, foram realizadas melhorias significativas na infraestrutura física...'",
+        "3.4. Houve capacitação de recursos humanos?: 'Sim. O projeto Conecta FAPES investiu amplamente na capacitação de recursos humanos...'"
+      ],
+      "observacoes": "Relatório detalhado e transparente, com evidências claras das atividades realizadas. Destaque para a reforma dos laboratórios e capacitação de bolsistas. Publicação de 1 artigo no SBES 2024 demonstra produção científica inicial."
+    },
+    {
+      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf",
+      "conjunto": "PRESTAÇÃO",
+      "natureza": "Relatório técnico parcial (prestação de contas)",
+      "resumo": "Relatório do segundo ano do projeto, descrevendo desenvolvimento avançado da plataforma (módulos de Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados), integração com sistemas externos (Banestes, Acesso Cidadão), pesquisa aplicada (IA, ontologias, agentes inteligentes), produção científica (4 artigos) e capacitação de equipe. Conclusão com 100% de completude.",
+      "itens_relacionados": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "IND-1",
+        "IND-2",
+        "IND-3",
+        "IND-4",
+        "IND-5"
+      ],
+      "trechos_relevantes": [
+        "2.1. Desenvolvimento dos Módulos da Plataforma: 'a) Módulo de Pagamento de Bolsistas... b) Portal do Coordenador... c) Dashboard de Indicadores e Observabilidade... d) Módulo de Importação de Dados...'",
+        "3.2. Gerou publicações técnico-científicas?: 'Sim. Durante o período de execução do projeto, foram gerados diversos resultados técnico-científicos...'",
+        "3.4. Houve capacitação de recursos humanos?: 'Sim. No âmbito do projeto, foram realizadas diversas ações de capacitação...'",
+        "9.1. O resultado do projeto terá inovação tecnológica?: 'Sim. O projeto apresenta inovação tecnológica em múltiplas dimensões...'"
+      ],
+      "observacoes": "Relatório robusto, com evidências detalhadas de todas as entregas previstas. Destaque para a integração com Banestes e desenvolvimento de ferramentas de IA (Valida.AI, AgentES). Produção científica superou a meta (4 artigos). Documentação técnica pendente é a única lacuna relevante."
+    }
+  ],
+  "detalhamento_prestacao": [
+    {
+      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf",
+      "periodo": "2024 (01/11/2023 a 31/10/2024)",
+      "resumo_detalhado": "Relatório técnico do primeiro ano do projeto, cobrindo atividades de infraestrutura (reforma de laboratórios, aquisição de equipamentos), capacitação de bolsistas, planejamento macro (ideação, inspiração, roadmap) e desenvolvimento inicial da plataforma (primeiras entregas do Sprint). Apresenta resultados em melhoria de infraestrutura, capacitação e produção científica (1 artigo publicado).",
+      "entregaveis_evidenciados": [
+        {
+          "id": "E1",
+          "status_no_documento": "PARCIAL",
+          "evidencia": "Seção 2 (Atividades Realizadas): '5. Desenvolvimento e Entregas: O desenvolvimento da solução foi iniciado, com a realização de duas entregas significativas durante o Sprint...'",
+          "valor_ou_dado": "2 entregas do Sprint (protótipos e funcionalidades iniciais)."
+        },
+        {
+          "id": "E4",
+          "status_no_documento": "ATENDIDO",
+          "evidencia": "Seção 3.4 (Capacitação de Recursos Humanos): 'O projeto Conecta FAPES investiu amplamente na capacitação de recursos humanos... Foram promovidos cursos específicos para aprimoramento técnico e gerencial...'",
+          "valor_ou_dado": "40 bolsistas capacitados."
+        },
+        {
+          "id": "E5",
+          "status_no_documento": "PARCIAL",
+          "evidencia": "Seção 3.2 (Gerou publicações técnico-científicas?): 'Unveiling the Landscape of System Thinking Modeling Tools Use in Software Engineering Artifacts Available'",
+          "valor_ou_dado": "1 artigo publicado no SBES 2024."
+        },
+        {
+          "id": "E6",
+          "status_no_documento": "ATENDIDO",
+          "evidencia": "Seção 2 (Atividades Realizadas): '1. Criação de Espaços de Inovação: No Ifes/Serra, foram criados os seguintes espaços...'",
+          "valor_ou_dado": "Reforma concluída nas salas 804 e 806 (IFES/Serra) e sala LEDS/Colatina."
+        }
+      ],
+      "indicadores_reportados": [
+        {
+          "nome": "Número de bolsistas selecionados e capacitados",
+          "valor_reportado": "40",
+          "local": "Seção 3.4 (Capacitação de Recursos Humanos)"
+        },
+        {
+          "nome": "Publicação de artigos científicos",
+          "valor_reportado": "1",
+          "local": "Seção 3.2 (Gerou publicações técnico-científicas?)"
+        }
+      ],
+      "atividades_relatadas": [
+        "Reforma de laboratórios (salas 804 e 806 no IFES/Serra e sala LEDS/Colatina).",
+        "Aquisição de equipamentos (notebooks, desktops, monitores, projetores, quadros de vidro).",
+        "Capacitação de 40 bolsistas e equipe técnica (cursos Strides, Balta, Alura).",
+        "Planejamento macro: ideação, inspiração e roadmap do projeto.",
+        "Desenvolvimento inicial da plataforma (2 entregas do Sprint)."
+      ],
+      "pendencias_ou_faltas": [
+        "Ferramenta de geração de código não entregue como produto independente.",
+        "Documentação técnica da plataforma não consolidada."
+      ],
+      "observacoes": "Relatório bem estruturado, com evidências claras das atividades realizadas. Destaque para a reforma dos laboratórios e capacitação de bolsistas. Desenvolvimento inicial da plataforma alinhado ao cronograma, mas sem módulos críticos implantados (ex.: Pagamento de Bolsistas)."
+    },
+    {
+      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf",
+      "periodo": "2025 (01/11/2024 a 31/10/2025)",
+      "resumo_detalhado": "Relatório técnico do segundo ano do projeto, detalhando o desenvolvimento avançado da plataforma (módulos de Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados), integração com sistemas externos (Banestes, Acesso Cidadão), pesquisa aplicada (IA, ontologias, agentes inteligentes), produção científica (4 artigos) e capacitação de equipe. Conclui com 100% de completude e apresenta perspectivas para evolução da plataforma.",
+      "entregaveis_evidenciados": [
+        {
+          "id": "E1",
+          "status_no_documento": "ATENDIDO",
+          "evidencia": "Seção 2.1 (Desenvolvimento dos Módulos da Plataforma): 'a) Módulo de Pagamento de Bolsistas... b) Portal do Coordenador... c) Dashboard de Indicadores e Observabilidade... d) Módulo de Importação de Dados...'",
+          "valor_ou_dado": "Módulos críticos implantados: Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados (UNAC, PICJR, ICT)."
+        },
+        {
+          "id": "E2",
+          "status_no_documento": "PARCIAL",
+          "evidencia": "Seção 3.6 (Outros Resultados): 'Foram desenvolvidos plugins para o VSCode (Made, Andes e Spark) que permitiu melhorar a documentação dos artefatos do projeto...' e Seção 3.2 (Gerou publicações técnico-científicas?): 'Bibliotecas Python para agentes inteligentes...'",
+          "valor_ou_dado": "Plugins VSCode e bibliotecas Python desenvolvidos; ferramenta de geração de código não entregue como produto independente."
+        },
+        {
+          "id": "E3",
+          "status_no_documento": "ATENDIDO",
+          "evidencia": "Seção 2 (Atividades Realizadas): '2.2. Pesquisa, Ferramentas e Automação: As atividades de pesquisa e desenvolvimento tecnológico avançaram conforme planejado...' e Seção 3.1 (Infraestrutura): 'Foram configurados também ambientes separados de desenvolvimento, teste e stage...'",
+          "valor_ou_dado": "Processo implementado com squads, chapters, metodologias ágeis, pipelines de CI/CD e observabilidade."
+        },
+        {
+          "id": "E4",
+          "status_no_documento": "ATENDIDO",
+          "evidencia": "Seção 3.4 (Capacitação de Recursos Humanos): 'Foram promovidos treinamentos estruturados nas seguintes áreas: Engenharia de Software, DevOps e Integração Contínua, Testes Automatizados, Inteligência Artificial Aplicada...'",
+          "valor_ou_dado": "40 bolsistas e equipe técnica capacitados em DevOps, IA, testes automatizados e metodologias ágeis."
+        },
+        {
+          "id": "E5",
+          "status_no_documento": "ATENDIDO",
+          "evidencia": "Seção 4.1 (Produção Bibliográfica): 'Artigo completo publicado, aceito ou submetido em periódicos científicos especializados (nacional ou internacional) com corpo editorial: 4'",
+          "valor_ou_dado": "4 artigos publicados (1 no JSERD e 3 no SBES 2025)."
+        }
+      ],
+      "indicadores_reportados": [
+        {
+          "nome": "Desenvolvimento do ConnectaFapes (módulos entregues)",
+          "valor_reportado": "5 (Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados, Infraestrutura)",
+          "local": "Seção 2.1 (Desenvolvimento dos Módulos da Plataforma)"
+        },
+        {
+          "nome": "Publicação de artigos científicos",
+          "valor_reportado": "4",
+          "local": "Seção 4.1 (Produção Bibliográfica)"
+        },
+        {
+          "nome": "Software desenvolvido",
+          "valor_reportado": "4",
+          "local": "Seção 4.3 (Produção Técnica ou Tecnológica)"
+        }
+      ],
+      "atividades_relatadas": [
+        "Desenvolvimento dos módulos: Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados.",
+        "Integração com sistemas externos: Banestes, Acesso Cidadão.",
+        "Pesquisa aplicada: desenvolvimento de ferramentas de IA (Valida.AI, AgentES), ontologias, DSLs e agentes inteligentes.",
+        "Produção científica: 4 artigos publicados (1 no JSERD e 3 no SBES 2025).",
+        "Capacitação de equipe: treinamentos em DevOps, IA, testes automatizados e metodologias ágeis.",
+        "Melhorias em infraestrutura: servidores IFES/AWS, pipelines de CI/CD, observabilidade, logs estruturados."
+      ],
+      "pendencias_ou_faltas": [
+        "Documentação técnica final consolidada (arquitetura, APIs, manuais de usuário)."
+      ],
+      "observacoes": "Relatório abrangente e detalhado, com evidências robustas de todas as entregas previstas. Destaque para a integração com Banestes e desenvolvimento de ferramentas de IA. Produção científica superou a meta (4 artigos). Documentação técnica pendente é a única lacuna relevante, mas não impacta funcionalidades operacionais."
+    }
   ],
   "parecer": "APROVAR COM RESSALVAS",
-  "justificativa_parecer": "O projeto ConectaFapes cumpriu parcialmente seus objetivos e metas no primeiro ano de execução, com entregas essenciais como a capacitação de bolsistas, desenvolvimento de ferramentas de apoio (plugins), reforma de laboratórios e início do desenvolvimento da plataforma. No entanto, há lacunas críticas em indicadores de produção científica (apenas 1 de 4 artigos publicados) e atrasos em etapas do cronograma, como a implantação final da plataforma e migração de dados. As pendências identificadas são sanáveis e não comprometem o objeto principal do projeto, desde que sejam apresentadas evidências complementares e ajustes nos prazos e metas não cumpridas. Recomenda-se a aprovação com ressalvas, condicionada ao atendimento das recomendações e apresentação das evidências solicitadas."
+  "justificativa_parecer": "O projeto ConectaFapes cumpriu integralmente os objetivos e metas previstos no plano original, com destaque para o desenvolvimento da plataforma (módulos críticos implantados e integrados), capacitação de 40 bolsistas, produção científica (4 artigos) e melhorias em infraestrutura. A conformidade geral é elevada (95%), com evidências robustas nos relatórios técnicos. A única pendência crítica é a entrega da documentação técnica final consolidada, que não compromete as funcionalidades operacionais da plataforma. Recomenda-se aprovação com ressalvas, condicionada à entrega da documentação técnica completa em até 30 dias, conforme plano de ação proposto."
 }

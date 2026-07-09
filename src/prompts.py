@@ -72,6 +72,27 @@ estruturada em JSON (e nada além do JSON), no formato:
       "observacoes": "qualidade, legibilidade, dados faltando ou inconsistências"
     }
   ],
+  "detalhamento_prestacao": [
+    {
+      "arquivo": "nome exato do arquivo de PRESTAÇÃO",
+      "periodo": "período/exercício coberto, se houver (ex.: 2024) ou NÃO INFORMADO",
+      "resumo_detalhado": "parágrafo descrevendo o que o documento apresenta",
+      "entregaveis_evidenciados": [
+        {
+          "id": "E1",
+          "status_no_documento": "ATENDIDO" | "PARCIAL" | "NÃO ATENDIDO" | "NÃO EVIDENCIADO",
+          "evidencia": "trecho/seção exata deste documento",
+          "valor_ou_dado": "quantidade/resultado reportado, se houver"
+        }
+      ],
+      "indicadores_reportados": [
+        {"nome": "...", "valor_reportado": "...", "local": "página/seção deste documento"}
+      ],
+      "atividades_relatadas": ["atividade/entrega descrita neste documento"],
+      "pendencias_ou_faltas": ["o que este documento deixa em aberto/não comprova"],
+      "observacoes": "qualidade, consistência, divergências com o projeto"
+    }
+  ],
   "parecer": "APROVAR" | "APROVAR COM RESSALVAS" | "DILIGÊNCIA" | "REPROVAR",
   "justificativa_parecer": "..."
 }
@@ -87,6 +108,11 @@ REGRAS:
   ambos os conjuntos), atribuindo a cada um o que ele especificamente
   comprova. As seções gerais (entregáveis, indicadores, parecer) permanecem
   CONSOLIDADAS sobre o conjunto de todos os documentos.
+- Em "detalhamento_prestacao", inclua UM item para CADA arquivo do conjunto
+  PRESTAÇÃO (nunca do PROJETO), com o detalhamento profundo daquele documento:
+  o status de cada entregável CONFORME evidenciado NAQUELE arquivo, os
+  indicadores nele reportados, atividades relatadas e o que ficou em aberto.
+  Baseie cada status/valor em trecho real do próprio documento.
 """
 
 

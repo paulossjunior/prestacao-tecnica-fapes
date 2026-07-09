@@ -144,6 +144,53 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
             f'<div class="docs">{"".join(cards)}</div>'
         )
 
+    # ---- Detalhamento por arquivo de prestação (mini-relatório) ----
+    detalhes = d.get("detalhamento_prestacao", []) or []
+    detalhe_html = ""
+    if detalhes:
+        blocos = []
+        for det in detalhes:
+            ents = det.get("entregaveis_evidenciados", []) or []
+            linhas = "".join(
+                f"""<tr>
+                  <td class="mono">{_e(x.get('id'))}</td>
+                  <td>{_chip(_status_norm(x.get('status_no_documento')), STATUS_CORES[_status_norm(x.get('status_no_documento'))])}</td>
+                  <td>{_e(x.get('valor_ou_dado'))}</td>
+                  <td class="ev">{_e(x.get('evidencia'))}</td>
+                </tr>""" for x in ents
+            ) or '<tr><td colspan="4" class="muted">Nenhum entregável evidenciado.</td></tr>'
+
+            inds = det.get("indicadores_reportados", []) or []
+            ind_linhas = "".join(
+                f"""<tr><td>{_e(i.get('nome'))}</td>
+                    <td class="mono">{_e(i.get('valor_reportado'))}</td>
+                    <td class="ev">{_e(i.get('local'))}</td></tr>""" for i in inds
+            ) or '<tr><td colspan="3" class="muted">Nenhum indicador reportado.</td></tr>'
+
+            blocos.append(f"""
+              <div class="det">
+                <div class="det-head">
+                  <span class="det-nome">📑 {_e(det.get('arquivo'))}</span>
+                  {_chip('Período: ' + str(det.get('periodo') or '—'), ('#334155', '#e2e8f0'))}
+                </div>
+                <p class="det-res">{_e(det.get('resumo_detalhado'))}</p>
+                <div class="det-sub">Entregáveis evidenciados neste documento</div>
+                <table><thead><tr><th>ID</th><th>Status no doc.</th><th>Valor/Dado</th><th>Evidência</th></tr></thead>
+                  <tbody>{linhas}</tbody></table>
+                <div class="det-sub">Indicadores reportados</div>
+                <table><thead><tr><th>Indicador</th><th>Valor reportado</th><th>Local</th></tr></thead>
+                  <tbody>{ind_linhas}</tbody></table>
+                <div class="cols" style="margin-top:12px">
+                  <div class="col"><h3>Atividades relatadas</h3><ul>{_lista(det.get('atividades_relatadas'))}</ul></div>
+                  <div class="col"><h3>Pendências / faltas</h3><ul>{_lista(det.get('pendencias_ou_faltas'), 'crit')}</ul></div>
+                </div>
+                <p class="sub"><strong>Observações:</strong> {_e(det.get('observacoes'))}</p>
+              </div>""")
+        detalhe_html = (
+            f'<h2>Detalhamento das prestações de contas ({len(detalhes)})</h2>'
+            + "".join(blocos)
+        )
+
     return f"""<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -216,6 +263,14 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
   .doc-row {{ font-size:11px; margin-top:5px; }}
   .doc-lbl {{ color:var(--muted); font-weight:600; text-transform:uppercase;
     letter-spacing:.04em; font-size:10px; }}
+  .det {{ border:1px solid var(--line); border-radius:12px; padding:16px;
+    margin-top:14px; background:#fff; break-inside:avoid; }}
+  .det-head {{ display:flex; justify-content:space-between; align-items:center;
+    gap:10px; margin-bottom:6px; }}
+  .det-nome {{ font-weight:800; font-size:14px; }}
+  .det-res {{ margin:4px 0 12px; }}
+  .det-sub {{ font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--muted); font-weight:700; margin:14px 0 4px; }}
   .foot {{ margin-top:22px; padding:16px; border:1px solid var(--line);
     border-radius:12px; background:#fff; }}
   .foot .badge {{ display:inline-block; padding:5px 14px; border-radius:999px;
@@ -280,6 +335,8 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
   <ul>{_lista(melhorias)}</ul>
 
   {por_arquivo_html}
+
+  {detalhe_html}
 
   <div class="foot">
     <div class="kicker">Parecer final</div>
