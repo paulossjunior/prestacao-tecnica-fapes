@@ -4,8 +4,8 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    # timeout alto: a análise via Mistral pode levar ~30-60s por requisição.
-    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 180
+    # timeout alto + threads: a análise via Mistral pode levar 1-3 min por requisição.
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 300
     envVars:
       - key: MISTRAL_API_KEY
         sync: false            # definir manualmente no dashboard (secret)
