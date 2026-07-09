@@ -66,6 +66,19 @@ def extract_many(files) -> str:
     return "\n\n".join(blocos)
 
 
+def extract_pairs(pares) -> str:
+    """Concatena o texto de vários (nome, bytes). Usado no processamento assíncrono."""
+    blocos = []
+    for nome, data in pares:
+        if not nome or not data:
+            continue
+        texto = extract_text(nome, data)
+        blocos.append(f"--- ARQUIVO: {nome} ---\n{texto}")
+    if not blocos:
+        raise ValueError("Nenhum arquivo válido enviado.")
+    return "\n\n".join(blocos)
+
+
 def extract_file(path: str) -> str:
     """Lê e extrai o texto de um arquivo do disco."""
     with open(path, "rb") as f:
