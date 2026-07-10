@@ -196,18 +196,25 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Parecer Técnico Executivo — {_e(titulo)}</title>
 <style>
-  :root {{ --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc; }}
+  :root {{ --ink:#1f2937; --muted:#5b6b86; --line:#d9e0ee; --bg:#eef2f8;
+    --navy:#1b2a63; --magenta:#d6296a; --lime:#a8c81e; }}
   * {{ box-sizing:border-box; }}
   body {{ margin:0; background:var(--bg); color:var(--ink);
     font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
     font-size:13px; line-height:1.5; }}
-  .page {{ max-width:920px; margin:0 auto; padding:28px; background:#fff; }}
-  .kicker {{ letter-spacing:.14em; font-size:11px; color:var(--muted);
-    text-transform:uppercase; font-weight:600; }}
-  h1 {{ font-size:22px; margin:2px 0 2px; }}
+  .page {{ max-width:920px; margin:0 auto; padding:0 28px 28px; background:#fff; }}
+  .fapes-hd {{ display:flex; align-items:center; justify-content:space-between;
+    gap:16px; padding:16px 0 12px; border-bottom:3px solid var(--lime); margin-bottom:6px; }}
+  .wordmark {{ font-size:30px; font-weight:800; letter-spacing:-1px; }}
+  .wordmark .fap {{ color:var(--navy); }} .wordmark .es {{ color:var(--magenta); }}
+  .gov-id {{ text-align:right; color:var(--navy); font-size:11px; line-height:1.3; }}
+  .gov-id strong {{ display:block; font-size:12px; }}
+  .kicker {{ letter-spacing:.14em; font-size:11px; color:var(--magenta);
+    text-transform:uppercase; font-weight:700; margin-top:14px; }}
+  h1 {{ font-size:22px; margin:2px 0 2px; color:var(--navy); }}
   h2 {{ font-size:14px; text-transform:uppercase; letter-spacing:.06em;
-    color:var(--muted); border-bottom:2px solid var(--line);
-    padding-bottom:6px; margin:26px 0 12px; }}
+    color:var(--navy); border-bottom:2px solid var(--line);
+    border-left:4px solid var(--magenta); padding:0 0 6px 8px; margin:26px 0 12px; }}
   .sub {{ color:var(--muted); font-size:12px; }}
   /* HERO */
   .hero {{ display:flex; gap:22px; align-items:center; margin-top:18px;
@@ -232,8 +239,8 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
     text-align:center; background:#fff; }}
   .tile-num {{ font-size:26px; font-weight:800; }}
   .tile-lbl {{ font-size:11px; color:var(--muted); margin-top:2px; }}
-  .summary {{ margin-top:18px; padding:16px; background:#f1f5f9;
-    border-left:4px solid #64748b; border-radius:8px; font-size:14px; }}
+  .summary {{ margin-top:18px; padding:16px; background:#eef2f8;
+    border-left:4px solid var(--navy); border-radius:8px; font-size:14px; }}
   table {{ width:100%; border-collapse:collapse; font-size:12px; }}
   th,td {{ text-align:left; padding:8px 9px; border-bottom:1px solid var(--line);
     vertical-align:top; }}
@@ -285,7 +292,12 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
     .cols,.docs{{grid-template-columns:1fr}} .hero{{flex-direction:column}} }}
 </style></head>
 <body><div class="page">
-  <div class="kicker">FAPES / IFES · Parecer Técnico</div>
+  <div class="fapes-hd">
+    <span class="wordmark"><span class="fap">fap</span><span class="es">es</span></span>
+    <span class="gov-id"><strong>GOVERNO DO ESTADO DO ESPÍRITO SANTO</strong>
+      Secretaria da Ciência, Tecnologia, Inovação e Educação Profissional</span>
+  </div>
+  <div class="kicker">Parecer Técnico</div>
   <h1>Parecer Técnico Executivo</h1>
   <div class="sub">{_e(titulo)} — comparativo previsto × realizado</div>
 

@@ -5,31 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Avaliação Técnica — Prestação de Contas (FAPES/IFES)</title>
   <style>
+    /* Identidade visual FAPES / Governo do Espírito Santo */
     :root {
-      --bg: #0f172a; --card: #1e293b; --line: #334155; --txt: #e2e8f0;
-      --muted: #94a3b8; --accent: #38bdf8;
-      --ok: #22c55e; --warn: #eab308; --bad: #ef4444; --info: #64748b;
+      --bg: #eef2f8; --card: #ffffff; --line: #d9e0ee; --txt: #1f2937;
+      --muted: #5b6b86; --accent: #1f4fa3;              /* azul links/botões */
+      --navy: #1b2a63; --magenta: #d6296a; --lime: #a8c81e;
+      --ok: #15803d; --warn: #b45309; --bad: #dc2626; --info: #5b6b86;
     }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
            background: var(--bg); color: var(--txt); line-height: 1.5; }
-    header { padding: 24px; border-bottom: 1px solid var(--line); }
-    header h1 { margin: 0 0 4px; font-size: 20px; }
-    header p { margin: 0; color: var(--muted); font-size: 14px; }
+    /* Cabeçalho institucional */
+    .gov-bar { background: var(--navy); color: #dfe6f5; font-size: 12px;
+               padding: 6px 24px; text-align: right; letter-spacing: .02em; }
+    header { background: #fff; border-bottom: 3px solid var(--lime);
+             padding: 16px 24px; display: flex; align-items: center;
+             justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: baseline; gap: 12px; }
+    .wordmark { font-size: 34px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+    .wordmark .fap { color: var(--navy); } .wordmark .es { color: var(--magenta); }
+    .brand .tag { color: var(--muted); font-size: 11px; max-width: 190px;
+                  text-transform: uppercase; letter-spacing: .03em; line-height: 1.25; }
+    .gov-id { text-align: right; color: var(--navy); font-size: 12px; line-height: 1.3; }
+    .gov-id strong { display: block; font-size: 13px; }
+    .titlebar { background: linear-gradient(90deg, var(--navy), #24408c);
+                color: #fff; padding: 16px 24px; }
+    .titlebar h1 { margin: 0; font-size: 20px; }
+    .titlebar p { margin: 4px 0 0; color: #c7d3ee; font-size: 13px; }
     main { max-width: 980px; margin: 0 auto; padding: 24px; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
     .card { background: var(--card); border: 1px solid var(--line);
-            border-radius: 10px; padding: 16px; }
-    .card h2 { margin: 0 0 10px; font-size: 15px; color: var(--accent); }
+            border-radius: 10px; padding: 16px; box-shadow: 0 1px 2px rgba(27,42,99,.04); }
+    .card h2 { margin: 0 0 10px; font-size: 15px; color: var(--navy);
+               border-left: 4px solid var(--magenta); padding-left: 8px; }
     input[type=file] { width: 100%; font-size: 13px; color: var(--muted); }
-    button.add { background: transparent; color: var(--accent); border: 1px dashed var(--accent);
+    button.add { background: #fff; color: var(--accent); border: 1px dashed var(--accent);
                  padding: 9px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
-    button.add:hover { background: rgba(56,189,248,.1); }
+    button.add:hover { background: #eef3fb; }
     .hint { color: var(--muted); font-size: 12px; margin: 8px 0 4px; }
     .filelist { list-style: none; margin: 8px 0 0; padding: 0; }
     .filelist li { display: flex; justify-content: space-between; align-items: center; gap: 8px;
-                   background: #0b1220; border: 1px solid var(--line); border-radius: 7px;
+                   background: #f4f7fc; border: 1px solid var(--line); border-radius: 7px;
                    padding: 6px 10px; margin-top: 6px; font-size: 12px; }
     .filelist .nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .filelist .tam { color: var(--muted); flex: 0 0 auto; }
@@ -37,27 +54,29 @@
                     font-size: 15px; line-height: 1; padding: 0 2px; flex: 0 0 auto; }
     .filelist .vazio { color: var(--muted); border: 0; background: none; padding: 0; }
     .actions { margin: 20px 0; display: flex; gap: 12px; align-items: center; }
-    button { background: var(--accent); color: #04263a; border: 0; font-weight: 600;
+    button { background: var(--accent); color: #fff; border: 0; font-weight: 700;
              padding: 11px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #1a4491; }
     button:disabled { opacity: .5; cursor: not-allowed; }
     #status { color: var(--muted); font-size: 14px; }
     .badge { display: inline-block; padding: 2px 10px; border-radius: 999px;
              font-size: 12px; font-weight: 700; }
-    .b-ATENDIDO, .b-APROVAR { background: var(--ok); color: #052e13; }
-    .b-PARCIAL, .b-APROVAR.ressalvas, .b-DILIGÊNCIA { background: var(--warn); color: #422006; }
-    .b-NÃO { background: var(--bad); color: #450a0a; }
-    .b-EVID { background: var(--info); color: #f1f5f9; }
+    .b-ATENDIDO, .b-APROVAR { background: #dcfce7; color: #166534; }
+    .b-PARCIAL, .b-APROVAR.ressalvas, .b-DILIGÊNCIA { background: #fef3c7; color: #92400e; }
+    .b-NÃO { background: #fee2e2; color: #991b1b; }
+    .b-EVID { background: #e6ecf6; color: var(--navy); }
     .result { margin-top: 24px; display: none; }
     .kpi { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-    .meter { flex: 1; min-width: 200px; height: 12px; background: var(--line);
+    .meter { flex: 1; min-width: 200px; height: 12px; background: #e2e8f0;
              border-radius: 999px; overflow: hidden; }
     .meter > div { height: 100%; background: linear-gradient(90deg,var(--bad),var(--warn),var(--ok)); }
     table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
     th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line);
              vertical-align: top; }
-    th { color: var(--muted); font-weight: 600; }
+    th { color: var(--muted); font-weight: 600; background: #f4f7fc; }
     section.block { margin-top: 24px; }
-    section.block h3 { font-size: 15px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+    section.block h3 { font-size: 15px; color: var(--navy);
+                       border-bottom: 2px solid var(--line); padding-bottom: 6px; }
     ul { margin: 8px 0; padding-left: 20px; }
     li { margin: 4px 0; }
     .muted { color: var(--muted); }
@@ -69,34 +88,36 @@
     .doc-nat { color: var(--muted); font-size: 12px; margin: 2px 0 6px; }
     .doc-row { font-size: 12px; margin-top: 5px; }
     .doc-lbl { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
-    .b-PROJ { background: #1e40af; color: #dbeafe; }
-    .b-PREST { background: #6b21a8; color: #ede9fe; }
-    .det { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-top: 12px; background: var(--card); }
+    .b-PROJ { background: var(--navy); color: #dbeafe; }
+    .b-PREST { background: var(--magenta); color: #fff; }
+    .det { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-top: 12px;
+           background: var(--card); border-top: 3px solid var(--navy); }
     .det-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .det-nome { font-weight: 800; font-size: 14px; }
+    .det-nome { font-weight: 800; font-size: 14px; color: var(--navy); }
     .det-sub { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; margin: 14px 0 4px; }
-    .err { background: #450a0a; border: 1px solid var(--bad); color: #fecaca;
+    .err { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
            padding: 12px; border-radius: 8px; margin-top: 16px; }
     details { margin-top: 24px; } summary { cursor: pointer; color: var(--muted); }
-    pre { background: #0b1220; padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; }
+    pre { background: #f4f7fc; border: 1px solid var(--line); color: #1f2937;
+          padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; }
     /* Loading overlay */
-    #overlay { position: fixed; inset: 0; background: rgba(2,6,23,.82);
+    #overlay { position: fixed; inset: 0; background: rgba(15,23,49,.86);
                display: none; align-items: center; justify-content: center; z-index: 999;
                backdrop-filter: blur(3px); }
     #overlay.on { display: flex; }
-    .loader { text-align: center; color: var(--txt); max-width: 420px; padding: 24px; }
+    .loader { text-align: center; color: #fff; max-width: 420px; padding: 24px; }
     .spinner { width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%;
-               border: 6px solid var(--line); border-top-color: var(--accent);
+               border: 6px solid rgba(255,255,255,.25); border-top-color: var(--lime);
                animation: spin 0.9s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .loader h3 { margin: 0 0 6px; font-size: 18px; }
-    .loader .tempo { font-size: 32px; font-weight: 800; color: var(--accent);
+    .loader .tempo { font-size: 32px; font-weight: 800; color: var(--lime);
                      font-variant-numeric: tabular-nums; margin: 4px 0; }
-    .loader p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+    .loader p { margin: 6px 0 0; color: #c7d3ee; font-size: 13px; }
     .bar { height: 4px; width: 220px; margin: 16px auto 0; border-radius: 999px;
-           background: var(--line); overflow: hidden; position: relative; }
+           background: rgba(255,255,255,.2); overflow: hidden; position: relative; }
     .bar::after { content: ''; position: absolute; left: -40%; top: 0; height: 100%; width: 40%;
-                  background: var(--accent); border-radius: 999px;
+                  background: var(--lime); border-radius: 999px;
                   animation: slide 1.2s ease-in-out infinite; }
     @keyframes slide { 0% { left: -40%; } 100% { left: 100%; } }
   </style>
@@ -111,10 +132,21 @@
       <p id="ovMsg">Comparando previsto × realizado via Mistral. Pode levar 1-3 min para PDFs grandes.</p>
     </div>
   </div>
+  <div class="gov-bar">Governo do Estado do Espírito Santo · Secretaria da Ciência, Tecnologia, Inovação e Educação Profissional</div>
   <header>
-    <h1>Avaliação Técnica — Prestação de Contas</h1>
-    <p>Compara o <strong>previsto</strong> (projeto) com o <strong>realizado</strong> (prestação) e emite parecer. Contexto FAPES/IFES.</p>
+    <div class="brand">
+      <span class="wordmark"><span class="fap">fap</span><span class="es">es</span></span>
+      <span class="tag">Fundação de Amparo à Pesquisa e Inovação do Espírito Santo</span>
+    </div>
+    <div class="gov-id">
+      <strong>GOVERNO DO ESTADO</strong>
+      DO ESPÍRITO SANTO
+    </div>
   </header>
+  <div class="titlebar">
+    <h1>Avaliação Técnica — Prestação de Contas</h1>
+    <p>Compara o <strong>previsto</strong> (projeto) com o <strong>realizado</strong> (prestação) e emite parecer técnico.</p>
+  </div>
   <main>
     <form id="form">
       <div class="grid">
