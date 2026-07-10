@@ -5,7 +5,21 @@ dashboard com veredito, gauge de conformidade, KPIs, ressalvas em destaque.
 O conteúdo textual (resumo, justificativa, recomendações) vem da análise do
 Mistral; aqui é só apresentação — rápido, gratuito e previsível.
 """
+import base64
 import html as _html
+import os
+
+_LOGO_PATH = os.path.join(os.path.dirname(__file__), "static", "logo.png")
+
+
+def _logo_data_uri() -> str:
+    """Logo FAPES embutido como data URI (relatório self-contained p/ PDF)."""
+    try:
+        with open(_LOGO_PATH, "rb") as f:
+            return "data:image/png;base64," + base64.b64encode(f.read()).decode()
+    except OSError:
+        return ""
+
 
 # Paleta por parecer: (cor_texto, cor_fundo, cor_borda)
 PARECER_CORES = {
@@ -67,6 +81,7 @@ def _atingido_chip(v) -> str:
 
 def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técnica") -> str:
     d = resultado or {}
+    logo_uri = _logo_data_uri()
     parecer = d.get("parecer", "—")
     fg, bg, brd = PARECER_CORES.get(str(parecer).strip().upper(),
                                     ("#334155", "#f1f5f9", "#94a3b8"))
@@ -205,8 +220,7 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
   .page {{ max-width:920px; margin:0 auto; padding:0 28px 28px; background:#fff; }}
   .fapes-hd {{ display:flex; align-items:center; justify-content:space-between;
     gap:16px; padding:16px 0 12px; border-bottom:3px solid var(--lime); margin-bottom:6px; }}
-  .wordmark {{ font-size:30px; font-weight:800; letter-spacing:-1px; }}
-  .wordmark .fap {{ color:var(--navy); }} .wordmark .es {{ color:var(--magenta); }}
+  .fapes-hd .logo {{ height:42px; width:auto; display:block; }}
   .gov-id {{ text-align:right; color:var(--navy); font-size:11px; line-height:1.3; }}
   .gov-id strong {{ display:block; font-size:12px; }}
   .kicker {{ letter-spacing:.14em; font-size:11px; color:var(--magenta);
@@ -293,7 +307,7 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
 </style></head>
 <body><div class="page">
   <div class="fapes-hd">
-    <span class="wordmark"><span class="fap">fap</span><span class="es">es</span></span>
+    <img class="logo" src="{logo_uri}" alt="FAPES">
     <span class="gov-id"><strong>GOVERNO DO ESTADO DO ESPÍRITO SANTO</strong>
       Secretaria da Ciência, Tecnologia, Inovação e Educação Profissional</span>
   </div>
