@@ -1,0 +1,11 @@
+services:
+  web:
+    build: .
+    image: prestacao-tecnica-fapes
+    container_name: prestacao-tecnica
+    ports:
+      - "8080:8000"          # host:container -> acesse http://localhost:8080
+    environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:?defina MISTRAL_API_KEY no .env}
+      - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-large-latest}
+    restart: unless-stopped

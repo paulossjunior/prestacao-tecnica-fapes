@@ -1,0 +1,14 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.env
+.git/
+.gitignore
+documentos/
+exemplos/
+parecer.*
+*.md
+render.yaml
+crash-dumps/
+.DS_Store

@@ -83,6 +83,21 @@ Formatos: `.pdf`, `.docx`, `.txt`, `.md`.
   (APROVAR / APROVAR COM RESSALVAS / DILIGÊNCIA / REPROVAR).
 - **HTML**: parecer técnico institucional, autocontido, pronto p/ impressão (A4).
 
+## Modo 3 — Docker Compose
+
+```bash
+cp .env.example .env        # edite: MISTRAL_API_KEY=...
+docker compose up -d --build
+# abra http://localhost:8080
+docker compose logs -f web  # acompanhar
+docker compose down         # parar
+```
+
+`docker-compose.yml` lê o `.env` (só passa `MISTRAL_API_KEY` e `MISTRAL_MODEL` ao
+container). Roda gunicorn (`wsgi:app`, 4 threads, timeout 600). Porta host 8080 →
+8000 no container. A geração de PDF por navegador (`--pdf` do CLI) não está no
+container; na web use "Imprimir → Salvar como PDF".
+
 ## Deploy no Render (teste)
 
 O projeto já vem com `render.yaml` (Blueprint) + `wsgi.py` (gunicorn).
