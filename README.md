@@ -83,20 +83,84 @@ Formatos: `.pdf`, `.docx`, `.txt`, `.md`.
   (APROVAR / APROVAR COM RESSALVAS / DILIGÊNCIA / REPROVAR).
 - **HTML**: parecer técnico institucional, autocontido, pronto p/ impressão (A4).
 
-## Modo 3 — Docker Compose
+## Modo 3 — Docker Compose (recomendado)
+
+Roda a aplicação web isolada em container, sem instalar Python/deps na máquina.
+
+### Pré-requisitos
+- Docker Desktop (ou Docker Engine) com o daemon **rodando**.
+- Uma chave da API Mistral.
+
+### Passo a passo
 
 ```bash
-cp .env.example .env        # edite: MISTRAL_API_KEY=...
+# 1) chave de API
+cp .env.example .env
+#    edite .env e preencha: MISTRAL_API_KEY=sua_chave
+
+# 2) sobe (build + start em background)
 docker compose up -d --build
-# abra http://localhost:8080
-docker compose logs -f web  # acompanhar
-docker compose down         # parar
+
+# 3) acesse
+open http://localhost:8080        # ou abra no navegador
+
+# 4) logs / parar
+docker compose logs -f web        # acompanhar em tempo real
+docker compose down               # parar e remover o container
 ```
 
-`docker-compose.yml` lê o `.env` (só passa `MISTRAL_API_KEY` e `MISTRAL_MODEL` ao
-container). Roda gunicorn (`wsgi:app`, 4 threads, timeout 600). Porta host 8080 →
-8000 no container. A geração de PDF por navegador (`--pdf` do CLI) não está no
-container; na web use "Imprimir → Salvar como PDF".
+Primeiro build leva ~1-2 min (baixa a imagem base e instala deps). Subidas
+seguintes são instantâneas (`docker compose up -d`, sem `--build`).
+
+### Verificar se está no ar
+
+```bash
+curl -o /dev/null -w "%{http_code}\n" http://localhost:8080/            # 200
+curl -o /dev/null -w "%{http_code}\n" http://localhost:8080/static/logo.png  # 200
+docker compose ps                                                        # STATUS = Up
+```
+
+### Testar a análise pela linha de comando (opcional)
+
+O endpoint é assíncrono: envia os arquivos e retorna um `job_id`; consulte o
+resultado em `/status/<job_id>`.
+
+```bash
+# 1) enfileira o job (retorna job_id na hora)
+curl -s -X POST http://localhost:8080/analisar \
+  -F "projeto=@exemplos/projeto.txt" \
+  -F "prestacao=@exemplos/prestacao.txt" \
+  -F "prestacao=@exemplos/prestacao2.txt"
+# -> {"job_id":"<id>","status":"processing"}
+
+# 2) consulte o status até "done" (leva ~30-60s)
+curl -s http://localhost:8080/status/<id>
+# -> {"status":"done","resultado":{ ...parecer JSON... }}
+```
+
+Pela **web** (recomendado): abra http://localhost:8080, clique **+ Adicionar
+arquivos** em cada seção (Projeto e Prestação; aceita vários), **Analisar** e
+depois **Gerar relatório HTML**.
+
+### Como funciona o container
+- `Dockerfile`: `python:3.12-slim`, instala `requirements.txt`, roda
+  `gunicorn wsgi:app` (1 worker, 4 threads, timeout 600s).
+- `docker-compose.yml`: mapeia **host 8080 → container 8000**, lê o `.env` e
+  passa **apenas** `MISTRAL_API_KEY` e `MISTRAL_MODEL` (o resto do `.env` não
+  entra no container), `restart: unless-stopped`.
+- A análise roda em thread (assíncrona) → a conexão HTTP nunca fica presa.
+
+### Solução de problemas
+| Sintoma | Causa / correção |
+|---------|------------------|
+| `Cannot connect to the Docker daemon` | Docker Desktop parado. Abra-o e aguarde o daemon subir. |
+| `bind: address already in use` (8080) | Outra coisa usa a 8080. Troque a porta host em `docker-compose.yml` (ex.: `"8090:8000"`). |
+| `defina MISTRAL_API_KEY no .env` | `.env` ausente ou sem a chave. Crie a partir de `.env.example`. |
+| Erro "Job não encontrado" no front | Container reiniciou no meio da análise (job store é em memória). Reenvie. |
+| PDF | O container não tem navegador headless; use "Imprimir → Salvar como PDF" no navegador. O `--pdf` do CLI só funciona fora do container. |
+
+> Porta **8080** foi escolhida porque no macOS a **5000** costuma estar ocupada
+> pelo *AirPlay Receiver*.
 
 ## Deploy no Render (teste)
 
