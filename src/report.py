@@ -21,6 +21,22 @@ def _logo_data_uri() -> str:
         return ""
 
 
+# Base normativa FAPES para avaliação da prestação técnica (nome, url).
+REFERENCIAS = [
+    ("Anexo VI — Relatório Técnico de Projeto de Pesquisa (modelo)",
+     "https://fapes.es.gov.br/Media/fapes/SIGFAPES/Relat%C3%B3rio%20T%C3%A9cnico%20de%20Projeto.pdf"),
+    ("Prestação de Contas Técnica — SIGFAPES/E-Docs",
+     "https://fapes.es.gov.br/prestacao-contas-tecnica"),
+    ("Passo a passo da Prestação de Contas — SIGFAPES",
+     "https://fapes.es.gov.br/Media/fapes/SIGFAPES/PASSO%20A%20PASSO%20DA%20PRESTA%C3%87%C3%83O%20DE%20CONTAS%20SIGFAPES%20-%20PDF.pdf"),
+    ("Tutorial — Relatório Técnico de Projeto (SIGFAPES)",
+     "https://fapes.es.gov.br/Media/fapes/Importacao/tutorial-relatorio-tecnico-projeto-sigfapes-atualizado.pdf"),
+    ("Resolução CCAF nº 313/2022 — Manual de Utilização e Prestação de Contas",
+     "https://fapes.es.gov.br/resolucoes"),
+    ("Prestação de Contas — FAPES (portal)",
+     "https://fapes.es.gov.br/prestacao-de-contas"),
+]
+
 # Paleta por parecer: (cor_texto, cor_fundo, cor_borda)
 PARECER_CORES = {
     "APROVAR": ("#166534", "#dcfce7", "#22c55e"),
@@ -206,6 +222,58 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
             + "".join(blocos)
         )
 
+    # ---- Enquadramento conforme Anexo VI (FAPES) ----
+    obj = d.get("objetivos_alcancados", {}) or {}
+    resd = d.get("resultados_periodo", {}) or {}
+    indp = d.get("indicadores_producao", {}) or {}
+    avg = d.get("avaliacao_geral", {}) or {}
+
+    def _defrow(rotulo, valor):
+        return (f'<div class="doc-row"><span class="doc-lbl">{_e(rotulo)}:</span> '
+                f'{_e(valor)}</div>')
+
+    anexo_html = ""
+    if any([obj, resd, indp, avg]):
+        anexo_html = f"""
+      <h2>Enquadramento — Relatório Técnico (Anexo VI / FAPES)</h2>
+      <div class="cols">
+        <div class="doc">
+          <div class="det-sub" style="margin-top:0">Objetivos alcançados</div>
+          {_chip(_e(obj.get('situacao') or '—'), ('#1b2a63', '#e6ecf6'))}
+          <p style="margin:8px 0 0">{_e(obj.get('descricao'))}</p>
+          <div class="det-sub">Indicadores de produção</div>
+          {_defrow('Bibliográfica', indp.get('bibliografica'))}
+          {_defrow('Técnica/Tecnológica', indp.get('tecnica_tecnologica'))}
+          {_defrow('Cultural', indp.get('cultural'))}
+          {_defrow('Orientações', indp.get('orientacoes'))}
+        </div>
+        <div class="doc">
+          <div class="det-sub" style="margin-top:0">Resultados no período</div>
+          {_defrow('Infraestrutura', resd.get('infraestrutura'))}
+          {_defrow('Publicações téc.-científicas', resd.get('publicacoes_tecnico_cientificas'))}
+          {_defrow('Serviços especializados', resd.get('servicos_especializados'))}
+          {_defrow('Capacitação de RH', resd.get('capacitacao_rh'))}
+          {_defrow('Difusão / divulgação', resd.get('difusao_divulgacao'))}
+        </div>
+      </div>
+      <div class="doc" style="margin-top:12px">
+        <div class="det-sub" style="margin-top:0">Avaliação geral</div>
+        {_defrow('Inovação tecnológica', avg.get('inovacao_tecnologica'))}
+        {_defrow('Transferência a terceiros', avg.get('transferencia_terceiros'))}
+        {_defrow('Proteção intelectual', avg.get('protecao_ip'))}
+        {_defrow('Indissociabilidade (ensino/extensão)', avg.get('indissociabilidade'))}
+        {_defrow('Impacto social', avg.get('impacto_social'))}
+      </div>"""
+
+    # ---- Referências / base normativa FAPES ----
+    refs_li = "".join(
+        f'<li><a href="{u}">{_e(n)}</a></li>' for n, u in REFERENCIAS
+    )
+    referencias_html = f"""
+      <h2>Referências — Base normativa FAPES</h2>
+      <p class="sub">Documentos que orientam a prestação de contas técnica e sua avaliação.</p>
+      <ul class="refs">{refs_li}</ul>"""
+
     return f"""<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -292,6 +360,9 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
   .det-res {{ margin:4px 0 12px; }}
   .det-sub {{ font-size:11px; text-transform:uppercase; letter-spacing:.05em;
     color:var(--muted); font-weight:700; margin:14px 0 4px; }}
+  .refs {{ font-size:12px; }} .refs li {{ margin:5px 0; }}
+  .refs a {{ color:var(--navy); text-decoration:none; }}
+  .refs a:hover {{ text-decoration:underline; }}
   .foot {{ margin-top:22px; padding:16px; border:1px solid var(--line);
     border-radius:12px; background:#fff; }}
   .foot .badge {{ display:inline-block; padding:5px 14px; border-radius:999px;
@@ -360,9 +431,13 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
   <h2>Pontos de melhoria</h2>
   <ul>{_lista(melhorias)}</ul>
 
+  {anexo_html}
+
   {por_arquivo_html}
 
   {detalhe_html}
+
+  {referencias_html}
 
   <div class="foot">
     <div class="kicker">Parecer final</div>

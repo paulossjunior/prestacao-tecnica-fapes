@@ -5,7 +5,9 @@ services:
     container_name: prestacao-tecnica
     ports:
       - "8080:8000"          # host:container -> acesse http://localhost:8080
+    env_file:
+      - .env                 # carrega o .env inteiro no container (MISTRAL_API_KEY etc.)
     environment:
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY:?defina MISTRAL_API_KEY no .env}
+      # fallback caso não esteja no .env
       - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-large-latest}
     restart: unless-stopped

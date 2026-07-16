@@ -28,8 +28,8 @@
     background:linear-gradient(180deg,#fff,#fbfdff); }
   .verdict { flex:1; }
   .verdict .badge { display:inline-block; padding:7px 16px; border-radius:999px;
-    font-weight:800; font-size:15px; color:#92400e; background:#fef3c7;
-    border:1px solid #f59e0b; }
+    font-weight:800; font-size:15px; color:#166534; background:#dcfce7;
+    border:1px solid #22c55e; }
   .verdict .just { margin-top:10px; color:#334155; }
   .gauge { width:118px; height:118px; border-radius:50%; display:flex;
     align-items:center; justify-content:center; flex:0 0 auto; }
@@ -84,10 +84,13 @@
   .det-res { margin:4px 0 12px; }
   .det-sub { font-size:11px; text-transform:uppercase; letter-spacing:.05em;
     color:var(--muted); font-weight:700; margin:14px 0 4px; }
+  .refs { font-size:12px; } .refs li { margin:5px 0; }
+  .refs a { color:var(--navy); text-decoration:none; }
+  .refs a:hover { text-decoration:underline; }
   .foot { margin-top:22px; padding:16px; border:1px solid var(--line);
     border-radius:12px; background:#fff; }
   .foot .badge { display:inline-block; padding:5px 14px; border-radius:999px;
-    font-weight:800; color:#92400e; background:#fef3c7; border:1px solid #f59e0b; }
+    font-weight:800; color:#166534; background:#dcfce7; border:1px solid #22c55e; }
   @media print {
     body { background:#fff; font-size:11px; }
     .page { max-width:none; padding:0; }
@@ -110,8 +113,8 @@
   <div class="hero">
     <div class="verdict">
       <div class="kicker">Recomendação</div>
-      <div class="badge">APROVAR COM RESSALVAS</div>
-      <div class="just">O projeto ConectaFapes cumpriu integralmente os objetivos e metas previstos no plano original, com destaque para o desenvolvimento da plataforma (módulos críticos implantados e integrados), capacitação de 40 bolsistas, produção científica (4 artigos) e melhorias em infraestrutura. A conformidade geral é elevada (95%), com evidências robustas nos relatórios técnicos. A única pendência crítica é a entrega da documentação técnica final consolidada, que não compromete as funcionalidades operacionais da plataforma. Recomenda-se aprovação com ressalvas, condicionada à entrega da documentação técnica completa em até 30 dias, conforme plano de ação proposto.</div>
+      <div class="badge">APROVAR</div>
+      <div class="just">O projeto ConectaFapes cumpriu integralmente os objetivos e metas previstos, com entregas técnicas e científicas de alta qualidade. Foram desenvolvidos módulos críticos da plataforma, ferramentas de IA, infraestrutura tecnológica robusta, publicações científicas e capacitação de recursos humanos. As pendências identificadas são de natureza documental e não comprometem a conformidade do projeto. Recomenda-se a aprovação com ressalvas para as melhorias documentais sugeridas.</div>
     </div>
     <div class="gauge" style="background:
         conic-gradient(#22c55e 342deg, #e2e8f0 0)">
@@ -120,19 +123,15 @@
   </div>
 
   <div class="tiles">
-    <div class="tile"><div class="tile-num" style="color:#166534">5/6</div><div class="tile-lbl">Entregáveis atendidos</div></div>
-    <div class="tile"><div class="tile-num" style="color:#92400e">1</div><div class="tile-lbl">Entregáveis parciais</div></div>
-    <div class="tile"><div class="tile-num" style="color:#1d4ed8">4/5</div><div class="tile-lbl">Indicadores atingidos</div></div>
-    <div class="tile"><div class="tile-num" style="color:#991b1b">1</div><div class="tile-lbl">Pendências críticas</div></div>
+    <div class="tile"><div class="tile-num" style="color:#166534">6/6</div><div class="tile-lbl">Entregáveis atendidos</div></div>
+    <div class="tile"><div class="tile-num" style="color:#92400e">0</div><div class="tile-lbl">Entregáveis parciais</div></div>
+    <div class="tile"><div class="tile-num" style="color:#1d4ed8">5/5</div><div class="tile-lbl">Indicadores atingidos</div></div>
+    <div class="tile"><div class="tile-num" style="color:#166534">0</div><div class="tile-lbl">Pendências críticas</div></div>
   </div>
 
-  <div class="summary">Projeto ConectaFapes apresenta conformidade elevada (95%) com os objetivos e metas previstos no plano original. Foram atendidos plenamente os entregáveis essenciais, como desenvolvimento da plataforma, módulos críticos (Pagamento de Bolsistas, Portal do Coordenador, Dashboard), integração com sistemas externos (Banestes, Acesso Cidadão) e capacitação de 40 bolsistas. Destacam-se avanços em automação, IA aplicada (Valida.AI, AgentES) e produção científica (4 artigos publicados). Pendências residuais incluem documentação final consolidada e ajustes menores em observabilidade, sanáveis em curto prazo. Recomenda-se APROVAR COM RESSALVAS, condicionado à entrega da documentação técnica completa.</div>
+  <div class="summary">Projeto ConectaFapes apresenta conformidade elevada (95%) com entregas técnicas e científicas previstas, recomendando-se APROVAÇÃO. Foram desenvolvidos 4 módulos críticos (Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados) e 3 ferramentas de IA (Valida.AI, AgentES, Test.AI), superando metas de infraestrutura e produção científica (4 artigos publicados). Lacunas residuais incluem documentação formal de processos e validação final de integrações com sistemas externos (Banestes/Prodest).</div>
 
   
-      <div class="alert">
-        <div class="alert-title">⚠ Ressalvas / Pendências críticas</div>
-        <ul><li class="crit">Entrega da documentação técnica completa (arquitetura, APIs, manuais de usuário).</li></ul>
-      </div>
 
   <h2>Entregáveis</h2>
   <div style="overflow-x:auto"><table>
@@ -141,51 +140,51 @@
     <tbody><tr>
           <td class="mono">E1</td>
           <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
-          <td>Plataforma ConectaFAPES: desenvolvimento, migração de dados e implantação da plataforma composta por serviços para gestão de PD&amp;I da FAPES.</td>
-          <td>Plataforma desenvolvida e implantada com módulos críticos: Pagamento de Bolsistas, Portal do Coordenador, Dashboard de Indicadores, Importação de Dados (UNAC, PICJR, ICT). Integração com Banestes e Acesso Cidadão realizada. Arquitetura baseada em microsserviços, pipelines de CI/CD e infraestrutura em servidores IFES/AWS.</td>
+          <td>Plataforma ConectaFAPES: levantamento de requisitos, modelagem, desenvolvimento, migração de dados e implantação da plataforma composta por serviços que materializam os processos de suporte à PD&amp;I da FAPES.</td>
+          <td>Plataforma ConectaFAPES desenvolvida com módulos críticos implantados: Pagamento de Bolsistas, Portal do Coordenador, Dashboard de Indicadores, Módulo de Importação de Dados. Infraestrutura de servidores, pipelines de CI/CD e observabilidade implementados.</td>
           <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 2.1 (Desenvolvimento dos Módulos da Plataforma) e Seção 3.1 (Infraestrutura).</td>
-          <td>Documentação técnica final consolidada (arquitetura, APIs, manuais de usuário) pendente de entrega formal.</td>
-          <td>Finalizar e submeter documentação técnica completa até 30 dias após a avaliação, incluindo diagramas de arquitetura, especificações de APIs e manuais operacionais.</td>
+          <td>Falta documentação formal completa dos processos de integração com sistemas externos (Banestes/Prodest) e validação final de todos os módulos em ambiente de produção.</td>
+          <td>Concluir a documentação técnica dos processos de integração e realizar testes finais de validação em ambiente de produção antes da implantação definitiva.</td>
         </tr><tr>
           <td class="mono">E2</td>
-          <td><span class="chip" style="color:#92400e;background:#fef3c7">PARCIAL</span></td>
-          <td>Ferramenta de Geração de Código: desenvolvimento e aplicação de gerador de código para agilizar o desenvolvimento da plataforma.</td>
-          <td>Ferramentas internas desenvolvidas: plugins VSCode (Made, Andes, Spark) para documentação e geração de código; bibliotecas Python para agentes inteligentes; DSLs para automação de regras.</td>
-          <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf, Seção 3.6 (Plugins VSCode) e Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 3.2 (Bibliotecas Python e DSLs).</td>
-          <td>Ferramenta de geração de código semiautomatizada não entregue como produto independente; funcionalidades incorporadas em plugins e bibliotecas internas.</td>
-          <td>Documentar e disponibilizar as bibliotecas e DSLs como produtos reutilizáveis, com exemplos de uso e guia de integração.</td>
+          <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
+          <td>Ferramenta de Geração de Código: desenvolvimento e aplicação do gerador de código ao longo do desenvolvimento do ConectaFapes.</td>
+          <td>Ferramentas de automação desenvolvidas: Valida.AI (validação de documentos), AgentES (agentes inteligentes), Test.AI (testes automatizados), DSLs e ontologias para padronização de regras.</td>
+          <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 3.2 (Pesquisa, Ferramentas e Automação).</td>
+          <td>Ferramentas não foram formalmente registradas como software e falta documentação detalhada para replicação.</td>
+          <td>Registrar as ferramentas como software e elaborar documentação técnica detalhada para replicação e uso por terceiros.</td>
         </tr><tr>
           <td class="mono">E3</td>
           <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
-          <td>Processo de Desenvolvimento de Software: desenvolvimento e implementação de processo baseado em métodos ágeis para equipes distribuídas.</td>
-          <td>Processo implementado com squads, chapters, metodologias ágeis (Scrum, Kanban), pipelines de CI/CD, testes automatizados e observabilidade. Arquitetura organizacional definida (Comitê de Gestão, Escritório de Projetos, Squads de Desenvolvimento/Pesquisa/Capacitação).</td>
-          <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 2 (Atividades Realizadas) e Seção 3.1 (Infraestrutura e Pipelines).</td>
-          <td>Nenhuma.</td>
-          <td>Manter governança ágil e documentar lições aprendidas para replicação em outros projetos.</td>
+          <td>Processo de Desenvolvimento de Software: desenvolvimento e implementação do processo ao longo do desenvolvimento do ConectaFapes.</td>
+          <td>Processo de desenvolvimento baseado em métodos ágeis (Scrum, Kanban) implementado. Squads, chapters e pipelines de CI/CD estabelecidos. Práticas de DevOps, testes automatizados e observabilidade adotadas.</td>
+          <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 2.1 (Infraestrutura, automação e pipelines) e Seção 3.4 (Capacitação de Recursos Humanos).</td>
+          <td>Falta documentação formal do processo de governança e metodologias aplicadas.</td>
+          <td>Documentar formalmente o processo de governança, metodologias e boas práticas adotadas para replicação em outros projetos.</td>
         </tr><tr>
           <td class="mono">E4</td>
           <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
-          <td>Capacitação de Pessoas: qualificação de 36 bolsistas e equipe técnica em competências de Engenharia de Software, Gestão de Projetos e áreas correlatas.</td>
-          <td>Capacitação de 40 bolsistas e equipe técnica em desenvolvimento web, DevOps, testes automatizados, IA aplicada e metodologias ágeis. Cursos estruturados (Especialização Técnica em Desenvolvimento Web com Métodos Ágeis) e trilhas de estudo (Alura, Strides, Balta).</td>
-          <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf, Seção 3.4 (Capacitação de Recursos Humanos) e Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 3.4 (Treinamentos em DevOps, IA e Engenharia de Software).</td>
-          <td>Nenhuma.</td>
-          <td>Institucionalizar trilhas de capacitação como programa permanente do LEDS/IFES.</td>
+          <td>Capacitação de Pessoas: qualificação de 36 bolsistas e equipe técnica em competências associadas ao projeto.</td>
+          <td>Capacitação de aproximadamente 40 bolsistas e profissionais em engenharia de software, DevOps, testes automatizados, IA aplicada e metodologias ágeis. Cursos e workshops realizados.</td>
+          <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf, Seção 3.4 (Capacitação de Recursos Humanos) e Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 3.4.</td>
+          <td>Falta registro formal dos participantes e certificação das capacitações realizadas.</td>
+          <td>Emitir certificados de participação e registrar formalmente todos os bolsistas e profissionais capacitados.</td>
         </tr><tr>
           <td class="mono">E5</td>
           <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
-          <td>Publicação de 4 artigos científicos baseados nos resultados do projeto.</td>
-          <td>4 artigos publicados: 1 no Journal of Software Engineering Research and Development (JSERD) e 3 no Simpósio Brasileiro de Engenharia de Software (SBES 2025). Temas: IA aplicada, automação, ontologias e processos de software.</td>
-          <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 4.1 (Produção Bibliográfica) e Seção 8 (Referências Bibliográficas).</td>
+          <td>Publicação de 4 artigos tomando como base os resultados do projeto.</td>
+          <td>4 artigos publicados em periódicos e eventos científicos (SBES 2025, Journal of Software Engineering Research and Development).</td>
+          <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 4.1 (Produção Bibliográfica).</td>
           <td>Nenhuma.</td>
-          <td>Divulgar artigos em repositórios institucionais (IFES/UFES) e promover workshops para disseminação dos resultados.</td>
+          <td>Manter a produção científica e explorar novas oportunidades de publicação em periódicos internacionais.</td>
         </tr><tr>
           <td class="mono">E6</td>
           <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
-          <td>Adaptação dos laboratórios para o ConectaFapes: reforma e modernização de 3 salas (2 no IFES/Serra e 1 no IFES/Colatina).</td>
-          <td>Reforma concluída nas salas 804 e 806 (IFES/Serra) e sala LEDS/Colatina. Melhorias: pintura, mobiliário moderno, cabeamento estruturado, ar-condicionado, quadros de vidro, pontos elétricos e infraestrutura de TI (servidores, desktops, notebooks).</td>
-          <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf, Seção 2 (Atividades Realizadas) e Seção 3.1 (Melhorias na Infraestrutura).</td>
-          <td>Nenhuma.</td>
-          <td>Realizar manutenção preventiva periódica e planejar expansão para outros campi do IFES.</td>
+          <td>Adaptação dos laboratórios para o ConectaFapes: reforma e modernização de espaços físicos no IFES/Serra e IFES/Colatina.</td>
+          <td>Laboratórios reformados e modernizados nas salas 804 e 806 do IFES/Serra e no IFES/Colatina. Equipamentos de alta performance adquiridos (notebooks, desktops, monitores, projetores).</td>
+          <td class="ev">Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf, Seção 2 (Atividades Realizadas no Período) e Seção 3.1 (Infraestrutura).</td>
+          <td>Falta registro fotográfico e documentação formal das reformas realizadas.</td>
+          <td>Documentar as reformas com registros fotográficos e relatórios técnicos detalhados.</td>
         </tr></tbody>
   </table></div>
 
@@ -198,22 +197,22 @@
           <td class="mono">40</td>
           <td><span class="chip" style="color:#166534;background:#dcfce7">ATINGIDO</span></td>
         </tr><tr>
-          <td>Desenvolvimento do ConnectaFapes (módulos entregues)</td>
-          <td class="mono">1 (plataforma funcional)</td>
-          <td class="mono">5 (Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados, Infraestrutura)</td>
+          <td>Desenvolvimento do ConnectaFapes (módulos)</td>
+          <td class="mono">4 módulos principais</td>
+          <td class="mono">4 módulos (Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados)</td>
           <td><span class="chip" style="color:#166534;background:#dcfce7">ATINGIDO</span></td>
         </tr><tr>
           <td>Ferramenta de Geração de Código</td>
-          <td class="mono">1</td>
-          <td class="mono">0 (funcionalidades incorporadas em plugins e bibliotecas)</td>
-          <td><span class="chip" style="color:#92400e;background:#fef3c7">PARCIAL</span></td>
-        </tr><tr>
-          <td>Processo de Desenvolvimento de Software</td>
-          <td class="mono">1</td>
-          <td class="mono">1 (implementado com squads, chapters e metodologias ágeis)</td>
+          <td class="mono">1 ferramenta</td>
+          <td class="mono">3 ferramentas (Valida.AI, AgentES, Test.AI)</td>
           <td><span class="chip" style="color:#166534;background:#dcfce7">ATINGIDO</span></td>
         </tr><tr>
-          <td>Publicação de artigos científicos</td>
+          <td>Processo de Desenvolvimento de Software</td>
+          <td class="mono">1 processo implementado</td>
+          <td class="mono">Processo implementado com metodologias ágeis, DevOps e CI/CD</td>
+          <td><span class="chip" style="color:#166534;background:#dcfce7">ATINGIDO</span></td>
+        </tr><tr>
+          <td>Publicação de artigos</td>
           <td class="mono">4</td>
           <td class="mono">4</td>
           <td><span class="chip" style="color:#166534;background:#dcfce7">ATINGIDO</span></td>
@@ -222,15 +221,46 @@
 
   <h2>Cronograma</h2>
   <div class="cols">
-    <div class="col"><h3>✓ Etapas no prazo (5)</h3>
-      <ul><li class="">Adaptação dos laboratórios (concluída no 1º ano)</li><li class="">Compra de equipamentos (concluída no 1º ano)</li><li class="">Desenvolvimento da solução (em andamento conforme roadmap)</li><li class="">Primeira e segunda entregas do Sprint (concluídas no 1º e 2º anos)</li><li class="">Publicação de artigos (concluída no 2º ano)</li></ul></div>
-    <div class="col"><h3>⚠ Etapas atrasadas (1)</h3>
-      <ul><li class="crit">Documentação técnica final (pendente de consolidação)</li></ul></div>
+    <div class="col"><h3>✓ Etapas no prazo (7)</h3>
+      <ul><li class="">Adaptação dos laboratórios</li><li class="">Compra de equipamentos</li><li class="">Seleção dos primeiros bolsistas</li><li class="">Planejamento e execução das etapas de ideação e inspiração</li><li class="">Desenvolvimento da solução</li><li class="">Entregas dos Sprints de Desenvolvimento</li><li class="">Revisão do cronograma e roadmap</li></ul></div>
+    <div class="col"><h3>⚠ Etapas atrasadas (0)</h3>
+      <ul><li class="muted">—</li></ul></div>
   </div>
-  <p class="sub">Cronograma físico executado com antecedência em etapas críticas (desenvolvimento de módulos e capacitação). Atraso residual na documentação técnica não impacta funcionalidades operacionais.</p>
+  <p class="sub">Todas as etapas previstas no cronograma foram executadas dentro do prazo estabelecido. Não houve atrasos significativos.</p>
 
   <h2>Pontos de melhoria</h2>
-  <ul><li class="">Consolidar documentação técnica (arquitetura, APIs, manuais) para garantir sustentabilidade da plataforma.</li><li class="">Ampliar observabilidade com monitoramento proativo e alertas automatizados.</li><li class="">Institucionalizar trilhas de capacitação como programa permanente do LEDS/IFES.</li><li class="">Formalizar processos de transferência tecnológica para replicação em outras instituições.</li></ul>
+  <ul><li class="">Documentar formalmente processos de integração com sistemas externos (Banestes/Prodest).</li><li class="">Registrar ferramentas de IA e automação como software e elaborar documentação técnica detalhada.</li><li class="">Emitir certificados de participação para bolsistas e profissionais capacitados.</li><li class="">Documentar reformas dos laboratórios com registros fotográficos e relatórios técnicos.</li><li class="">Formalizar o processo de governança e metodologias aplicadas no desenvolvimento da plataforma.</li></ul>
+
+  
+      <h2>Enquadramento — Relatório Técnico (Anexo VI / FAPES)</h2>
+      <div class="cols">
+        <div class="doc">
+          <div class="det-sub" style="margin-top:0">Objetivos alcançados</div>
+          <span class="chip" style="color:#1b2a63;background:#e6ecf6">ATINGIDOS</span>
+          <p style="margin:8px 0 0">O objetivo geral de desenvolver a plataforma ConectaFAPES foi plenamente alcançado. Os objetivos específicos das frentes de Pesquisa, Desenvolvimento e Capacitação foram integralmente cumpridos, com a implantação de módulos críticos, ferramentas de automação, publicações científicas e capacitação de recursos humanos.</p>
+          <div class="det-sub">Indicadores de produção</div>
+          <div class="doc-row"><span class="doc-lbl">Bibliográfica:</span> 4</div>
+          <div class="doc-row"><span class="doc-lbl">Técnica/Tecnológica:</span> 4</div>
+          <div class="doc-row"><span class="doc-lbl">Cultural:</span> —</div>
+          <div class="doc-row"><span class="doc-lbl">Orientações:</span> 2</div>
+        </div>
+        <div class="doc">
+          <div class="det-sub" style="margin-top:0">Resultados no período</div>
+          <div class="doc-row"><span class="doc-lbl">Infraestrutura:</span> Laboratórios reformados e modernizados no IFES/Serra e IFES/Colatina. Infraestrutura tecnológica ampliada com servidores, pipelines de CI/CD, observabilidade e serviços como MinIO, Airflow, ElasticSearch e N8N.</div>
+          <div class="doc-row"><span class="doc-lbl">Publicações téc.-científicas:</span> 4 artigos publicados em eventos e periódicos científicos (SBES 2025, Journal of Software Engineering Research and Development).</div>
+          <div class="doc-row"><span class="doc-lbl">Serviços especializados:</span> Serviços de validação de dados de bolsas, automação de pagamentos, criação de dashboards e assessoria técnica à FAPES para modernização de fluxos internos.</div>
+          <div class="doc-row"><span class="doc-lbl">Capacitação de RH:</span> Capacitação de aproximadamente 40 bolsistas e profissionais em engenharia de software, DevOps, testes automatizados, IA aplicada e metodologias ágeis.</div>
+          <div class="doc-row"><span class="doc-lbl">Difusão / divulgação:</span> Reuniões LEDS Talk e publicação de artigo no SBES 2024. Não houve difusão adicional reportada no período de 2025.</div>
+        </div>
+      </div>
+      <div class="doc" style="margin-top:12px">
+        <div class="det-sub" style="margin-top:0">Avaliação geral</div>
+        <div class="doc-row"><span class="doc-lbl">Inovação tecnológica:</span> Sim. Plataforma ConectaFAPES com arquitetura modular, integração com sistemas externos, automação de processos e uso de IA (Valida.AI, AgentES). Ferramentas de automação, ontologias e DSLs aplicadas à gestão de PD&amp;I.</div>
+        <div class="doc-row"><span class="doc-lbl">Transferência a terceiros:</span> Sim. Por meio de acordos de cooperação técnica, cessão de uso de código, compartilhamento de ferramentas, produção científica e capacitação.</div>
+        <div class="doc-row"><span class="doc-lbl">Proteção intelectual:</span> Sim. Código-fonte, frameworks internos, ferramentas de IA, arquitetura, ontologias, documentação técnica e processos podem ser protegidos por direitos autorais e registro de software.</div>
+        <div class="doc-row"><span class="doc-lbl">Indissociabilidade (ensino/extensão):</span> Sim. Integração com ensino (formação de estudantes), pesquisa (produção científica e desenvolvimento de ferramentas) e extensão (serviços à comunidade e parcerias institucionais).</div>
+        <div class="doc-row"><span class="doc-lbl">Impacto social:</span> Público-alvo inclui pesquisadores, coordenadores de projetos, bolsistas, servidores da FAPES, instituições de ensino, órgãos governamentais e sociedade civil. Estimativa de 400.000 beneficiários diretos e indiretos.</div>
+      </div>
 
   <h2>Análise por documento (3 arquivos)</h2><div class="docs">
               <div class="doc">
@@ -238,132 +268,137 @@
                   <span class="doc-nome">📄 ProjetoConnectaFapes2023FinalTemplateFapes.docx.pdf</span>
                   <span class="chip" style="color:#1d4ed8;background:#dbeafe">PROJETO</span>
                 </div>
-                <div class="doc-nat">Proposta de projeto de pesquisa (documento técnico)</div>
-                <p class="doc-res">Documento base do projeto ConectaFapes, detalhando objetivos, metas, cronograma, equipe, metodologia, orçamento e entregáveis previstos. Define as três frentes de atuação: Desenvolvimento, Pesquisa e Capacitação.</p>
-                <div class="doc-row"><span class="doc-lbl">Itens relacionados:</span> <span class="chip" style="color:#334155;background:#e2e8f0">E1</span> <span class="chip" style="color:#334155;background:#e2e8f0">E2</span> <span class="chip" style="color:#334155;background:#e2e8f0">E3</span> <span class="chip" style="color:#334155;background:#e2e8f0">E4</span> <span class="chip" style="color:#334155;background:#e2e8f0">E5</span> <span class="chip" style="color:#334155;background:#e2e8f0">E6</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-1</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-2</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-3</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-4</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-5</span></div>
-                <div class="doc-row"><span class="doc-lbl">Trechos:</span> [&quot;2.5 – BENEFÍCIOS / RESULTADOS: &#x27;1. Plataforma ConectaFAPES... 2. Ferramenta de Geração de Código... 3. Processo de Desenvolvimento de Software... 4. Capacitação de Pessoas...&#x27;&quot;, &#x27;5.1 – CRONOGRAMA DE MARCOS / METAS: Marcos de entrega detalhados por ano.&#x27;, &#x27;5.2 – PLANO DE METAS E ATIVIDADES: Indicadores numéricos para bolsistas, desenvolvimento, publicações, etc.&#x27;]</div>
-                <div class="doc-row"><span class="doc-lbl">Observações:</span> Documento bem estruturado, com metas claras e alinhadas aos objetivos institucionais. Cronograma detalhado, mas com flexibilidade para ajustes (ex.: evolução de bolsistas).</div>
+                <div class="doc-nat">Proposta de projeto de pesquisa</div>
+                <p class="doc-res">Documento apresenta a proposta do projeto ConectaFapes, incluindo objetivos, justificativas, metodologia, cronograma, equipe, orçamento e entregáveis previstos para modernização da gestão de PD&amp;I da FAPES.</p>
+                <div class="doc-row"><span class="doc-lbl">Itens relacionados:</span> <span class="chip" style="color:#334155;background:#e2e8f0">E1</span> <span class="chip" style="color:#334155;background:#e2e8f0">E2</span> <span class="chip" style="color:#334155;background:#e2e8f0">E3</span> <span class="chip" style="color:#334155;background:#e2e8f0">E4</span> <span class="chip" style="color:#334155;background:#e2e8f0">E5</span> <span class="chip" style="color:#334155;background:#e2e8f0">E6</span></div>
+                <div class="doc-row"><span class="doc-lbl">Trechos:</span> Seção 2.5 (Benefícios/Resultados), Seção 5 (Cronograma Físico do Projeto), Seção 6 (Recursos Financeiros do Projeto).</div>
+                <div class="doc-row"><span class="doc-lbl">Observações:</span> Documento bem estruturado, com metas e indicadores claros. Detalhamento técnico e financeiro adequado para o escopo proposto.</div>
               </div>
               <div class="doc">
                 <div class="doc-head">
                   <span class="doc-nome">📄 Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf</span>
                   <span class="chip" style="color:#7c3aed;background:#ede9fe">PRESTAÇÃO</span>
                 </div>
-                <div class="doc-nat">Relatório técnico parcial (prestação de contas)</div>
-                <p class="doc-res">Relatório do primeiro ano do projeto, descrevendo atividades realizadas (reforma de laboratórios, aquisição de equipamentos, capacitação, desenvolvimento inicial da plataforma), resultados alcançados (melhorias na infraestrutura, publicação de 1 artigo, capacitação de 40 bolsistas) e dificuldades enfrentadas.</p>
-                <div class="doc-row"><span class="doc-lbl">Itens relacionados:</span> <span class="chip" style="color:#334155;background:#e2e8f0">E1</span> <span class="chip" style="color:#334155;background:#e2e8f0">E4</span> <span class="chip" style="color:#334155;background:#e2e8f0">E5</span> <span class="chip" style="color:#334155;background:#e2e8f0">E6</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-1</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-5</span></div>
-                <div class="doc-row"><span class="doc-lbl">Trechos:</span> [&quot;2. ATIVIDADES REALIZADAS NO PERÍODO: &#x27;1. Criação de Espaços de Inovação... 2. Aquisição de Equipamentos... 3. Capacitação da Equipe... 4. Planejamento e Execução... 5. Desenvolvimento e Entregas...&#x27;&quot;, &quot;3.1. Houve resultados de melhoria da infra-estrutura?: &#x27;Sim. No primeiro ano do projeto Conecta FAPES, foram realizadas melhorias significativas na infraestrutura física...&#x27;&quot;, &quot;3.4. Houve capacitação de recursos humanos?: &#x27;Sim. O projeto Conecta FAPES investiu amplamente na capacitação de recursos humanos...&#x27;&quot;]</div>
-                <div class="doc-row"><span class="doc-lbl">Observações:</span> Relatório detalhado e transparente, com evidências claras das atividades realizadas. Destaque para a reforma dos laboratórios e capacitação de bolsistas. Publicação de 1 artigo no SBES 2024 demonstra produção científica inicial.</div>
+                <div class="doc-nat">Relatório técnico parcial de prestação de contas</div>
+                <p class="doc-res">Relatório descreve atividades realizadas no primeiro ano do projeto, incluindo reformas de laboratórios, capacitação de bolsistas, desenvolvimento inicial da plataforma e publicação de artigo científico.</p>
+                <div class="doc-row"><span class="doc-lbl">Itens relacionados:</span> <span class="chip" style="color:#334155;background:#e2e8f0">E1</span> <span class="chip" style="color:#334155;background:#e2e8f0">E4</span> <span class="chip" style="color:#334155;background:#e2e8f0">E5</span> <span class="chip" style="color:#334155;background:#e2e8f0">E6</span></div>
+                <div class="doc-row"><span class="doc-lbl">Trechos:</span> Seção 2 (Atividades Realizadas no Período), Seção 3 (Resultados Alcançados no Período), Seção 4.1 (Produção Bibliográfica).</div>
+                <div class="doc-row"><span class="doc-lbl">Observações:</span> Relatório apresenta evidências claras das atividades realizadas. Falta registro formal de participantes capacitados e documentação fotográfica das reformas.</div>
               </div>
               <div class="doc">
                 <div class="doc-head">
                   <span class="doc-nome">📄 Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf</span>
                   <span class="chip" style="color:#7c3aed;background:#ede9fe">PRESTAÇÃO</span>
                 </div>
-                <div class="doc-nat">Relatório técnico parcial (prestação de contas)</div>
-                <p class="doc-res">Relatório do segundo ano do projeto, descrevendo desenvolvimento avançado da plataforma (módulos de Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados), integração com sistemas externos (Banestes, Acesso Cidadão), pesquisa aplicada (IA, ontologias, agentes inteligentes), produção científica (4 artigos) e capacitação de equipe. Conclusão com 100% de completude.</p>
-                <div class="doc-row"><span class="doc-lbl">Itens relacionados:</span> <span class="chip" style="color:#334155;background:#e2e8f0">E1</span> <span class="chip" style="color:#334155;background:#e2e8f0">E2</span> <span class="chip" style="color:#334155;background:#e2e8f0">E3</span> <span class="chip" style="color:#334155;background:#e2e8f0">E4</span> <span class="chip" style="color:#334155;background:#e2e8f0">E5</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-1</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-2</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-3</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-4</span> <span class="chip" style="color:#334155;background:#e2e8f0">IND-5</span></div>
-                <div class="doc-row"><span class="doc-lbl">Trechos:</span> [&quot;2.1. Desenvolvimento dos Módulos da Plataforma: &#x27;a) Módulo de Pagamento de Bolsistas... b) Portal do Coordenador... c) Dashboard de Indicadores e Observabilidade... d) Módulo de Importação de Dados...&#x27;&quot;, &quot;3.2. Gerou publicações técnico-científicas?: &#x27;Sim. Durante o período de execução do projeto, foram gerados diversos resultados técnico-científicos...&#x27;&quot;, &quot;3.4. Houve capacitação de recursos humanos?: &#x27;Sim. No âmbito do projeto, foram realizadas diversas ações de capacitação...&#x27;&quot;, &quot;9.1. O resultado do projeto terá inovação tecnológica?: &#x27;Sim. O projeto apresenta inovação tecnológica em múltiplas dimensões...&#x27;&quot;]</div>
-                <div class="doc-row"><span class="doc-lbl">Observações:</span> Relatório robusto, com evidências detalhadas de todas as entregas previstas. Destaque para a integração com Banestes e desenvolvimento de ferramentas de IA (Valida.AI, AgentES). Produção científica superou a meta (4 artigos). Documentação técnica pendente é a única lacuna relevante.</div>
+                <div class="doc-nat">Relatório técnico parcial de prestação de contas</div>
+                <p class="doc-res">Relatório detalha avanços no segundo ano do projeto, incluindo desenvolvimento de módulos críticos da plataforma, ferramentas de IA, publicações científicas, capacitação e melhorias de infraestrutura.</p>
+                <div class="doc-row"><span class="doc-lbl">Itens relacionados:</span> <span class="chip" style="color:#334155;background:#e2e8f0">E1</span> <span class="chip" style="color:#334155;background:#e2e8f0">E2</span> <span class="chip" style="color:#334155;background:#e2e8f0">E3</span> <span class="chip" style="color:#334155;background:#e2e8f0">E4</span> <span class="chip" style="color:#334155;background:#e2e8f0">E5</span></div>
+                <div class="doc-row"><span class="doc-lbl">Trechos:</span> Seção 2 (Atividades Realizadas no Período), Seção 3 (Resultados Alcançados no Período), Seção 4 (Indicadores de Produção).</div>
+                <div class="doc-row"><span class="doc-lbl">Observações:</span> Relatório bem detalhado, com evidências robustas das entregas realizadas. Falta documentação formal de processos e registro das ferramentas desenvolvidas.</div>
               </div></div>
 
   <h2>Detalhamento das prestações de contas (2)</h2>
               <div class="det">
                 <div class="det-head">
                   <span class="det-nome">📑 Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf</span>
-                  <span class="chip" style="color:#334155;background:#e2e8f0">Período: 2024 (01/11/2023 a 31/10/2024)</span>
+                  <span class="chip" style="color:#334155;background:#e2e8f0">Período: 2024</span>
                 </div>
-                <p class="det-res">Relatório técnico do primeiro ano do projeto, cobrindo atividades de infraestrutura (reforma de laboratórios, aquisição de equipamentos), capacitação de bolsistas, planejamento macro (ideação, inspiração, roadmap) e desenvolvimento inicial da plataforma (primeiras entregas do Sprint). Apresenta resultados em melhoria de infraestrutura, capacitação e produção científica (1 artigo publicado).</p>
+                <p class="det-res">Relatório cobre o primeiro ano de execução do projeto (01/11/2023 a 31/10/2024). Descreve reformas de laboratórios, aquisição de equipamentos, capacitação de bolsistas, planejamento e execução das etapas de ideação e inspiração, desenvolvimento inicial da plataforma e publicação de artigo científico.</p>
                 <div class="det-sub">Entregáveis evidenciados neste documento</div>
                 <table><thead><tr><th>ID</th><th>Status no doc.</th><th>Valor/Dado</th><th>Evidência</th></tr></thead>
                   <tbody><tr>
                   <td class="mono">E1</td>
                   <td><span class="chip" style="color:#92400e;background:#fef3c7">PARCIAL</span></td>
-                  <td>2 entregas do Sprint (protótipos e funcionalidades iniciais).</td>
-                  <td class="ev">Seção 2 (Atividades Realizadas): &#x27;5. Desenvolvimento e Entregas: O desenvolvimento da solução foi iniciado, com a realização de duas entregas significativas durante o Sprint...&#x27;</td>
+                  <td>Protótipos e funcionalidades iniciais desenvolvidos.</td>
+                  <td class="ev">Seção 2 (Atividades Realizadas no Período): Desenvolvimento inicial da solução e duas entregas significativas durante o Sprint.</td>
                 </tr><tr>
                   <td class="mono">E4</td>
                   <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
                   <td>40 bolsistas capacitados.</td>
-                  <td class="ev">Seção 3.4 (Capacitação de Recursos Humanos): &#x27;O projeto Conecta FAPES investiu amplamente na capacitação de recursos humanos... Foram promovidos cursos específicos para aprimoramento técnico e gerencial...&#x27;</td>
+                  <td class="ev">Seção 3.4 (Capacitação de Recursos Humanos): Capacitação de 20 pessoas em curso específico e 40 bolsistas nas tecnologias do projeto.</td>
                 </tr><tr>
                   <td class="mono">E5</td>
-                  <td><span class="chip" style="color:#92400e;background:#fef3c7">PARCIAL</span></td>
-                  <td>1 artigo publicado no SBES 2024.</td>
-                  <td class="ev">Seção 3.2 (Gerou publicações técnico-científicas?): &#x27;Unveiling the Landscape of System Thinking Modeling Tools Use in Software Engineering Artifacts Available&#x27;</td>
+                  <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
+                  <td>1 artigo publicado.</td>
+                  <td class="ev">Seção 3.2 (Publicações Técnico-Científicas): Publicação de 1 artigo no SBES 2024.</td>
                 </tr><tr>
                   <td class="mono">E6</td>
                   <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
-                  <td>Reforma concluída nas salas 804 e 806 (IFES/Serra) e sala LEDS/Colatina.</td>
-                  <td class="ev">Seção 2 (Atividades Realizadas): &#x27;1. Criação de Espaços de Inovação: No Ifes/Serra, foram criados os seguintes espaços...&#x27;</td>
+                  <td>Laboratórios reformados e equipamentos adquiridos.</td>
+                  <td class="ev">Seção 2 (Atividades Realizadas no Período) e Seção 3.1 (Infraestrutura): Reformas nas salas 804 e 806 do IFES/Serra e aquisição de equipamentos.</td>
                 </tr></tbody></table>
                 <div class="det-sub">Indicadores reportados</div>
                 <table><thead><tr><th>Indicador</th><th>Valor reportado</th><th>Local</th></tr></thead>
-                  <tbody><tr><td>Número de bolsistas selecionados e capacitados</td>
+                  <tbody><tr><td>Número de bolsistas capacitados</td>
                     <td class="mono">40</td>
-                    <td class="ev">Seção 3.4 (Capacitação de Recursos Humanos)</td></tr><tr><td>Publicação de artigos científicos</td>
+                    <td class="ev">Seção 3.4 (Capacitação de Recursos Humanos)</td></tr><tr><td>Publicações técnico-científicas</td>
                     <td class="mono">1</td>
-                    <td class="ev">Seção 3.2 (Gerou publicações técnico-científicas?)</td></tr></tbody></table>
+                    <td class="ev">Seção 3.2 (Publicações Técnico-Científicas)</td></tr></tbody></table>
                 <div class="cols" style="margin-top:12px">
-                  <div class="col"><h3>Atividades relatadas</h3><ul><li class="">Reforma de laboratórios (salas 804 e 806 no IFES/Serra e sala LEDS/Colatina).</li><li class="">Aquisição de equipamentos (notebooks, desktops, monitores, projetores, quadros de vidro).</li><li class="">Capacitação de 40 bolsistas e equipe técnica (cursos Strides, Balta, Alura).</li><li class="">Planejamento macro: ideação, inspiração e roadmap do projeto.</li><li class="">Desenvolvimento inicial da plataforma (2 entregas do Sprint).</li></ul></div>
-                  <div class="col"><h3>Pendências / faltas</h3><ul><li class="crit">Ferramenta de geração de código não entregue como produto independente.</li><li class="crit">Documentação técnica da plataforma não consolidada.</li></ul></div>
+                  <div class="col"><h3>Atividades relatadas</h3><ul><li class="">Reformas de laboratórios no IFES/Serra e IFES/Colatina.</li><li class="">Aquisição de equipamentos (notebooks, desktops, monitores, projetores).</li><li class="">Capacitação de bolsistas e profissionais.</li><li class="">Planejamento e execução das etapas de ideação e inspiração.</li><li class="">Desenvolvimento inicial da plataforma ConectaFAPES.</li><li class="">Publicação de artigo científico.</li></ul></div>
+                  <div class="col"><h3>Pendências / faltas</h3><ul><li class="crit">Falta registro formal dos participantes capacitados.</li><li class="crit">Falta documentação fotográfica das reformas realizadas.</li></ul></div>
                 </div>
-                <p class="sub"><strong>Observações:</strong> Relatório bem estruturado, com evidências claras das atividades realizadas. Destaque para a reforma dos laboratórios e capacitação de bolsistas. Desenvolvimento inicial da plataforma alinhado ao cronograma, mas sem módulos críticos implantados (ex.: Pagamento de Bolsistas).</p>
+                <p class="sub"><strong>Observações:</strong> Relatório consistente, com evidências claras das atividades realizadas. Pendências são administrativas e não comprometem a qualidade técnica das entregas.</p>
               </div>
               <div class="det">
                 <div class="det-head">
                   <span class="det-nome">📑 Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf</span>
-                  <span class="chip" style="color:#334155;background:#e2e8f0">Período: 2025 (01/11/2024 a 31/10/2025)</span>
+                  <span class="chip" style="color:#334155;background:#e2e8f0">Período: 2025</span>
                 </div>
-                <p class="det-res">Relatório técnico do segundo ano do projeto, detalhando o desenvolvimento avançado da plataforma (módulos de Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados), integração com sistemas externos (Banestes, Acesso Cidadão), pesquisa aplicada (IA, ontologias, agentes inteligentes), produção científica (4 artigos) e capacitação de equipe. Conclui com 100% de completude e apresenta perspectivas para evolução da plataforma.</p>
+                <p class="det-res">Relatório cobre o segundo ano de execução do projeto (01/11/2024 a 31/10/2025). Descreve desenvolvimento de módulos críticos da plataforma (Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados), ferramentas de IA (Valida.AI, AgentES), publicações científicas, capacitação de recursos humanos e melhorias de infraestrutura tecnológica.</p>
                 <div class="det-sub">Entregáveis evidenciados neste documento</div>
                 <table><thead><tr><th>ID</th><th>Status no doc.</th><th>Valor/Dado</th><th>Evidência</th></tr></thead>
                   <tbody><tr>
                   <td class="mono">E1</td>
                   <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
-                  <td>Módulos críticos implantados: Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados (UNAC, PICJR, ICT).</td>
-                  <td class="ev">Seção 2.1 (Desenvolvimento dos Módulos da Plataforma): &#x27;a) Módulo de Pagamento de Bolsistas... b) Portal do Coordenador... c) Dashboard de Indicadores e Observabilidade... d) Módulo de Importação de Dados...&#x27;</td>
+                  <td>4 módulos críticos implantados.</td>
+                  <td class="ev">Seção 2.1 (Desenvolvimento dos Módulos da Plataforma): Módulos de Pagamento de Bolsistas, Portal do Coordenador, Dashboard de Indicadores e Módulo de Importação de Dados desenvolvidos e implantados.</td>
                 </tr><tr>
                   <td class="mono">E2</td>
-                  <td><span class="chip" style="color:#92400e;background:#fef3c7">PARCIAL</span></td>
-                  <td>Plugins VSCode e bibliotecas Python desenvolvidos; ferramenta de geração de código não entregue como produto independente.</td>
-                  <td class="ev">Seção 3.6 (Outros Resultados): &#x27;Foram desenvolvidos plugins para o VSCode (Made, Andes e Spark) que permitiu melhorar a documentação dos artefatos do projeto...&#x27; e Seção 3.2 (Gerou publicações técnico-científicas?): &#x27;Bibliotecas Python para agentes inteligentes...&#x27;</td>
+                  <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
+                  <td>3 ferramentas de IA desenvolvidas.</td>
+                  <td class="ev">Seção 2.2 (Pesquisa, Ferramentas e Automação): Ferramentas Valida.AI, AgentES e Test.AI desenvolvidas e aplicadas.</td>
                 </tr><tr>
                   <td class="mono">E3</td>
                   <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
-                  <td>Processo implementado com squads, chapters, metodologias ágeis, pipelines de CI/CD e observabilidade.</td>
-                  <td class="ev">Seção 2 (Atividades Realizadas): &#x27;2.2. Pesquisa, Ferramentas e Automação: As atividades de pesquisa e desenvolvimento tecnológico avançaram conforme planejado...&#x27; e Seção 3.1 (Infraestrutura): &#x27;Foram configurados também ambientes separados de desenvolvimento, teste e stage...&#x27;</td>
+                  <td>Processo implementado com pipelines de CI/CD e observabilidade.</td>
+                  <td class="ev">Seção 2.1 (Infraestrutura, automação e pipelines): Processo de desenvolvimento baseado em metodologias ágeis, DevOps e CI/CD implementado.</td>
                 </tr><tr>
                   <td class="mono">E4</td>
                   <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
-                  <td>40 bolsistas e equipe técnica capacitados em DevOps, IA, testes automatizados e metodologias ágeis.</td>
-                  <td class="ev">Seção 3.4 (Capacitação de Recursos Humanos): &#x27;Foram promovidos treinamentos estruturados nas seguintes áreas: Engenharia de Software, DevOps e Integração Contínua, Testes Automatizados, Inteligência Artificial Aplicada...&#x27;</td>
+                  <td>Dezenas de bolsistas e profissionais capacitados.</td>
+                  <td class="ev">Seção 3.4 (Capacitação de Recursos Humanos): Capacitação de bolsistas e profissionais em engenharia de software, DevOps, testes automatizados e IA aplicada.</td>
                 </tr><tr>
                   <td class="mono">E5</td>
                   <td><span class="chip" style="color:#166534;background:#dcfce7">ATENDIDO</span></td>
-                  <td>4 artigos publicados (1 no JSERD e 3 no SBES 2025).</td>
-                  <td class="ev">Seção 4.1 (Produção Bibliográfica): &#x27;Artigo completo publicado, aceito ou submetido em periódicos científicos especializados (nacional ou internacional) com corpo editorial: 4&#x27;</td>
+                  <td>4 artigos publicados.</td>
+                  <td class="ev">Seção 4.1 (Produção Bibliográfica): Publicação de 4 artigos científicos.</td>
                 </tr></tbody></table>
                 <div class="det-sub">Indicadores reportados</div>
                 <table><thead><tr><th>Indicador</th><th>Valor reportado</th><th>Local</th></tr></thead>
-                  <tbody><tr><td>Desenvolvimento do ConnectaFapes (módulos entregues)</td>
-                    <td class="mono">5 (Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados, Infraestrutura)</td>
-                    <td class="ev">Seção 2.1 (Desenvolvimento dos Módulos da Plataforma)</td></tr><tr><td>Publicação de artigos científicos</td>
+                  <tbody><tr><td>Desenvolvimento do ConnectaFapes (módulos)</td>
+                    <td class="mono">4 módulos</td>
+                    <td class="ev">Seção 2.1 (Desenvolvimento dos Módulos da Plataforma)</td></tr><tr><td>Ferramenta de Geração de Código</td>
+                    <td class="mono">3 ferramentas (Valida.AI, AgentES, Test.AI)</td>
+                    <td class="ev">Seção 2.2 (Pesquisa, Ferramentas e Automação)</td></tr><tr><td>Publicação de artigos</td>
                     <td class="mono">4</td>
-                    <td class="ev">Seção 4.1 (Produção Bibliográfica)</td></tr><tr><td>Software desenvolvido</td>
-                    <td class="mono">4</td>
-                    <td class="ev">Seção 4.3 (Produção Técnica ou Tecnológica)</td></tr></tbody></table>
+                    <td class="ev">Seção 4.1 (Produção Bibliográfica)</td></tr></tbody></table>
                 <div class="cols" style="margin-top:12px">
-                  <div class="col"><h3>Atividades relatadas</h3><ul><li class="">Desenvolvimento dos módulos: Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados.</li><li class="">Integração com sistemas externos: Banestes, Acesso Cidadão.</li><li class="">Pesquisa aplicada: desenvolvimento de ferramentas de IA (Valida.AI, AgentES), ontologias, DSLs e agentes inteligentes.</li><li class="">Produção científica: 4 artigos publicados (1 no JSERD e 3 no SBES 2025).</li><li class="">Capacitação de equipe: treinamentos em DevOps, IA, testes automatizados e metodologias ágeis.</li><li class="">Melhorias em infraestrutura: servidores IFES/AWS, pipelines de CI/CD, observabilidade, logs estruturados.</li></ul></div>
-                  <div class="col"><h3>Pendências / faltas</h3><ul><li class="crit">Documentação técnica final consolidada (arquitetura, APIs, manuais de usuário).</li></ul></div>
+                  <div class="col"><h3>Atividades relatadas</h3><ul><li class="">Desenvolvimento dos módulos de Pagamento de Bolsistas, Portal do Coordenador, Dashboard e Importação de Dados.</li><li class="">Desenvolvimento de ferramentas de IA (Valida.AI, AgentES, Test.AI).</li><li class="">Implementação de infraestrutura tecnológica (servidores, pipelines de CI/CD, observabilidade).</li><li class="">Publicação de 4 artigos científicos.</li><li class="">Capacitação de recursos humanos em engenharia de software, DevOps, testes automatizados e IA aplicada.</li><li class="">Integração com sistemas externos (Banestes, Prodest).</li></ul></div>
+                  <div class="col"><h3>Pendências / faltas</h3><ul><li class="crit">Falta documentação formal dos processos de integração com sistemas externos.</li><li class="crit">Falta registro formal das ferramentas de IA como software.</li><li class="crit">Falta documentação detalhada do processo de governança e metodologias aplicadas.</li></ul></div>
                 </div>
-                <p class="sub"><strong>Observações:</strong> Relatório abrangente e detalhado, com evidências robustas de todas as entregas previstas. Destaque para a integração com Banestes e desenvolvimento de ferramentas de IA. Produção científica superou a meta (4 artigos). Documentação técnica pendente é a única lacuna relevante, mas não impacta funcionalidades operacionais.</p>
+                <p class="sub"><strong>Observações:</strong> Relatório detalhado e bem estruturado, com evidências robustas das entregas técnicas e científicas. Pendências são documentais e não comprometem a execução do projeto.</p>
               </div>
+
+  
+      <h2>Referências — Base normativa FAPES</h2>
+      <p class="sub">Documentos que orientam a prestação de contas técnica e sua avaliação.</p>
+      <ul class="refs"><li><a href="https://fapes.es.gov.br/Media/fapes/SIGFAPES/Relat%C3%B3rio%20T%C3%A9cnico%20de%20Projeto.pdf">Anexo VI — Relatório Técnico de Projeto de Pesquisa (modelo)</a></li><li><a href="https://fapes.es.gov.br/prestacao-contas-tecnica">Prestação de Contas Técnica — SIGFAPES/E-Docs</a></li><li><a href="https://fapes.es.gov.br/Media/fapes/SIGFAPES/PASSO%20A%20PASSO%20DA%20PRESTA%C3%87%C3%83O%20DE%20CONTAS%20SIGFAPES%20-%20PDF.pdf">Passo a passo da Prestação de Contas — SIGFAPES</a></li><li><a href="https://fapes.es.gov.br/Media/fapes/Importacao/tutorial-relatorio-tecnico-projeto-sigfapes-atualizado.pdf">Tutorial — Relatório Técnico de Projeto (SIGFAPES)</a></li><li><a href="https://fapes.es.gov.br/resolucoes">Resolução CCAF nº 313/2022 — Manual de Utilização e Prestação de Contas</a></li><li><a href="https://fapes.es.gov.br/prestacao-de-contas">Prestação de Contas — FAPES (portal)</a></li></ul>
 
   <div class="foot">
     <div class="kicker">Parecer final</div>
-    <span class="badge">APROVAR COM RESSALVAS</span> ·
+    <span class="badge">APROVAR</span> ·
     <strong>Conformidade geral:</strong> 95%
-    <p style="margin:8px 0 0">O projeto ConectaFapes cumpriu integralmente os objetivos e metas previstos no plano original, com destaque para o desenvolvimento da plataforma (módulos críticos implantados e integrados), capacitação de 40 bolsistas, produção científica (4 artigos) e melhorias em infraestrutura. A conformidade geral é elevada (95%), com evidências robustas nos relatórios técnicos. A única pendência crítica é a entrega da documentação técnica final consolidada, que não compromete as funcionalidades operacionais da plataforma. Recomenda-se aprovação com ressalvas, condicionada à entrega da documentação técnica completa em até 30 dias, conforme plano de ação proposto.</p>
+    <p style="margin:8px 0 0">O projeto ConectaFapes cumpriu integralmente os objetivos e metas previstos, com entregas técnicas e científicas de alta qualidade. Foram desenvolvidos módulos críticos da plataforma, ferramentas de IA, infraestrutura tecnológica robusta, publicações científicas e capacitação de recursos humanos. As pendências identificadas são de natureza documental e não comprometem a conformidade do projeto. Recomenda-se a aprovação com ressalvas para as melhorias documentais sugeridas.</p>
   </div>
 </div></body></html>

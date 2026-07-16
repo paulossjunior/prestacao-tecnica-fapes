@@ -59,6 +59,30 @@ estruturada em JSON (e nada além do JSON), no formato:
     "etapas_atrasadas": [...],
     "observacoes": "..."
   },
+  "objetivos_alcancados": {
+    "situacao": "ATINGIDOS" | "PARCIALMENTE" | "NÃO ATINGIDOS" | "NÃO EVIDENCIADO",
+    "descricao": "o que foi de fato alcançado ante os objetivos propostos"
+  },
+  "resultados_periodo": {
+    "infraestrutura": "melhorias em instalações/laboratórios/equipamentos, ou NÃO EVIDENCIADO",
+    "publicacoes_tecnico_cientificas": "produção publicada/submetida, ou NÃO EVIDENCIADO",
+    "servicos_especializados": "serviços à comunidade, ou NÃO EVIDENCIADO",
+    "capacitacao_rh": "pessoas capacitadas/formadas, ou NÃO EVIDENCIADO",
+    "difusao_divulgacao": "difusão da tecnologia/informação, ou NÃO EVIDENCIADO"
+  },
+  "indicadores_producao": {
+    "bibliografica": "quantidade ou —",
+    "cultural": "quantidade ou —",
+    "tecnica_tecnologica": "quantidade ou —",
+    "orientacoes": "quantidade ou —"
+  },
+  "avaliacao_geral": {
+    "inovacao_tecnologica": "há inovação? qual? ou NÃO INFORMADO",
+    "transferencia_terceiros": "tecnologia repassável? como? ou NÃO INFORMADO",
+    "protecao_ip": "passível de proteção (patente/software/etc.)? ou NÃO INFORMADO",
+    "indissociabilidade": "relação com ensino e extensão, ou NÃO INFORMADO",
+    "impacto_social": "público-alvo/beneficiários, ou NÃO INFORMADO"
+  },
   "pontos_de_melhoria": ["...", "..."],
   "pendencias_criticas": ["itens que impedem aprovação"],
   "analise_por_arquivo": [
@@ -113,6 +137,14 @@ REGRAS:
   o status de cada entregável CONFORME evidenciado NAQUELE arquivo, os
   indicadores nele reportados, atividades relatadas e o que ficou em aberto.
   Baseie cada status/valor em trecho real do próprio documento.
+- A avaliação segue a estrutura oficial do Relatório Técnico de Projeto da FAPES
+  (Anexo VI): objetivos alcançados; atividades no período; resultados
+  (infraestrutura, publicações técnico-científicas, serviços especializados,
+  capacitação de RH, difusão); indicadores de produção; e avaliação geral
+  (inovação, transferência, proteção intelectual, indissociabilidade,
+  impacto social). Preencha "objetivos_alcancados", "resultados_periodo",
+  "indicadores_producao" e "avaliacao_geral" com base nos documentos; use
+  "NÃO EVIDENCIADO"/"NÃO INFORMADO" quando o dado não constar.
 """
 
 
