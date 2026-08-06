@@ -13,6 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Código
 COPY wsgi.py run.py ./
 COPY src ./src
+# Skill de escrita executiva injetada nos prompts (prompts.py lê ../.agents).
+COPY .agents ./.agents
 
 EXPOSE 8000
 

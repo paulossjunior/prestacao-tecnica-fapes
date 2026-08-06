@@ -1,16 +1,20 @@
 """Prompts de avaliação técnica (contexto FAPES/IFES)."""
 import os
+import sys
 
 # Skill de escrita executiva (editável sem tocar no código).
 _AGENTS_MD = os.path.join(os.path.dirname(__file__), os.pardir, ".agents", "AGENTS.md")
 
 
 def _skill_escrita() -> str:
-    """Carrega .agents/AGENTS.md para injetar nos prompts. Silencioso se ausente."""
+    """Carrega .agents/AGENTS.md para injetar nos prompts. Avisa se ausente."""
     try:
         with open(_AGENTS_MD, encoding="utf-8") as f:
             texto = f.read().strip()
-    except OSError:
+    except OSError as e:
+        # Sem a skill a análise ainda roda, mas a escrita perde a diretriz.
+        print(f"[aviso] skill de escrita não carregada ({e}); usando só o prompt base.",
+              file=sys.stderr)
         return ""
     if not texto:
         return ""
