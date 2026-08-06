@@ -94,6 +94,26 @@
     .det-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .det-nome { font-weight: 800; font-size: 14px; color: var(--navy); }
     .det-sub { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; margin: 14px 0 4px; }
+    /* Abas (Documentos / Prompt) */
+    .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 16px; }
+    .tab { background: none; color: var(--muted); border: 0; border-bottom: 3px solid transparent;
+           border-radius: 0; padding: 10px 16px; font-size: 14px; font-weight: 600;
+           cursor: pointer; margin-bottom: -2px; }
+    .tab:hover { background: #e9eefa; color: var(--navy); }
+    .tab.on { color: var(--navy); border-bottom-color: var(--magenta); background: none; }
+    .tab .dot { display: none; width: 7px; height: 7px; border-radius: 50%;
+                background: var(--magenta); margin-left: 7px; vertical-align: middle; }
+    .tab.editado .dot { display: inline-block; }
+    .painel { display: none; } .painel.on { display: block; }
+    #promptTxt { width: 100%; min-height: 420px; resize: vertical; font-size: 12px;
+                 font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                 line-height: 1.45; color: var(--txt); background: #f9fbff;
+                 border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+    #promptTxt:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: #fff; }
+    .prompt-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+    .prompt-bar button { padding: 8px 14px; font-size: 13px; }
+    .aviso { background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+             padding: 10px 12px; border-radius: 8px; font-size: 12px; margin: 0 0 12px; }
     .err { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
            padding: 12px; border-radius: 8px; margin-top: 16px; }
     details { margin-top: 24px; } summary { cursor: pointer; color: var(--muted); }
@@ -128,7 +148,7 @@
       <h3 id="ovTitulo">Analisando documentos…</h3>
       <div class="tempo" id="ovTempo">0s</div>
       <div class="bar"></div>
-      <p id="ovMsg">Comparando previsto × realizado via Mistral. Pode levar 1-3 min para PDFs grandes.</p>
+      <p id="ovMsg">Comparando previsto × realizado. Pode levar 1-3 min para PDFs grandes.</p>
     </div>
   </div>
   <div class="gov-bar">Governo do Estado do Espírito Santo · Secretaria da Ciência, Tecnologia, Inovação e Educação Profissional</div>
@@ -148,6 +168,32 @@
   </div>
   <main>
     <form id="form">
+      <div class="tabs">
+        <button type="button" class="tab on" data-painel="documentos">Documentos</button>
+        <button type="button" class="tab" data-painel="prompt" id="tabPrompt">
+          Prompt do sistema<span class="dot" title="prompt personalizado"></span>
+        </button>
+      </div>
+
+      <div class="painel" id="painel-prompt">
+        <div class="card">
+          <h2>Prompt enviado ao modelo</h2>
+          <p class="aviso">
+            Este texto define o <strong>schema JSON</strong> da resposta. As chaves
+            (<code>entregaveis</code>, <code>indicadores</code>, <code>parecer</code>…)
+            alimentam a tela e o relatório — se removê-las, as seções ficam vazias.
+            Editar as <em>regras</em> e os critérios é seguro.
+          </p>
+          <textarea id="promptTxt" name="system_prompt" spellcheck="false"
+                    aria-label="Prompt do sistema"></textarea>
+          <div class="prompt-bar">
+            <button type="button" class="add" id="btnPromptReset">↺ Restaurar padrão</button>
+            <span class="muted" style="font-size:12px" id="promptInfo">carregando…</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="painel on" id="painel-documentos">
       <div class="grid">
         <div class="card">
           <h2>1. Documento(s) de Projeto</h2>
@@ -166,6 +212,8 @@
           <ul class="filelist" id="listaPrestacao"></ul>
         </div>
       </div>
+      </div><!-- /painel-documentos -->
+
       <div class="actions">
         <button type="submit" id="btn">Analisar</button>
         <span id="status"></span>
@@ -437,6 +485,51 @@
       renderLista(alvo);
     }
 
+    // ---- Abas: Documentos / Prompt do sistema ----
+    function abrirAba(nome) {
+      document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.dataset.painel === nome));
+      document.querySelectorAll('.painel').forEach(p => p.classList.toggle('on', p.id === 'painel-' + nome));
+    }
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => abrirAba(t.dataset.painel));
+    });
+    // ?aba=prompt abre direto na aba do prompt (deep link)
+    const abaInicial = new URLSearchParams(location.search).get('aba');
+    if (abaInicial === 'prompt') abrirAba('prompt');
+
+    // ---- Prompt do sistema: carrega o padrão, permite editar e restaurar ----
+    const promptTxt = document.getElementById('promptTxt');
+    const promptInfo = document.getElementById('promptInfo');
+    const tabPrompt = document.getElementById('tabPrompt');
+    let promptPadrao = '';
+
+    function marcaPrompt() {
+      const atual = promptTxt.value;
+      const editado = atual.trim() !== promptPadrao.trim();
+      tabPrompt.classList.toggle('editado', editado);
+      promptInfo.textContent = `${atual.length.toLocaleString('pt-BR')} caracteres`
+        + (editado ? ' · personalizado (será enviado no lugar do padrão)' : ' · padrão');
+    }
+
+    (async () => {
+      try {
+        const r = await fetch('/prompt');
+        promptPadrao = (await r.json()).system_prompt || '';
+        promptTxt.value = promptPadrao;
+      } catch {
+        promptTxt.value = '';
+        promptTxt.placeholder = 'Falha ao carregar o prompt padrão. '
+          + 'Deixe vazio para o servidor usar o padrão dele.';
+      }
+      marcaPrompt();
+    })();
+
+    promptTxt.addEventListener('input', marcaPrompt);
+    document.getElementById('btnPromptReset').addEventListener('click', () => {
+      promptTxt.value = promptPadrao;
+      marcaPrompt();
+    });
+
     document.querySelectorAll('button.add').forEach(btn => {
       const alvo = btn.dataset.alvo;
       btn.addEventListener('click', () => {
@@ -457,6 +550,7 @@
       if (!inputs.projeto.files.length || !inputs.prestacao.files.length) {
         errEl.textContent = 'Erro: adicione ao menos um arquivo de Projeto e um de Prestação.';
         errEl.style.display = 'block';
+        abrirAba('documentos');  // mostra onde faltou
         return;
       }
       resultEl.style.display = 'none';
@@ -468,7 +562,7 @@
       const ovTitulo = document.getElementById('ovTitulo');
       ovTitulo.textContent = 'Analisando documentos…';
       document.getElementById('ovMsg').textContent =
-        'Comparando previsto × realizado via Mistral. Pode levar 1-3 min para PDFs grandes.';
+        'Comparando previsto × realizado. Pode levar 1-3 min para PDFs grandes.';
       overlay.classList.add('on');
 
       const t0 = Date.now();
@@ -515,7 +609,7 @@
       }
     });
 
-    // Gera o parecer técnico em HTML (via Mistral) e abre em nova aba.
+    // Gera o parecer técnico em HTML (render local) e abre em nova aba.
     document.getElementById('btnRelatorio').addEventListener('click', async () => {
       const d = window.__ultimaAnalise;
       const relBtn = document.getElementById('btnRelatorio');

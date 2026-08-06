@@ -8,6 +8,7 @@ from flask import Flask, Response, jsonify, render_template, request
 
 from analyzer import analisar
 from extract import extract_pairs
+from prompts import get_system_prompt
 from report import gerar_html
 
 load_dotenv()
@@ -26,11 +27,11 @@ def _set(job_id, **kv):
         _jobs.setdefault(job_id, {}).update(kv)
 
 
-def _run_job(job_id, projeto_pairs, prestacao_pairs):
+def _run_job(job_id, projeto_pairs, prestacao_pairs, system_prompt=None):
     try:
         projeto = extract_pairs(projeto_pairs)
         prestacao = extract_pairs(prestacao_pairs)
-        resultado = analisar(projeto, prestacao)
+        resultado = analisar(projeto, prestacao, system_prompt=system_prompt)
         _set(job_id, status="done", resultado=resultado)
     except Exception as e:  # noqa: BLE001 — devolve a mensagem ao cliente
         _set(job_id, status="error", erro=str(e))
@@ -39,6 +40,12 @@ def _run_job(job_id, projeto_pairs, prestacao_pairs):
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/prompt")
+def prompt_endpoint():
+    """Prompt de sistema padrão (schema + regras + skill de escrita)."""
+    return jsonify({"system_prompt": get_system_prompt()})
 
 
 @app.route("/analisar", methods=["POST"])
@@ -52,10 +59,15 @@ def analisar_endpoint():
     if not projeto_pairs or not prestacao_pairs:
         return jsonify({"erro": "Envie ao menos um arquivo de projeto e um de prestação."}), 400
 
+    # Prompt editado na aba "Prompt"; vazio = usa o padrão.
+    system_prompt = (request.form.get("system_prompt") or "").strip() or None
+
     job_id = uuid.uuid4().hex
     _set(job_id, status="processing")
     threading.Thread(
-        target=_run_job, args=(job_id, projeto_pairs, prestacao_pairs), daemon=True
+        target=_run_job,
+        args=(job_id, projeto_pairs, prestacao_pairs, system_prompt),
+        daemon=True,
     ).start()
     return jsonify({"job_id": job_id, "status": "processing"}), 202
 
