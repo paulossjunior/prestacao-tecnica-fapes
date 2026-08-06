@@ -3,7 +3,10 @@ import os
 import sys
 
 # Skill de escrita executiva (editável sem tocar no código).
-_AGENTS_MD = os.path.join(os.path.dirname(__file__), os.pardir, ".agents", "AGENTS.md")
+_AGENTS_DIR = os.path.join(os.path.dirname(__file__), os.pardir, ".agents")
+_AGENTS_MD = os.path.join(_AGENTS_DIR, "AGENTS.md")
+# Perfis por tipo de projeto: um .md por perfil, id = nome do arquivo.
+_PERFIS_DIR = os.path.join(_AGENTS_DIR, "perfis")
 
 
 def _skill_escrita() -> str:
@@ -22,6 +25,65 @@ def _skill_escrita() -> str:
         "\n\n=== DIRETRIZ DE ESCRITA EXECUTIVA (siga rigorosamente) ===\n"
         f"{texto}\n"
         "=== FIM DA DIRETRIZ ===\n"
+    )
+
+
+def _perfil_path(perfil: str) -> str:
+    """Caminho do .md do perfil, barrando travessia de diretório."""
+    perfil = (perfil or "").strip().lower()
+    if not perfil or perfil in ("padrao", "padrão") or not perfil.replace("-", "").replace("_", "").isalnum():
+        return ""
+    return os.path.join(_PERFIS_DIR, f"{perfil}.md")
+
+
+def listar_perfis() -> list[dict]:
+    """Perfis disponíveis em .agents/perfis/, para popular a interface.
+
+    Convenção do arquivo: primeira linha `# Nome`, segunda linha não vazia é a
+    descrição curta; o resto é o corpo injetado no prompt.
+    """
+    try:
+        arquivos = sorted(f for f in os.listdir(_PERFIS_DIR) if f.endswith(".md"))
+    except OSError:
+        return []
+
+    perfis = []
+    for nome_arq in arquivos:
+        try:
+            with open(os.path.join(_PERFIS_DIR, nome_arq), encoding="utf-8") as f:
+                linhas = [ln.strip() for ln in f.read().splitlines()]
+        except OSError:
+            continue
+        titulo = next((ln.lstrip("# ").strip() for ln in linhas if ln.startswith("#")), "")
+        corpo = [ln for ln in linhas if ln and not ln.startswith("#")]
+        perfis.append({
+            "id": os.path.splitext(nome_arq)[0],
+            "nome": titulo or os.path.splitext(nome_arq)[0],
+            "descricao": corpo[0] if corpo else "",
+        })
+    return perfis
+
+
+def _bloco_perfil(perfil: str) -> str:
+    """Critérios do tipo de projeto, injetados após o schema. Vazio se ausente."""
+    caminho = _perfil_path(perfil)
+    if not caminho:
+        return ""
+    try:
+        with open(caminho, encoding="utf-8") as f:
+            texto = f.read().strip()
+    except OSError:
+        print(f"[aviso] perfil {perfil!r} não encontrado; usando só o prompt base.",
+              file=sys.stderr)
+        return ""
+    if not texto:
+        return ""
+    return (
+        "\n\n=== PERFIL DO PROJETO (critérios específicos deste tipo) ===\n"
+        f"{texto}\n"
+        "Estes critérios calibram a ANÁLISE e o PARECER. O formato JSON acima\n"
+        "permanece inalterado: não crie, renomeie nem remova chaves.\n"
+        "=== FIM DO PERFIL ===\n"
     )
 
 
@@ -201,9 +263,9 @@ def build_report_prompt(analise_json: str) -> str:
 """
 
 
-def get_system_prompt() -> str:
-    """System prompt da análise + skill de escrita executiva (.agents/AGENTS.md)."""
-    return SYSTEM_PROMPT + _skill_escrita()
+def get_system_prompt(perfil: str | None = None) -> str:
+    """System prompt: schema base + perfil do tipo de projeto + skill de escrita."""
+    return SYSTEM_PROMPT + _bloco_perfil(perfil) + _skill_escrita()
 
 
 def get_report_system_prompt() -> str:

@@ -114,6 +114,11 @@
     .prompt-bar button { padding: 8px 14px; font-size: 13px; }
     .aviso { background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
              padding: 10px 12px; border-radius: 8px; font-size: 12px; margin: 0 0 12px; }
+    select { font-size: 14px; padding: 9px 12px; border: 1px solid var(--line);
+             border-radius: 8px; background: #fff; color: var(--txt); min-width: 240px; }
+    select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+    .perfil-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .perfil-desc { color: var(--muted); font-size: 12px; flex: 1; min-width: 200px; }
     .err { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
            padding: 12px; border-radius: 8px; margin-top: 16px; }
     details { margin-top: 24px; } summary { cursor: pointer; color: var(--muted); }
@@ -194,6 +199,17 @@
       </div>
 
       <div class="painel on" id="painel-documentos">
+      <div class="card" style="margin-bottom:16px">
+        <h2>Tipo de projeto</h2>
+        <div class="perfil-box">
+          <select id="perfil" name="perfil" aria-label="Tipo de projeto">
+            <option value="">Padrão (sem critérios por tipo)</option>
+          </select>
+          <span class="perfil-desc" id="perfilDesc"></span>
+        </div>
+        <p class="hint">Ajusta os critérios de avaliação e a calibração do parecer.
+          O formato do resultado não muda. Veja o texto na aba <em>Prompt do sistema</em>.</p>
+      </div>
       <div class="grid">
         <div class="card">
           <h2>1. Documento(s) de Projeto</h2>
@@ -511,22 +527,63 @@
         + (editado ? ' · personalizado (será enviado no lugar do padrão)' : ' · padrão');
     }
 
-    (async () => {
+    // Recarrega o prompt do perfil escolhido; pede confirmação se houver edição.
+    async function carregarPrompt(perfil, { confirmar = false } = {}) {
+      const editado = promptTxt.value.trim() !== promptPadrao.trim();
+      if (confirmar && editado &&
+          !confirm('Trocar o tipo de projeto substitui o prompt editado. Continuar?')) {
+        return false;
+      }
       try {
-        const r = await fetch('/prompt');
+        const r = await fetch('/prompt?perfil=' + encodeURIComponent(perfil || ''));
         promptPadrao = (await r.json()).system_prompt || '';
         promptTxt.value = promptPadrao;
       } catch {
+        promptPadrao = '';
         promptTxt.value = '';
         promptTxt.placeholder = 'Falha ao carregar o prompt padrão. '
           + 'Deixe vazio para o servidor usar o padrão dele.';
       }
       marcaPrompt();
+      return true;
+    }
+
+    // Perfis por tipo de projeto (.agents/perfis/*.md).
+    const selPerfil = document.getElementById('perfil');
+    const perfilDesc = document.getElementById('perfilDesc');
+    let perfis = [];
+
+    function mostraDescPerfil() {
+      const p = perfis.find(x => x.id === selPerfil.value);
+      perfilDesc.textContent = p ? p.descricao : 'Avaliação genérica, sem ênfase por tipo.';
+    }
+
+    (async () => {
+      try {
+        perfis = (await (await fetch('/perfis')).json()).perfis || [];
+        perfis.forEach(p => {
+          const o = document.createElement('option');
+          o.value = p.id; o.textContent = p.nome; o.title = p.descricao;
+          selPerfil.appendChild(o);
+        });
+      } catch { /* sem perfis: segue só com o padrão */ }
+      mostraDescPerfil();
+      await carregarPrompt('');
     })();
+
+    selPerfil.addEventListener('change', async () => {
+      const anterior = selPerfil.dataset.anterior || '';
+      if (await carregarPrompt(selPerfil.value, { confirmar: true })) {
+        selPerfil.dataset.anterior = selPerfil.value;
+        mostraDescPerfil();
+      } else {
+        selPerfil.value = anterior;  // cancelou: desfaz a troca
+      }
+    });
 
     promptTxt.addEventListener('input', marcaPrompt);
     document.getElementById('btnPromptReset').addEventListener('click', () => {
-      promptTxt.value = promptPadrao;
+      promptTxt.value = promptPadrao;   // padrão do perfil selecionado
       marcaPrompt();
     });
 

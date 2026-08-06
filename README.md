@@ -82,8 +82,8 @@ python src/cli.py --provider openai --out parecer.json --html parecer.html
 python src/cli.py caminho/projeto caminho/prestacao --pdf parecer.pdf
 ```
 
-Opções: `--ocr`, `--provider openai|mistral`, `--out ARQ.json`, `--html ARQ.html`,
-`--pdf ARQ.pdf`.
+Opções: `--ocr`, `--perfil pesquisa|inovacao|extensao`,
+`--provider openai|mistral`, `--out ARQ.json`, `--html ARQ.html`, `--pdf ARQ.pdf`.
 
 O PDF é gerado por navegador headless (Chrome/Chromium/Edge), respeitando o CSS
 de impressão. Defina `CHROME_BIN` se o executável não for detectado.
@@ -99,6 +99,26 @@ python run.py            # http://127.0.0.1:5000
 3. **Gerar relatório HTML** → parecer formatado abre em nova aba (imprimir/PDF).
 
 Formatos: `.pdf`, `.docx`, `.txt`, `.md`.
+
+### Perfis por tipo de projeto
+
+O dropdown **Tipo de projeto** (aba Documentos) escolhe os critérios de
+avaliação. A escolha é manual — não há detecção automática.
+
+| Perfil | Ênfase |
+|--------|--------|
+| Padrão | avaliação genérica, sem ênfase por tipo |
+| Pesquisa | produção científica, formação de RH, método, infraestrutura |
+| Inovação | artefato entregue, validação técnica, PI, transferência |
+| Extensão | público atendido, ações realizadas, capacitação, difusão |
+
+O perfil muda **prioridades, evidências aceitas e calibração do parecer**;
+o **schema JSON não muda**, então tela e relatório funcionam igual nos quatro.
+
+Cada perfil é um arquivo em `.agents/perfis/<id>.md` — criar um tipo novo é
+soltar um `.md` na pasta; o dropdown e o CLI o listam sozinhos. Convenção:
+`# Nome` na primeira linha, descrição curta na linha seguinte, critérios no
+resto. No terminal: `python src/cli.py --perfil pesquisa`.
 
 ### Aba "Prompt do sistema"
 

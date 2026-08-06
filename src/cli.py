@@ -9,6 +9,7 @@ Padrão (sem argumentos):
 
 Opções:
     --ocr            usa o OCR/visão do provedor nos PDFs (melhor p/ escaneados)
+    --perfil NOME    tipo de projeto: pesquisa | inovacao | extensao (.agents/perfis)
     --provider NOME  força o provedor: mistral | openai (padrão: LLM_PROVIDER)
     --out ARQ.json   salva o JSON da análise
     --html ARQ.html  gera o parecer técnico executivo em HTML e salva
@@ -51,6 +52,7 @@ def main() -> int:
         usar_ocr = True
         raw.remove("--ocr")
     provider = _opt_valor(raw, "--provider")
+    perfil = _opt_valor(raw, "--perfil")
     out_json = _opt_valor(raw, "--out")
     out_html = _opt_valor(raw, "--html")
     out_pdf = _opt_valor(raw, "--pdf")
@@ -64,6 +66,7 @@ def main() -> int:
     log(f"[projeto]   {pasta_projeto}")
     log(f"[prestacao] {pasta_prestacao}")
     log(f"[provedor]  {llm.provider} · modelo={llm.model}")
+    log(f"[perfil]    {perfil or 'padrão (sem critérios por tipo)'}")
     log(f"[extração]  {'OCR ' + llm.ocr_model if usar_ocr else 'local (pypdf)'}")
 
     if usar_ocr:
@@ -76,7 +79,7 @@ def main() -> int:
     log(f"[extraído]  projeto={len(projeto)} chars, prestacao={len(prestacao)} chars")
 
     log(f"[analisando via {llm.provider}...]")
-    resultado = analisar(projeto, prestacao, llm)
+    resultado = analisar(projeto, prestacao, llm, perfil=perfil)
     texto = json.dumps(resultado, ensure_ascii=False, indent=2)
 
     if out_json:
