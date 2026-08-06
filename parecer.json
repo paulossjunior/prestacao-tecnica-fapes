@@ -1,85 +1,40 @@
 {
-  "resumo_executivo": "Projeto ConectaFapes apresenta conformidade elevada (95%) com entregas técnicas e científicas previstas, recomendando-se APROVAÇÃO. Foram desenvolvidos 4 módulos críticos (Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados) e 3 ferramentas de IA (Valida.AI, AgentES, Test.AI), superando metas de infraestrutura e produção científica (4 artigos publicados). Lacunas residuais incluem documentação formal de processos e validação final de integrações com sistemas externos (Banestes/Prodest).",
-  "grau_conformidade_geral": 95,
+  "resumo_executivo": "O projeto ConectaFAPES está em conformidade alta, com 90% dos objetivos e entregáveis atendidos. Houve avanços significativos na infraestrutura e capacitação, mas a integração com sistemas legados e a rotatividade de bolsistas apresentaram desafios. Recomenda-se a continuidade das ações de capacitação e ajustes nos processos de integração.",
+  "grau_conformidade_geral": 90,
   "entregaveis": [
     {
       "id": "E1",
-      "descricao_prevista": "Plataforma ConectaFAPES: levantamento de requisitos, modelagem, desenvolvimento, migração de dados e implantação da plataforma composta por serviços que materializam os processos de suporte à PD&I da FAPES.",
-      "descricao_realizada": "Plataforma ConectaFAPES desenvolvida com módulos críticos implantados: Pagamento de Bolsistas, Portal do Coordenador, Dashboard de Indicadores, Módulo de Importação de Dados. Infraestrutura de servidores, pipelines de CI/CD e observabilidade implementados.",
+      "descricao_prevista": "Desenvolvimento da plataforma ConectaFAPES, incluindo módulos de pagamento, importação de dados e dashboards.",
+      "descricao_realizada": "Módulos de pagamento de bolsistas, portal do coordenador, dashboards e importação de dados foram desenvolvidos.",
       "status": "ATENDIDO",
-      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 2.1 (Desenvolvimento dos Módulos da Plataforma) e Seção 3.1 (Infraestrutura).",
-      "lacunas": "Falta documentação formal completa dos processos de integração com sistemas externos (Banestes/Prodest) e validação final de todos os módulos em ambiente de produção.",
-      "recomendacao": "Concluir a documentação técnica dos processos de integração e realizar testes finais de validação em ambiente de produção antes da implantação definitiva."
+      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 2.1",
+      "lacunas": "Aprimorar integração com sistemas legados.",
+      "recomendacao": "Realizar testes adicionais e ajustes nos pipelines de integração."
     },
     {
       "id": "E2",
-      "descricao_prevista": "Ferramenta de Geração de Código: desenvolvimento e aplicação do gerador de código ao longo do desenvolvimento do ConectaFapes.",
-      "descricao_realizada": "Ferramentas de automação desenvolvidas: Valida.AI (validação de documentos), AgentES (agentes inteligentes), Test.AI (testes automatizados), DSLs e ontologias para padronização de regras.",
+      "descricao_prevista": "Capacitação de pessoal em áreas como engenharia de software e IA aplicada.",
+      "descricao_realizada": "Capacitação de estudantes e profissionais em engenharia de software, DevOps e IA aplicada.",
       "status": "ATENDIDO",
-      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 3.2 (Pesquisa, Ferramentas e Automação).",
-      "lacunas": "Ferramentas não foram formalmente registradas como software e falta documentação detalhada para replicação.",
-      "recomendacao": "Registrar as ferramentas como software e elaborar documentação técnica detalhada para replicação e uso por terceiros."
+      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 3.4",
+      "lacunas": "Expandir capacitação para novas tecnologias emergentes.",
+      "recomendacao": "Incluir treinamentos em tecnologias emergentes e metodologias ágeis."
     },
     {
       "id": "E3",
-      "descricao_prevista": "Processo de Desenvolvimento de Software: desenvolvimento e implementação do processo ao longo do desenvolvimento do ConectaFapes.",
-      "descricao_realizada": "Processo de desenvolvimento baseado em métodos ágeis (Scrum, Kanban) implementado. Squads, chapters e pipelines de CI/CD estabelecidos. Práticas de DevOps, testes automatizados e observabilidade adotadas.",
+      "descricao_prevista": "Publicação de artigos científicos baseados nos resultados do projeto.",
+      "descricao_realizada": "Publicação de artigos no SBES 2025 e JSERD.",
       "status": "ATENDIDO",
-      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 2.1 (Infraestrutura, automação e pipelines) e Seção 3.4 (Capacitação de Recursos Humanos).",
-      "lacunas": "Falta documentação formal do processo de governança e metodologias aplicadas.",
-      "recomendacao": "Documentar formalmente o processo de governança, metodologias e boas práticas adotadas para replicação em outros projetos."
-    },
-    {
-      "id": "E4",
-      "descricao_prevista": "Capacitação de Pessoas: qualificação de 36 bolsistas e equipe técnica em competências associadas ao projeto.",
-      "descricao_realizada": "Capacitação de aproximadamente 40 bolsistas e profissionais em engenharia de software, DevOps, testes automatizados, IA aplicada e metodologias ágeis. Cursos e workshops realizados.",
-      "status": "ATENDIDO",
-      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf, Seção 3.4 (Capacitação de Recursos Humanos) e Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 3.4.",
-      "lacunas": "Falta registro formal dos participantes e certificação das capacitações realizadas.",
-      "recomendacao": "Emitir certificados de participação e registrar formalmente todos os bolsistas e profissionais capacitados."
-    },
-    {
-      "id": "E5",
-      "descricao_prevista": "Publicação de 4 artigos tomando como base os resultados do projeto.",
-      "descricao_realizada": "4 artigos publicados em periódicos e eventos científicos (SBES 2025, Journal of Software Engineering Research and Development).",
-      "status": "ATENDIDO",
-      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 4.1 (Produção Bibliográfica).",
-      "lacunas": "Nenhuma.",
-      "recomendacao": "Manter a produção científica e explorar novas oportunidades de publicação em periódicos internacionais."
-    },
-    {
-      "id": "E6",
-      "descricao_prevista": "Adaptação dos laboratórios para o ConectaFapes: reforma e modernização de espaços físicos no IFES/Serra e IFES/Colatina.",
-      "descricao_realizada": "Laboratórios reformados e modernizados nas salas 804 e 806 do IFES/Serra e no IFES/Colatina. Equipamentos de alta performance adquiridos (notebooks, desktops, monitores, projetores).",
-      "status": "ATENDIDO",
-      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf, Seção 2 (Atividades Realizadas no Período) e Seção 3.1 (Infraestrutura).",
-      "lacunas": "Falta registro fotográfico e documentação formal das reformas realizadas.",
-      "recomendacao": "Documentar as reformas com registros fotográficos e relatórios técnicos detalhados."
+      "evidencia": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf, Seção 3.2",
+      "lacunas": "Ampliar a divulgação em eventos internacionais.",
+      "recomendacao": "Submeter artigos a conferências internacionais de maior impacto."
     }
   ],
   "indicadores": [
     {
-      "nome": "Número de bolsistas selecionados e capacitados",
+      "nome": "Número de bolsistas capacitados",
       "meta_prevista": "36",
       "valor_reportado": "40",
-      "atingido": true
-    },
-    {
-      "nome": "Desenvolvimento do ConnectaFapes (módulos)",
-      "meta_prevista": "4 módulos principais",
-      "valor_reportado": "4 módulos (Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados)",
-      "atingido": true
-    },
-    {
-      "nome": "Ferramenta de Geração de Código",
-      "meta_prevista": "1 ferramenta",
-      "valor_reportado": "3 ferramentas (Valida.AI, AgentES, Test.AI)",
-      "atingido": true
-    },
-    {
-      "nome": "Processo de Desenvolvimento de Software",
-      "meta_prevista": "1 processo implementado",
-      "valor_reportado": "Processo implementado com metodologias ágeis, DevOps e CI/CD",
       "atingido": true
     },
     {
@@ -91,222 +46,148 @@
   ],
   "cronograma": {
     "etapas_no_prazo": [
-      "Adaptação dos laboratórios",
-      "Compra de equipamentos",
-      "Seleção dos primeiros bolsistas",
-      "Planejamento e execução das etapas de ideação e inspiração",
       "Desenvolvimento da solução",
-      "Entregas dos Sprints de Desenvolvimento",
-      "Revisão do cronograma e roadmap"
+      "Capacitação de pessoal"
     ],
-    "etapas_atrasadas": [],
-    "observacoes": "Todas as etapas previstas no cronograma foram executadas dentro do prazo estabelecido. Não houve atrasos significativos."
+    "etapas_atrasadas": [
+      "Integração com sistemas legados"
+    ],
+    "observacoes": "Atrasos na integração devido à complexidade dos sistemas legados."
   },
   "objetivos_alcancados": {
     "situacao": "ATINGIDOS",
-    "descricao": "O objetivo geral de desenvolver a plataforma ConectaFAPES foi plenamente alcançado. Os objetivos específicos das frentes de Pesquisa, Desenvolvimento e Capacitação foram integralmente cumpridos, com a implantação de módulos críticos, ferramentas de automação, publicações científicas e capacitação de recursos humanos."
+    "descricao": "Desenvolvimento da plataforma ConectaFAPES com módulos essenciais e capacitação de pessoal."
   },
   "resultados_periodo": {
-    "infraestrutura": "Laboratórios reformados e modernizados no IFES/Serra e IFES/Colatina. Infraestrutura tecnológica ampliada com servidores, pipelines de CI/CD, observabilidade e serviços como MinIO, Airflow, ElasticSearch e N8N.",
-    "publicacoes_tecnico_cientificas": "4 artigos publicados em eventos e periódicos científicos (SBES 2025, Journal of Software Engineering Research and Development).",
-    "servicos_especializados": "Serviços de validação de dados de bolsas, automação de pagamentos, criação de dashboards e assessoria técnica à FAPES para modernização de fluxos internos.",
-    "capacitacao_rh": "Capacitação de aproximadamente 40 bolsistas e profissionais em engenharia de software, DevOps, testes automatizados, IA aplicada e metodologias ágeis.",
-    "difusao_divulgacao": "Reuniões LEDS Talk e publicação de artigo no SBES 2024. Não houve difusão adicional reportada no período de 2025."
+    "infraestrutura": "Melhorias significativas nas instalações do IFES e aquisição de equipamentos.",
+    "publicacoes_tecnico_cientificas": "Artigos publicados no SBES 2025 e JSERD.",
+    "servicos_especializados": "Automação de processos de pagamento e validação de dados.",
+    "capacitacao_rh": "Capacitação de 40 bolsistas e profissionais.",
+    "difusao_divulgacao": "Reuniões e sessões de validação com a sociedade civil."
   },
   "indicadores_producao": {
-    "bibliografica": 4,
+    "bibliografica": "4",
     "cultural": "—",
-    "tecnica_tecnologica": 4,
-    "orientacoes": 2
+    "tecnica_tecnologica": "4",
+    "orientacoes": "2"
   },
   "avaliacao_geral": {
-    "inovacao_tecnologica": "Sim. Plataforma ConectaFAPES com arquitetura modular, integração com sistemas externos, automação de processos e uso de IA (Valida.AI, AgentES). Ferramentas de automação, ontologias e DSLs aplicadas à gestão de PD&I.",
-    "transferencia_terceiros": "Sim. Por meio de acordos de cooperação técnica, cessão de uso de código, compartilhamento de ferramentas, produção científica e capacitação.",
-    "protecao_ip": "Sim. Código-fonte, frameworks internos, ferramentas de IA, arquitetura, ontologias, documentação técnica e processos podem ser protegidos por direitos autorais e registro de software.",
-    "indissociabilidade": "Sim. Integração com ensino (formação de estudantes), pesquisa (produção científica e desenvolvimento de ferramentas) e extensão (serviços à comunidade e parcerias institucionais).",
-    "impacto_social": "Público-alvo inclui pesquisadores, coordenadores de projetos, bolsistas, servidores da FAPES, instituições de ensino, órgãos governamentais e sociedade civil. Estimativa de 400.000 beneficiários diretos e indiretos."
+    "inovacao_tecnologica": "Sim, com a criação da plataforma ConectaFAPES e automação de processos.",
+    "transferencia_terceiros": "Sim, por meio de acordos de cooperação técnica e cessão de uso.",
+    "protecao_ip": "Sim, com registro de software e documentação técnica.",
+    "indissociabilidade": "Integração com ensino e extensão através de capacitações e parcerias.",
+    "impacto_social": "Pesquisadores, coordenadores de projetos, bolsistas e instituições de ensino."
   },
   "pontos_de_melhoria": [
-    "Documentar formalmente processos de integração com sistemas externos (Banestes/Prodest).",
-    "Registrar ferramentas de IA e automação como software e elaborar documentação técnica detalhada.",
-    "Emitir certificados de participação para bolsistas e profissionais capacitados.",
-    "Documentar reformas dos laboratórios com registros fotográficos e relatórios técnicos.",
-    "Formalizar o processo de governança e metodologias aplicadas no desenvolvimento da plataforma."
+    "Aprimorar a integração com sistemas legados.",
+    "Expandir a capacitação para novas tecnologias emergentes."
   ],
-  "pendencias_criticas": [],
+  "pendencias_criticas": [
+    "Ajustes nos processos de integração com sistemas legados."
+  ],
   "analise_por_arquivo": [
     {
       "arquivo": "ProjetoConnectaFapes2023FinalTemplateFapes.docx.pdf",
       "conjunto": "PROJETO",
-      "natureza": "Proposta de projeto de pesquisa",
-      "resumo": "Documento apresenta a proposta do projeto ConectaFapes, incluindo objetivos, justificativas, metodologia, cronograma, equipe, orçamento e entregáveis previstos para modernização da gestão de PD&I da FAPES.",
+      "natureza": "Documento de projeto",
+      "resumo": "Descreve os objetivos, indicadores, plano de trabalho e entregáveis previstos do projeto ConectaFAPES.",
       "itens_relacionados": [
         "E1",
         "E2",
-        "E3",
-        "E4",
-        "E5",
-        "E6"
+        "E3"
       ],
-      "trechos_relevantes": "Seção 2.5 (Benefícios/Resultados), Seção 5 (Cronograma Físico do Projeto), Seção 6 (Recursos Financeiros do Projeto).",
-      "observacoes": "Documento bem estruturado, com metas e indicadores claros. Detalhamento técnico e financeiro adequado para o escopo proposto."
+      "trechos_relevantes": "Seções 2.3, 2.4 e 5.1",
+      "observacoes": "Documento bem estruturado, mas faltam detalhes sobre a integração com sistemas legados."
     },
     {
-      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf",
+      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf",
       "conjunto": "PRESTAÇÃO",
-      "natureza": "Relatório técnico parcial de prestação de contas",
-      "resumo": "Relatório descreve atividades realizadas no primeiro ano do projeto, incluindo reformas de laboratórios, capacitação de bolsistas, desenvolvimento inicial da plataforma e publicação de artigo científico.",
+      "natureza": "Relatório técnico parcial",
+      "resumo": "Relata as atividades realizadas e os resultados alcançados no primeiro ano do projeto.",
       "itens_relacionados": [
         "E1",
-        "E4",
-        "E5",
-        "E6"
+        "E2"
       ],
-      "trechos_relevantes": "Seção 2 (Atividades Realizadas no Período), Seção 3 (Resultados Alcançados no Período), Seção 4.1 (Produção Bibliográfica).",
-      "observacoes": "Relatório apresenta evidências claras das atividades realizadas. Falta registro formal de participantes capacitados e documentação fotográfica das reformas."
+      "trechos_relevantes": "Seções 2 e 3",
+      "observacoes": "Relatório detalhado, mas poderia incluir mais informações sobre desafios enfrentados."
     },
     {
-      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf",
+      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf",
       "conjunto": "PRESTAÇÃO",
-      "natureza": "Relatório técnico parcial de prestação de contas",
-      "resumo": "Relatório detalha avanços no segundo ano do projeto, incluindo desenvolvimento de módulos críticos da plataforma, ferramentas de IA, publicações científicas, capacitação e melhorias de infraestrutura.",
+      "natureza": "Relatório técnico parcial",
+      "resumo": "Descreve os avanços e resultados do segundo ano do projeto, incluindo publicações e capacitações.",
       "itens_relacionados": [
         "E1",
-        "E2",
-        "E3",
-        "E4",
-        "E5"
+        "E3"
       ],
-      "trechos_relevantes": "Seção 2 (Atividades Realizadas no Período), Seção 3 (Resultados Alcançados no Período), Seção 4 (Indicadores de Produção).",
-      "observacoes": "Relatório bem detalhado, com evidências robustas das entregas realizadas. Falta documentação formal de processos e registro das ferramentas desenvolvidas."
+      "trechos_relevantes": "Seções 2.1, 3.2 e 3.4",
+      "observacoes": "Documento abrangente, mas faltam detalhes sobre a integração com sistemas legados."
     }
   ],
   "detalhamento_prestacao": [
     {
-      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf",
+      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2024.pdf",
       "periodo": "2024",
-      "resumo_detalhado": "Relatório cobre o primeiro ano de execução do projeto (01/11/2023 a 31/10/2024). Descreve reformas de laboratórios, aquisição de equipamentos, capacitação de bolsistas, planejamento e execução das etapas de ideação e inspiração, desenvolvimento inicial da plataforma e publicação de artigo científico.",
+      "resumo_detalhado": "Relata as atividades realizadas no primeiro ano, incluindo a criação de espaços de inovação e aquisição de equipamentos.",
       "entregaveis_evidenciados": [
         {
           "id": "E1",
-          "status_no_documento": "PARCIAL",
-          "evidencia": "Seção 2 (Atividades Realizadas no Período): Desenvolvimento inicial da solução e duas entregas significativas durante o Sprint.",
-          "valor_ou_dado": "Protótipos e funcionalidades iniciais desenvolvidos."
-        },
-        {
-          "id": "E4",
           "status_no_documento": "ATENDIDO",
-          "evidencia": "Seção 3.4 (Capacitação de Recursos Humanos): Capacitação de 20 pessoas em curso específico e 40 bolsistas nas tecnologias do projeto.",
-          "valor_ou_dado": "40 bolsistas capacitados."
-        },
-        {
-          "id": "E5",
-          "status_no_documento": "ATENDIDO",
-          "evidencia": "Seção 3.2 (Publicações Técnico-Científicas): Publicação de 1 artigo no SBES 2024.",
-          "valor_ou_dado": "1 artigo publicado."
-        },
-        {
-          "id": "E6",
-          "status_no_documento": "ATENDIDO",
-          "evidencia": "Seção 2 (Atividades Realizadas no Período) e Seção 3.1 (Infraestrutura): Reformas nas salas 804 e 806 do IFES/Serra e aquisição de equipamentos.",
-          "valor_ou_dado": "Laboratórios reformados e equipamentos adquiridos."
+          "evidencia": "Seção 2",
+          "valor_ou_dado": "Desenvolvimento de módulos iniciais da plataforma."
         }
       ],
       "indicadores_reportados": [
         {
           "nome": "Número de bolsistas capacitados",
           "valor_reportado": "40",
-          "local": "Seção 3.4 (Capacitação de Recursos Humanos)"
-        },
-        {
-          "nome": "Publicações técnico-científicas",
-          "valor_reportado": "1",
-          "local": "Seção 3.2 (Publicações Técnico-Científicas)"
+          "local": "Seção 3.4"
         }
       ],
       "atividades_relatadas": [
-        "Reformas de laboratórios no IFES/Serra e IFES/Colatina.",
-        "Aquisição de equipamentos (notebooks, desktops, monitores, projetores).",
-        "Capacitação de bolsistas e profissionais.",
-        "Planejamento e execução das etapas de ideação e inspiração.",
-        "Desenvolvimento inicial da plataforma ConectaFAPES.",
-        "Publicação de artigo científico."
+        "Criação de espaços de inovação",
+        "Aquisição de equipamentos"
       ],
       "pendencias_ou_faltas": [
-        "Falta registro formal dos participantes capacitados.",
-        "Falta documentação fotográfica das reformas realizadas."
+        "Detalhes sobre a integração com sistemas legados"
       ],
-      "observacoes": "Relatório consistente, com evidências claras das atividades realizadas. Pendências são administrativas e não comprometem a qualidade técnica das entregas."
+      "observacoes": "Relatório bem estruturado, mas faltam detalhes sobre desafios enfrentados."
     },
     {
-      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf",
+      "arquivo": "Anexo VI - Relatório Técnico de Projeto de Pesquisa_2025.pdf",
       "periodo": "2025",
-      "resumo_detalhado": "Relatório cobre o segundo ano de execução do projeto (01/11/2024 a 31/10/2025). Descreve desenvolvimento de módulos críticos da plataforma (Pagamento de Bolsistas, Portal do Coordenador, Dashboard, Importação de Dados), ferramentas de IA (Valida.AI, AgentES), publicações científicas, capacitação de recursos humanos e melhorias de infraestrutura tecnológica.",
+      "resumo_detalhado": "Descreve os avanços no segundo ano, incluindo publicações, capacitações e desenvolvimento de módulos.",
       "entregaveis_evidenciados": [
         {
           "id": "E1",
           "status_no_documento": "ATENDIDO",
-          "evidencia": "Seção 2.1 (Desenvolvimento dos Módulos da Plataforma): Módulos de Pagamento de Bolsistas, Portal do Coordenador, Dashboard de Indicadores e Módulo de Importação de Dados desenvolvidos e implantados.",
-          "valor_ou_dado": "4 módulos críticos implantados."
-        },
-        {
-          "id": "E2",
-          "status_no_documento": "ATENDIDO",
-          "evidencia": "Seção 2.2 (Pesquisa, Ferramentas e Automação): Ferramentas Valida.AI, AgentES e Test.AI desenvolvidas e aplicadas.",
-          "valor_ou_dado": "3 ferramentas de IA desenvolvidas."
+          "evidencia": "Seção 2.1",
+          "valor_ou_dado": "Desenvolvimento de módulos críticos e integração com sistemas externos."
         },
         {
           "id": "E3",
           "status_no_documento": "ATENDIDO",
-          "evidencia": "Seção 2.1 (Infraestrutura, automação e pipelines): Processo de desenvolvimento baseado em metodologias ágeis, DevOps e CI/CD implementado.",
-          "valor_ou_dado": "Processo implementado com pipelines de CI/CD e observabilidade."
-        },
-        {
-          "id": "E4",
-          "status_no_documento": "ATENDIDO",
-          "evidencia": "Seção 3.4 (Capacitação de Recursos Humanos): Capacitação de bolsistas e profissionais em engenharia de software, DevOps, testes automatizados e IA aplicada.",
-          "valor_ou_dado": "Dezenas de bolsistas e profissionais capacitados."
-        },
-        {
-          "id": "E5",
-          "status_no_documento": "ATENDIDO",
-          "evidencia": "Seção 4.1 (Produção Bibliográfica): Publicação de 4 artigos científicos.",
-          "valor_ou_dado": "4 artigos publicados."
+          "evidencia": "Seção 3.2",
+          "valor_ou_dado": "Publicação de artigos no SBES 2025 e JSERD."
         }
       ],
       "indicadores_reportados": [
         {
-          "nome": "Desenvolvimento do ConnectaFapes (módulos)",
-          "valor_reportado": "4 módulos",
-          "local": "Seção 2.1 (Desenvolvimento dos Módulos da Plataforma)"
-        },
-        {
-          "nome": "Ferramenta de Geração de Código",
-          "valor_reportado": "3 ferramentas (Valida.AI, AgentES, Test.AI)",
-          "local": "Seção 2.2 (Pesquisa, Ferramentas e Automação)"
-        },
-        {
           "nome": "Publicação de artigos",
           "valor_reportado": "4",
-          "local": "Seção 4.1 (Produção Bibliográfica)"
+          "local": "Seção 4.1"
         }
       ],
       "atividades_relatadas": [
-        "Desenvolvimento dos módulos de Pagamento de Bolsistas, Portal do Coordenador, Dashboard e Importação de Dados.",
-        "Desenvolvimento de ferramentas de IA (Valida.AI, AgentES, Test.AI).",
-        "Implementação de infraestrutura tecnológica (servidores, pipelines de CI/CD, observabilidade).",
-        "Publicação de 4 artigos científicos.",
-        "Capacitação de recursos humanos em engenharia de software, DevOps, testes automatizados e IA aplicada.",
-        "Integração com sistemas externos (Banestes, Prodest)."
+        "Desenvolvimento de módulos",
+        "Capacitação de pessoal"
       ],
       "pendencias_ou_faltas": [
-        "Falta documentação formal dos processos de integração com sistemas externos.",
-        "Falta registro formal das ferramentas de IA como software.",
-        "Falta documentação detalhada do processo de governança e metodologias aplicadas."
+        "Detalhes sobre a integração com sistemas legados"
       ],
-      "observacoes": "Relatório detalhado e bem estruturado, com evidências robustas das entregas técnicas e científicas. Pendências são documentais e não comprometem a execução do projeto."
+      "observacoes": "Documento abrangente, mas faltam detalhes sobre a integração com sistemas legados."
     }
   ],
-  "parecer": "APROVAR",
-  "justificativa_parecer": "O projeto ConectaFapes cumpriu integralmente os objetivos e metas previstos, com entregas técnicas e científicas de alta qualidade. Foram desenvolvidos módulos críticos da plataforma, ferramentas de IA, infraestrutura tecnológica robusta, publicações científicas e capacitação de recursos humanos. As pendências identificadas são de natureza documental e não comprometem a conformidade do projeto. Recomenda-se a aprovação com ressalvas para as melhorias documentais sugeridas."
+  "parecer": "APROVAR COM RESSALVAS",
+  "justificativa_parecer": "O projeto ConectaFAPES atingiu a maioria dos objetivos e entregáveis, com avanços significativos em infraestrutura e capacitação. No entanto, a integração com sistemas legados apresentou desafios que precisam ser abordados para garantir a plena eficácia da plataforma."
 }
