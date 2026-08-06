@@ -8,14 +8,15 @@ Padrão (sem argumentos):
     pasta_prestacao = documentos/prestacao
 
 Opções:
-    --ocr            usa o OCR nativo da Mistral nos PDFs (melhor p/ escaneados)
+    --ocr            usa o OCR/visão do provedor nos PDFs (melhor p/ escaneados)
+    --provider NOME  força o provedor: mistral | openai (padrão: LLM_PROVIDER)
     --out ARQ.json   salva o JSON da análise
     --html ARQ.html  gera o parecer técnico executivo em HTML e salva
     --pdf ARQ.pdf    gera o parecer em PDF (via navegador headless)
 
 Ex.:
     python src/cli.py
-    python src/cli.py --ocr --out parecer.json --html parecer.html --pdf parecer.pdf
+    python src/cli.py --provider openai --ocr --out parecer.json --html parecer.html
 """
 import json
 import sys
@@ -24,7 +25,7 @@ from dotenv import load_dotenv
 
 from analyzer import analisar
 from extract import extract_folder
-from mistral_client import get_client
+from llm import get_llm
 from report import gerar_html
 
 load_dotenv()
@@ -49,6 +50,7 @@ def main() -> int:
     if "--ocr" in raw:
         usar_ocr = True
         raw.remove("--ocr")
+    provider = _opt_valor(raw, "--provider")
     out_json = _opt_valor(raw, "--out")
     out_html = _opt_valor(raw, "--html")
     out_pdf = _opt_valor(raw, "--pdf")
@@ -58,23 +60,23 @@ def main() -> int:
     pasta_prestacao = args[1] if len(args) >= 2 else PRESTACAO_PADRAO
 
     log = lambda m: print(m, file=sys.stderr)
+    llm = get_llm(provider)
     log(f"[projeto]   {pasta_projeto}")
     log(f"[prestacao] {pasta_prestacao}")
-    log(f"[extração]  {'Mistral OCR' if usar_ocr else 'local (pypdf)'}")
-
-    client = get_client()
+    log(f"[provedor]  {llm.provider} · modelo={llm.model}")
+    log(f"[extração]  {'OCR ' + llm.ocr_model if usar_ocr else 'local (pypdf)'}")
 
     if usar_ocr:
-        from mistral_ocr import ocr_folder
-        projeto = ocr_folder(pasta_projeto, client)
-        prestacao = ocr_folder(pasta_prestacao, client)
+        from ocr import ocr_folder
+        projeto = ocr_folder(pasta_projeto, llm)
+        prestacao = ocr_folder(pasta_prestacao, llm)
     else:
         projeto = extract_folder(pasta_projeto)
         prestacao = extract_folder(pasta_prestacao)
     log(f"[extraído]  projeto={len(projeto)} chars, prestacao={len(prestacao)} chars")
 
-    log("[analisando via Mistral...]")
-    resultado = analisar(projeto, prestacao, client)
+    log(f"[analisando via {llm.provider}...]")
+    resultado = analisar(projeto, prestacao, llm)
     texto = json.dumps(resultado, ensure_ascii=False, indent=2)
 
     if out_json:

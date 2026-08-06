@@ -6,8 +6,10 @@ services:
     ports:
       - "8080:8000"          # host:container -> acesse http://localhost:8080
     env_file:
-      - .env                 # carrega o .env inteiro no container (MISTRAL_API_KEY etc.)
+      - .env                 # carrega o .env inteiro no container (chaves, modelos)
     environment:
-      # fallback caso não esteja no .env
+      # fallbacks caso não estejam no .env
+      - LLM_PROVIDER=${LLM_PROVIDER:-}
       - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-large-latest}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
     restart: unless-stopped
