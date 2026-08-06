@@ -7,9 +7,15 @@ services:
     # timeout alto + threads: no free tier a análise pode levar vários minutos.
     startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 600
     envVars:
+      - key: LLM_PROVIDER
+        value: mistral         # troque para "openai" se for usar a OpenAI
       - key: MISTRAL_API_KEY
         sync: false            # definir manualmente no dashboard (secret)
       - key: MISTRAL_MODEL
         value: mistral-large-latest
+      - key: OPENAI_API_KEY
+        sync: false            # secret; só necessário com LLM_PROVIDER=openai
+      - key: OPENAI_MODEL
+        value: gpt-4o
       - key: PYTHON_VERSION
         value: "3.12.8"
