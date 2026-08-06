@@ -16,8 +16,14 @@ Contexto: FAPES/IFES.
 ├── documentos/
 │   ├── projeto/           # PDFs/docx do PROJETO enviado
 │   └── prestacao/         # PDFs/docx da PRESTAÇÃO (evidências)
+├── .agents/               # texto editável injetado nos prompts (sem tocar no código)
+│   ├── AGENTS.md          # skill de escrita executiva (BLUF, quantificar, evidência)
+│   └── perfis/            # critérios por tipo de projeto — 1 arquivo = 1 perfil
+│       ├── pesquisa.md
+│       ├── inovacao.md
+│       └── extensao.md
 └── src/
-    ├── app.py             # servidor Flask + rotas (/analisar, /relatorio)
+    ├── app.py             # servidor Flask + rotas (ver tabela de endpoints)
     ├── cli.py             # execução por terminal (lê as pastas acima)
     ├── analyzer.py        # análise: docs -> JSON (chat, JSON mode)
     ├── report.py          # JSON -> parecer HTML (render local, sem LLM)
@@ -28,9 +34,19 @@ Contexto: FAPES/IFES.
     ├── openai_ocr.py      # PDF -> markdown via Responses API (visão)
     ├── mistral_client.py  # fábrica de cliente Mistral (compat SDK v1/v2)
     ├── mistral_ocr.py     # PDF -> markdown via OCR NATIVO da Mistral
-    ├── prompts.py         # system prompts (análise + relatório)
+    ├── prompts.py         # monta o system prompt: schema + perfil + skill
     └── templates/index.html
 ```
+
+Como o prompt é montado (`prompts.py`):
+
+```
+SYSTEM_PROMPT            schema JSON + regras          (código)
+  + perfil               .agents/perfis/<id>.md        (opcional, escolhido pelo usuário)
+  + escrita executiva    .agents/AGENTS.md             (sempre, se existir)
+```
+
+Editar os arquivos de `.agents/` muda a avaliação sem alterar código.
 
 ## Setup
 
@@ -74,6 +90,9 @@ python src/cli.py --out parecer.json --html parecer.html --pdf parecer.pdf
 
 # usando OCR/visão do provedor (melhor p/ PDF escaneado / tabelas)
 python src/cli.py --ocr --out parecer.json --html parecer.html --pdf parecer.pdf
+
+# critérios do tipo de projeto (pesquisa | inovacao | extensao)
+python src/cli.py --perfil pesquisa --out parecer.json --html parecer.html
 
 # forçando o provedor nesta execução
 python src/cli.py --provider openai --out parecer.json --html parecer.html
@@ -123,20 +142,37 @@ resto. No terminal: `python src/cli.py --perfil pesquisa`.
 ### Aba "Prompt do sistema"
 
 A tela tem duas abas: **Documentos** e **Prompt do sistema**. A segunda mostra o
-prompt exato enviado ao modelo (schema JSON + regras + a skill de escrita de
-`.agents/AGENTS.md`), editável antes de clicar em **Analisar**.
+prompt exato enviado ao modelo (schema JSON + critérios do perfil + skill de
+escrita), editável antes de clicar em **Analisar**.
 
-- O texto carrega de `GET /prompt` e vai junto no `POST /analisar`
-  (campo `system_prompt`). Campo vazio → o servidor usa o padrão.
-- **↺ Restaurar padrão** volta ao original; um ponto rosa na aba sinaliza
-  prompt personalizado.
+- O texto carrega de `GET /prompt?perfil=<id>` e vai junto no `POST /analisar`
+  (campo `system_prompt`). Campo vazio → o servidor monta o padrão do perfil.
+- Trocar o **Tipo de projeto** recarrega o texto; se você já tinha editado,
+  pede confirmação antes de descartar.
+- **↺ Restaurar padrão** volta ao padrão do perfil selecionado; um ponto rosa na
+  aba sinaliza prompt personalizado.
 - A edição vale só para aquela análise — não altera o código nem o `.agents/`.
 - Deep link: `http://localhost:5000/?aba=prompt` abre já nessa aba.
 
 > As chaves do JSON (`entregaveis`, `indicadores`, `parecer`…) alimentam a tela e
 > o relatório. Mudar as **regras** e os critérios é seguro; remover chaves do
-> **schema** deixa seções vazias. Para mudar só o estilo da escrita, edite
-> `.agents/AGENTS.md` — vale para todas as análises, sem tocar no prompt.
+> **schema** deixa seções vazias. Para mudar o estilo da escrita em todas as
+> análises, edite `.agents/AGENTS.md`; para mudar critérios de um tipo de
+> projeto, edite o `.md` do perfil.
+
+### Endpoints
+
+| Método | Rota | Uso |
+|--------|------|-----|
+| `GET` | `/` | interface |
+| `GET` | `/perfis` | tipos de projeto disponíveis (`.agents/perfis/*.md`) |
+| `GET` | `/prompt?perfil=<id>` | prompt de sistema montado para aquele perfil |
+| `POST` | `/analisar` | campos `projeto[]`, `prestacao[]`, `perfil`, `system_prompt` → `202 {job_id}` |
+| `GET` | `/status/<job_id>` | `processing` / `done` + `resultado` / `error` + `erro` |
+| `POST` | `/relatorio` | recebe o JSON da análise → devolve o parecer em HTML |
+
+A análise roda em thread e o job fica em memória: reiniciar o servidor perde
+jobs em andamento.
 
 ## Duas formas de ler PDF
 
@@ -218,7 +254,8 @@ arquivos** em cada seção (Projeto e Prestação; aceita vários), **Analisar**
 depois **Gerar relatório HTML**.
 
 ### Como funciona o container
-- `Dockerfile`: `python:3.12-slim`, instala `requirements.txt`, roda
+- `Dockerfile`: `python:3.12-slim`, instala `requirements.txt`, copia `src/` e
+  **`.agents/`** (sem ela os prompts perdem a skill de escrita e os perfis), roda
   `gunicorn wsgi:app` (1 worker, 4 threads, timeout 600s).
 - `docker-compose.yml`: mapeia **host 8080 → container 8000**, carrega o `.env`
   inteiro no container (`env_file`) e define fallbacks de `LLM_PROVIDER`,
@@ -276,9 +313,18 @@ Observações:
 | `MISTRAL_OCR_MODEL` | `mistral-ocr-latest` | OCR nativo |
 | `PORT` | `5000` | porta web |
 
+## Ajustar a avaliação sem mexer no código
+
+| Quero mudar | Edite |
+|-------------|-------|
+| Estilo e tom da escrita (todas as análises) | `.agents/AGENTS.md` |
+| Critérios de um tipo de projeto | `.agents/perfis/<id>.md` |
+| Adicionar um tipo de projeto | novo `.md` em `.agents/perfis/` |
+| Prompt de uma análise só | aba **Prompt do sistema** na web |
+| Schema do JSON e regras gerais | `SYSTEM_PROMPT` em `src/prompts.py` (afeta tela e relatório) |
+
 ## Notas
 
 - O modelo é instruído a se basear **apenas** no conteúdo dos documentos.
 - Texto de cada arquivo é truncado em ~120k caracteres (`MAX_CHARS` em `extract.py`).
 - POC: sem persistência, sem autenticação. Não usar em produção como está.
-```
