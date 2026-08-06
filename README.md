@@ -3,7 +3,8 @@
 POC em Python + web que compara o **previsto** (documento de projeto: objetivos,
 indicadores, plano de trabalho, entregáveis) com o **realizado** (prestação de
 contas técnica) e emite um **parecer estruturado** + **relatório HTML**, usando a
-API da **Mistral**. Contexto: FAPES/IFES.
+API da **OpenAI** ou da **Mistral** (escolha por variável de ambiente).
+Contexto: FAPES/IFES.
 
 ## Estrutura
 
@@ -19,10 +20,14 @@ API da **Mistral**. Contexto: FAPES/IFES.
     ├── app.py             # servidor Flask + rotas (/analisar, /relatorio)
     ├── cli.py             # execução por terminal (lê as pastas acima)
     ├── analyzer.py        # análise: docs -> JSON (chat, JSON mode)
-    ├── report.py          # JSON -> parecer HTML (via Mistral)
+    ├── report.py          # JSON -> parecer HTML (render local, sem LLM)
     ├── extract.py         # extração local de texto (pypdf/docx)
-    ├── mistral_ocr.py     # extração via OCR NATIVO da Mistral (PDF -> markdown)
-    ├── mistral_client.py  # fábrica de cliente (compat SDK v1/v2)
+    ├── llm.py             # camada de provedor: OpenAI ou Mistral (chat + OCR)
+    ├── ocr.py             # OCR de pasta usando o provedor ativo
+    ├── openai_client.py   # fábrica de cliente OpenAI
+    ├── openai_ocr.py      # PDF -> markdown via Responses API (visão)
+    ├── mistral_client.py  # fábrica de cliente Mistral (compat SDK v1/v2)
+    ├── mistral_ocr.py     # PDF -> markdown via OCR NATIVO da Mistral
     ├── prompts.py         # system prompts (análise + relatório)
     └── templates/index.html
 ```
@@ -32,8 +37,32 @@ API da **Mistral**. Contexto: FAPES/IFES.
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # edite: MISTRAL_API_KEY=...
+cp .env.example .env        # edite: API_KEY=... e MODEL=...
 ```
+
+## Provedor de LLM (OpenAI ou Mistral)
+
+Forma simples — chave e modelo genéricos; o provedor é deduzido do nome do modelo:
+
+```bash
+API_KEY=sk-proj-...    MODEL=gpt-4o                 # -> OpenAI
+API_KEY=...            MODEL=mistral-large-latest   # -> Mistral
+```
+
+Forma explícita (vence a dedução) — útil quando as duas chaves coexistem:
+
+```bash
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-proj-...
+OPENAI_MODEL=gpt-4o
+```
+
+Ordem de resolução do provedor: `LLM_PROVIDER` → chave específica presente
+(`OPENAI_API_KEY`/`MISTRAL_API_KEY`) → prefixo do nome do modelo → prefixo da
+`API_KEY` (`sk-` = OpenAI). Modelo incompatível com o provedor ativo (ex.:
+`gpt-4o` com `LLM_PROVIDER=mistral`) falha na inicialização com mensagem clara.
+
+No CLI, `--provider openai|mistral` sobrepõe o ambiente para aquela execução.
 
 ## Modo 1 — Terminal (pastas)
 
@@ -43,14 +72,18 @@ Coloque os arquivos em `documentos/projeto/` e `documentos/prestacao/`.
 # análise + JSON + relatório HTML + PDF, extração local (pypdf)
 python src/cli.py --out parecer.json --html parecer.html --pdf parecer.pdf
 
-# usando o OCR NATIVO da Mistral (melhor p/ PDF escaneado / tabelas)
+# usando OCR/visão do provedor (melhor p/ PDF escaneado / tabelas)
 python src/cli.py --ocr --out parecer.json --html parecer.html --pdf parecer.pdf
+
+# forçando o provedor nesta execução
+python src/cli.py --provider openai --out parecer.json --html parecer.html
 
 # pastas customizadas
 python src/cli.py caminho/projeto caminho/prestacao --pdf parecer.pdf
 ```
 
-Opções: `--ocr` (OCR Mistral), `--out ARQ.json`, `--html ARQ.html`, `--pdf ARQ.pdf`.
+Opções: `--ocr`, `--provider openai|mistral`, `--out ARQ.json`, `--html ARQ.html`,
+`--pdf ARQ.pdf`.
 
 O PDF é gerado por navegador headless (Chrome/Chromium/Edge), respeitando o CSS
 de impressão. Defina `CHROME_BIN` se o executável não for detectado.
@@ -67,13 +100,35 @@ python run.py            # http://127.0.0.1:5000
 
 Formatos: `.pdf`, `.docx`, `.txt`, `.md`.
 
+### Aba "Prompt do sistema"
+
+A tela tem duas abas: **Documentos** e **Prompt do sistema**. A segunda mostra o
+prompt exato enviado ao modelo (schema JSON + regras + a skill de escrita de
+`.agents/AGENTS.md`), editável antes de clicar em **Analisar**.
+
+- O texto carrega de `GET /prompt` e vai junto no `POST /analisar`
+  (campo `system_prompt`). Campo vazio → o servidor usa o padrão.
+- **↺ Restaurar padrão** volta ao original; um ponto rosa na aba sinaliza
+  prompt personalizado.
+- A edição vale só para aquela análise — não altera o código nem o `.agents/`.
+- Deep link: `http://localhost:5000/?aba=prompt` abre já nessa aba.
+
+> As chaves do JSON (`entregaveis`, `indicadores`, `parecer`…) alimentam a tela e
+> o relatório. Mudar as **regras** e os critérios é seguro; remover chaves do
+> **schema** deixa seções vazias. Para mudar só o estilo da escrita, edite
+> `.agents/AGENTS.md` — vale para todas as análises, sem tocar no prompt.
+
 ## Duas formas de ler PDF
 
 - **Local (`extract.py`, padrão)**: rápido, sem custo extra; usa a camada de texto
   do PDF. Não lê PDF escaneado (imagem).
-- **OCR Mistral (`--ocr` / `mistral_ocr.py`)**: envia o PDF à Mistral (upload →
-  signed URL → `ocr.process`), retorna markdown com **tabelas preservadas**. Lê
-  PDF escaneado. Tem custo/latência por página.
+- **OCR do provedor (`--ocr`)**: lê PDF escaneado e preserva tabelas em markdown;
+  tem custo/latência por página.
+  - **Mistral** (`mistral_ocr.py`): OCR nativo — upload → signed URL →
+    `ocr.process`.
+  - **OpenAI** (`openai_ocr.py`): sem endpoint de OCR dedicado; o PDF vai inline
+    (base64) para a Responses API e o modelo multimodal transcreve. Limites da
+    API: ~32 MB e ~100 páginas por arquivo.
 
 ## Saída
 
@@ -89,14 +144,14 @@ Roda a aplicação web isolada em container, sem instalar Python/deps na máquin
 
 ### Pré-requisitos
 - Docker Desktop (ou Docker Engine) com o daemon **rodando**.
-- Uma chave da API Mistral.
+- Uma chave da API OpenAI ou Mistral.
 
 ### Passo a passo
 
 ```bash
 # 1) chave de API
 cp .env.example .env
-#    edite .env e preencha: MISTRAL_API_KEY=sua_chave
+#    edite .env e preencha: API_KEY=sua_chave e MODEL=gpt-4o (ou mistral-large-latest)
 
 # 2) sobe (build + start em background)
 docker compose up -d --build
@@ -145,9 +200,9 @@ depois **Gerar relatório HTML**.
 ### Como funciona o container
 - `Dockerfile`: `python:3.12-slim`, instala `requirements.txt`, roda
   `gunicorn wsgi:app` (1 worker, 4 threads, timeout 600s).
-- `docker-compose.yml`: mapeia **host 8080 → container 8000**, lê o `.env` e
-  passa **apenas** `MISTRAL_API_KEY` e `MISTRAL_MODEL` (o resto do `.env` não
-  entra no container), `restart: unless-stopped`.
+- `docker-compose.yml`: mapeia **host 8080 → container 8000**, carrega o `.env`
+  inteiro no container (`env_file`) e define fallbacks de `LLM_PROVIDER`,
+  `MISTRAL_MODEL` e `OPENAI_MODEL`, `restart: unless-stopped`.
 - A análise roda em thread (assíncrona) → a conexão HTTP nunca fica presa.
 
 ### Solução de problemas
@@ -155,7 +210,8 @@ depois **Gerar relatório HTML**.
 |---------|------------------|
 | `Cannot connect to the Docker daemon` | Docker Desktop parado. Abra-o e aguarde o daemon subir. |
 | `bind: address already in use` (8080) | Outra coisa usa a 8080. Troque a porta host em `docker-compose.yml` (ex.: `"8090:8000"`). |
-| `defina MISTRAL_API_KEY no .env` | `.env` ausente ou sem a chave. Crie a partir de `.env.example`. |
+| `Defina OPENAI_API_KEY (ou API_KEY)` / idem Mistral | `.env` ausente ou sem a chave. Crie a partir de `.env.example`. |
+| `Modelo 'X' é do provedor 'Y'...` | `MODEL` não bate com o provedor ativo. Ajuste `MODEL` ou `LLM_PROVIDER`. |
 | Erro "Job não encontrado" no front | Container reiniciou no meio da análise (job store é em memória). Reenvie. |
 | PDF | O container não tem navegador headless; use "Imprimir → Salvar como PDF" no navegador. O `--pdf` do CLI só funciona fora do container. |
 
@@ -169,7 +225,8 @@ O projeto já vem com `render.yaml` (Blueprint) + `wsgi.py` (gunicorn).
 1. Push do repositório no GitHub (já feito).
 2. Render → **New** → **Blueprint** → conecte o repo
    `paulossjunior/prestacao-tecnica-fapes`. O Render lê o `render.yaml`.
-3. Em **Environment**, defina o secret **`MISTRAL_API_KEY`** (não vai no git).
+3. Em **Environment**, defina o secret da API (**`OPENAI_API_KEY`** ou
+   **`MISTRAL_API_KEY`**; não vai no git) e ajuste `LLM_PROVIDER`.
 4. **Create** → build (`pip install`) + start
    (`gunicorn wsgi:app --bind 0.0.0.0:$PORT --timeout 180`).
 5. Acesse a URL pública `https://<seu-serviço>.onrender.com`.
@@ -179,7 +236,7 @@ Deploy rápido:
 
 Observações:
 - Plano **free** hiberna após inatividade (primeiro acesso demora ~30-60s).
-- `--timeout 180`: a análise via Mistral leva ~30-60s; timeout curto derruba a requisição.
+- `--timeout 180`: a análise leva ~30-60s; timeout curto derruba a requisição.
 - **PDF**: no Render não há navegador headless; o `--pdf` do CLI não roda lá. Na web,
   gere o **relatório HTML** e use "Imprimir → Salvar como PDF" do navegador.
 
@@ -187,8 +244,15 @@ Observações:
 
 | Var | Padrão | Uso |
 |-----|--------|-----|
-| `MISTRAL_API_KEY` | — | obrigatória |
-| `MISTRAL_MODEL` | `mistral-large-latest` | análise + relatório |
+| `API_KEY` | — | chave genérica; usada se a específica do provedor não existir |
+| `MODEL` | — | modelo genérico; também serve para deduzir o provedor |
+| `LLM_PROVIDER` | dedução | `openai` \| `mistral`; explícito, vence a dedução |
+| `OPENAI_API_KEY` | — | obrigatória com provedor `openai` (ou use `API_KEY`) |
+| `OPENAI_MODEL` | `gpt-4o` | análise |
+| `OPENAI_OCR_MODEL` | = `OPENAI_MODEL` | transcrição de PDF (visão) |
+| `OPENAI_BASE_URL` | — | endpoint compatível (Azure, proxy, gateway) |
+| `MISTRAL_API_KEY` | — | obrigatória com provedor `mistral` (ou use `API_KEY`) |
+| `MISTRAL_MODEL` | `mistral-large-latest` | análise |
 | `MISTRAL_OCR_MODEL` | `mistral-ocr-latest` | OCR nativo |
 | `PORT` | `5000` | porta web |
 
