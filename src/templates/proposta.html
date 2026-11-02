@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ p.titulo[:40] or 'Proposta' }} — SIGFAPES</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --surface:#fff; --ink:#0f1e2e; --muted:#5a6b7b; --line:#dde4ea;
+    --brand:#0a4d8c; --brand2:#0f7a5a;
+    --ok-fg:#166534; --ok-bg:#dcfce7; --ok-ln:#22c55e;
+    --warn-fg:#92400e; --warn-bg:#fef3c7; --warn-ln:#f59e0b;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --shadow:0 1px 2px rgba(15,30,46,.06),0 8px 24px rgba(15,30,46,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0b1420;--surface:#121e2c;--ink:#e8eef4;--muted:#93a4b5;--line:#243445;
+      --brand:#4f9ce0;--brand2:#3fbf92;--ok-fg:#86efac;--ok-bg:#0f2e1d;
+      --warn-fg:#fcd34d;--warn-bg:#352714;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+      color-scheme:dark;}
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;}
+  .wrap{max-width:900px;margin:0 auto;padding:24px 20px 56px;}
+  .topnav{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:18px;}
+  .topnav a{font:600 12.5px var(--sans);text-decoration:none;color:var(--muted);
+    padding:8px 13px;border-radius:8px;border:1px solid transparent;}
+  .topnav a:hover{color:var(--ink);background:var(--surface);border-color:var(--line);}
+  .crumbs{font-size:12.5px;color:var(--muted);margin-bottom:10px;}
+  .crumbs a{color:var(--brand);text-decoration:none;}
+  h1{font:800 22px var(--sans);margin:0 0 6px;text-wrap:balance;}
+  .edital{font-size:13px;color:var(--muted);margin-bottom:20px;}
+
+  .grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+  @media (max-width:720px){ .grid{grid-template-columns:1fr;} }
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);padding:18px 20px;}
+  .card h2{font:700 13px var(--sans);letter-spacing:.04em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 14px;}
+  dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:9px 16px;}
+  dt{font-size:12px;color:var(--muted);} dd{margin:0;font-size:13px;font-weight:600;}
+  .proto{font-family:var(--mono);font-size:12px;}
+
+  .doc{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;margin-top:10px;background:var(--bg);}
+  .doc .ic{flex:none;width:34px;height:42px;border-radius:5px;background:var(--surface);
+    border:1px solid var(--line);position:relative;}
+  .doc .ic::after{content:"PDF";position:absolute;inset:auto 0 5px;text-align:center;
+    font:700 8px var(--mono);color:var(--muted);}
+  .doc .n{font-weight:600;font-size:13px;} .doc .s{font-size:11.5px;color:var(--muted);}
+  .doc a.btn{margin-left:auto;}
+  .btn{font:600 12.5px var(--sans);text-decoration:none;padding:8px 13px;border-radius:8px;
+    border:1px solid var(--brand);color:#fff;background:var(--brand);white-space:nowrap;}
+  .btn.ghost{color:var(--brand);background:transparent;}
+
+  .status{display:inline-flex;align-items:center;gap:7px;font:700 12px var(--sans);
+    padding:6px 11px;border-radius:20px;}
+  .st-ok{color:var(--ok-fg);background:var(--ok-bg);} .st-pend{color:var(--warn-fg);background:var(--warn-bg);}
+  .aval-nota{font:800 30px var(--sans);font-variant-numeric:tabular-nums;}
+  .muted{color:var(--muted);font-size:12.5px;}
+  footer{margin-top:26px;font-size:11.5px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="topnav">
+    <a href="/propostas">Propostas &amp; Avaliações</a>
+    <a href="/avaliar">Avaliação individual</a>
+  </nav>
+
+  <div class="crumbs"><a href="/propostas">Propostas</a> › {{ p.protocolo }}</div>
+  <h1>{{ p.titulo or 'Proposta sem título' }}</h1>
+  <div class="edital">{{ p.edital }}</div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Proposta</h2>
+      <dl>
+        <dt>Pesquisador</dt><dd>{{ p.pesquisador or '—' }}</dd>
+        <dt>Instituição</dt><dd>{{ p.instituicao or '—' }}</dd>
+        <dt>Protocolo</dt><dd class="proto">{{ p.protocolo }}</dd>
+        {% if p.processo %}<dt>Processo</dt><dd class="proto">{{ p.processo }}</dd>{% endif %}
+        <dt>Situação</dt><dd>{{ p.situacao }}</dd>
+        {% if p.data %}<dt>Submissão</dt><dd>{{ p.data }}</dd>{% endif %}
+      </dl>
+
+      <h2 style="margin-top:20px">Documentos</h2>
+      <div class="doc">
+        <div class="ic"></div>
+        <div>
+          <div class="n">Projeto (proposta)</div>
+          <div class="s">PDF gerado pelo SIGFAPES · projeto {{ projeto_id }}</div>
+        </div>
+        <a class="btn" href="/propostas/{{ projeto_id }}/projeto.pdf" target="_blank" rel="noopener">Abrir PDF</a>
+      </div>
+      <div class="doc">
+        <div class="ic" style="opacity:.5"></div>
+        <div>
+          <div class="n">Relatório técnico (prestação)</div>
+          <div class="s">Não disponível por automação ainda — cole a URL do relatório para habilitar.</div>
+        </div>
+        <span class="status st-pend">pendente</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Avaliação</h2>
+      {% if aval %}
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+          <span class="aval-nota">{{ aval.nota if aval.nota is not none else '—' }}%</span>
+          <span class="status {{ 'st-ok' if aval.situacao == 'APROVADO' else 'st-pend' }}">{{ aval.situacao }}</span>
+        </div>
+        <div class="muted" style="margin-bottom:14px">Parecer: <b>{{ aval.parecer or '—' }}</b></div>
+        <a class="btn" href="/projetos/{{ aval.id }}" target="_blank" rel="noopener">Ver parecer completo</a>
+        <a class="btn ghost" href="/projetos/{{ aval.id }}/pdf" style="margin-left:6px">PDF</a>
+      {% else %}
+        <span class="status st-pend">● Avaliação pendente</span>
+        <p class="muted" style="margin-top:12px">
+          A avaliação compara o <b>projeto</b> (previsto) com o <b>relatório técnico</b> (realizado).
+          O projeto já está disponível; falta o relatório técnico da prestação para rodar a análise.
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <footer>
+    Fonte: SIGFAPES. Projeto baixado via <code>imprimir_pdf.php</code> (proxy autenticado).
+    Avaliação por LLM, disponível quando o relatório técnico estiver acessível.
+  </footer>
+
+</div>
+</body>
+</html>

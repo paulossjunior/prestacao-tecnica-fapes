@@ -15,3 +15,9 @@ __pycache__/
 
 # Dumps de crash do navegador headless (geração de PDF)
 crash-dumps/
+
+# Avaliações persistidas (dados gerados pelo /projetos)
+avaliacoes/
+
+# Cache do SIGFAPES (CSV + PDFs de projeto)
+cache/

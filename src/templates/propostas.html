@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Propostas & Avaliações — SIGFAPES</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --surface:#fff; --ink:#0f1e2e; --muted:#5a6b7b; --line:#dde4ea;
+    --brand:#0a4d8c; --brand2:#0f7a5a;
+    --ok-fg:#166534; --ok-bg:#dcfce7; --ok-ln:#22c55e;
+    --bad-fg:#991b1b; --bad-bg:#fee2e2; --bad-ln:#ef4444;
+    --warn-fg:#92400e; --warn-bg:#fef3c7; --warn-ln:#f59e0b;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --shadow:0 1px 2px rgba(15,30,46,.06),0 8px 24px rgba(15,30,46,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0b1420;--surface:#121e2c;--ink:#e8eef4;--muted:#93a4b5;--line:#243445;
+      --brand:#4f9ce0;--brand2:#3fbf92;--ok-fg:#86efac;--ok-bg:#0f2e1d;--bad-fg:#fca5a5;--bad-bg:#3a1618;
+      --warn-fg:#fcd34d;--warn-bg:#352714;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+      color-scheme:dark;}
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;}
+  .wrap{max-width:1140px;margin:0 auto;padding:28px 20px 56px;}
+  header.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
+    padding-bottom:16px;border-bottom:2px solid var(--line);margin-bottom:20px;}
+  .brandmark{display:flex;align-items:center;gap:12px;}
+  .logo{width:42px;height:42px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font:800 15px var(--sans);}
+  .t1{font:800 18px var(--sans);} .t2{font-size:12.5px;color:var(--muted);}
+  .topnav{display:flex;gap:4px;flex-wrap:wrap;}
+  .topnav a{font:600 12.5px var(--sans);text-decoration:none;color:var(--muted);
+    padding:8px 13px;border-radius:8px;border:1px solid transparent;}
+  .topnav a:hover{color:var(--ink);background:var(--surface);border-color:var(--line);}
+  .topnav a.on{color:var(--brand);background:var(--surface);border-color:var(--line);}
+
+  .bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .status-chip{display:inline-flex;align-items:center;gap:7px;font:600 12px var(--sans);
+    color:var(--warn-fg);background:var(--warn-bg);border:1px solid var(--warn-ln);padding:6px 11px;border-radius:8px;}
+  .filtro{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;margin-bottom:14px;}
+  .statusdd{position:relative;}
+  .statusdd summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:10px;
+    background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 14px;box-shadow:var(--shadow);}
+  .statusdd summary::-webkit-details-marker{display:none;}
+  .statusdd summary .fl{font:700 12px var(--sans);} .statusdd summary .fv{font-size:12px;color:var(--muted);}
+  .statusdd summary::after{content:"▾";color:var(--muted);}
+  .statusdd[open] summary::after{content:"▴";}
+  .statusdd-body{position:absolute;z-index:20;margin-top:6px;min-width:340px;max-width:460px;max-height:360px;overflow:auto;
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:8px;}
+  .stopt{display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:7px;cursor:pointer;font-size:12.5px;}
+  .stopt:hover{background:var(--bg);}
+  .stopt .stname{flex:1;} .stopt .stn{font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .statusdd-foot{display:flex;justify-content:flex-end;padding:8px 6px 4px;position:sticky;bottom:0;background:var(--surface);}
+  .selchips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .fsel{font:600 12.5px var(--sans);background:var(--surface);border:1px solid var(--line);
+    border-radius:9px;padding:9px 12px;color:var(--ink);box-shadow:var(--shadow);cursor:pointer;}
+  .fsearch{display:flex;gap:6px;align-items:center;}
+  .fsearch input{font:500 12.5px var(--sans);background:var(--surface);border:1px solid var(--line);
+    border-radius:9px;padding:9px 12px;min-width:220px;color:var(--ink);box-shadow:var(--shadow);}
+  .limpar{font:600 12px var(--sans);color:var(--muted);text-decoration:none;align-self:center;padding:0 4px;}
+  .limpar:hover{color:var(--ink);text-decoration:underline;}
+  .btn-sync{font:600 12.5px var(--sans);cursor:pointer;color:#fff;background:var(--brand);
+    border:1px solid var(--brand);padding:8px 14px;border-radius:8px;}
+  .btn-sync:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-eval{background:var(--brand2);border-color:var(--brand2);}
+  .batch-itens{list-style:none;margin:10px 0 0;padding:0;max-height:220px;overflow:auto;}
+  .batch-itens li{font:500 12px var(--sans);padding:5px 0;border-top:1px solid var(--line);
+    display:flex;gap:8px;justify-content:space-between;}
+  .batch-itens li .r{color:var(--muted);font-family:var(--mono);font-size:11px;text-align:right;}
+  .batch-itens li.ok .r{color:var(--ok-fg);} .batch-itens li.err .r{color:var(--bad-fg);}
+  .chk-col{width:34px;text-align:center;}
+  .rowchk{width:15px;height:15px;cursor:pointer;}
+
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 16px;box-shadow:var(--shadow);}
+  .tile .v{font:800 24px var(--sans);font-variant-numeric:tabular-nums;}
+  .tile .l{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .tile.ok .v{color:var(--ok-fg);} .tile.bad .v{color:var(--bad-fg);}
+  @media (max-width:640px){ .tiles{grid-template-columns:repeat(2,1fr);} }
+
+  .sync-box{margin-bottom:16px;background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;box-shadow:var(--shadow);}
+  .sync-head{display:flex;justify-content:space-between;font:600 12.5px var(--sans);color:var(--muted);margin-bottom:8px;}
+  .sync-head #syncMb{font-family:var(--mono);color:var(--ink);}
+  .progress{height:8px;border-radius:5px;background:var(--line);overflow:hidden;position:relative;}
+  .progress-bar{position:absolute;top:0;left:-40%;width:40%;height:100%;border-radius:5px;
+    background:linear-gradient(90deg,var(--brand),var(--brand2));animation:slide 1.3s ease-in-out infinite;}
+  @keyframes slide{0%{left:-40%;}50%{left:60%;}100%{left:110%;}}
+  @media (prefers-reduced-motion:reduce){ .progress-bar{animation:none;left:0;width:100%;opacity:.5;} }
+  .sync-msg{margin-bottom:16px;font:600 13px var(--sans);padding:10px 14px;border-radius:9px;
+    background:var(--warn-bg);color:var(--warn-fg);border:1px solid var(--warn-ln);}
+  .sync-msg.ok{background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-ln);}
+  .sync-msg.err{background:var(--bad-bg);color:var(--bad-fg);border-color:var(--bad-ln);}
+
+  .edital{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;}
+  .edital > h2{margin:0;font:700 14px var(--sans);padding:14px 16px;background:var(--bg);
+    border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:baseline;}
+  .edital > h2 .n{margin-left:auto;font:700 12px var(--mono);color:var(--muted);}
+  .tbl-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;min-width:820px;}
+  th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);font-size:12.5px;vertical-align:middle;}
+  th{font:700 10.5px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  tr:last-child td{border-bottom:0;}
+  .ttl-link{color:var(--brand);text-decoration:none;font-weight:600;} .ttl-link:hover{text-decoration:underline;}
+  .proto{font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .pesq{white-space:nowrap;}
+  .nota{font:800 15px var(--mono);font-variant-numeric:tabular-nums;}
+  .badge{display:inline-block;font:700 10.5px var(--sans);padding:3px 9px;border-radius:20px;white-space:nowrap;}
+  .b-ok{color:var(--ok-fg);background:var(--ok-bg);} .b-bad{color:var(--bad-fg);background:var(--bad-bg);}
+  .b-warn{color:var(--warn-fg);background:var(--warn-bg);} .b-mut{color:var(--muted);background:var(--bg);}
+  .acts{display:flex;gap:6px;}
+  .mini{font:600 11px var(--sans);text-decoration:none;padding:5px 9px;border-radius:6px;
+    border:1px solid var(--line);color:var(--ink);background:var(--surface);white-space:nowrap;}
+  .mini.pri{background:var(--brand);border-color:var(--brand);color:#fff;}
+
+  .empty{background:var(--surface);border:1px dashed var(--warn-ln);border-radius:12px;padding:28px 22px;}
+  .empty code{font-family:var(--mono);font-size:12px;background:var(--bg);padding:2px 7px;border-radius:5px;border:1px solid var(--line);}
+  footer{margin-top:26px;font-size:11.5px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brandmark">
+      <div class="logo">FAP</div>
+      <div>
+        <div class="t1">Propostas &amp; Avaliações</div>
+        <div class="t2">Prestação de Contas Técnica — FAPES/IFES</div>
+      </div>
+    </div>
+    <nav class="topnav">
+      <a href="/propostas" class="on">Propostas &amp; Avaliações</a>
+      <a href="/avaliar">Avaliação individual</a>
+    </nav>
+  </header>
+
+  <form class="filtro" method="get" id="filtroForm">
+    <details class="statusdd">
+      <summary>
+        <span class="fl">Status</span>
+        <span class="fv">{{ status_sel|length }} selec.</span>
+      </summary>
+      <div class="statusdd-body">
+        {% for o in status_opcoes %}
+          <label class="stopt">
+            <input type="checkbox" name="status" value="{{ o.status }}" {{ 'checked' if o.status in status_sel }}>
+            <span class="stname">{{ o.status }}</span>
+            <span class="stn">{{ o.n }}</span>
+          </label>
+        {% endfor %}
+        <div class="statusdd-foot"><button type="submit" class="btn-sync btn-eval">Aplicar</button></div>
+      </div>
+    </details>
+
+    <details class="statusdd">
+      <summary>
+        <span class="fl">Edital</span>
+        <span class="fv">{{ (edital_sel|length ~ ' selec.') if edital_sel else 'todos' }}</span>
+      </summary>
+      <div class="statusdd-body">
+        {% if edital_opcoes %}
+          {% for o in edital_opcoes %}
+            <label class="stopt">
+              <input type="checkbox" name="edital" value="{{ o.edital }}" {{ 'checked' if o.edital in edital_sel }}>
+              <span class="stname">{{ o.edital }}</span>
+              <span class="stn">{{ o.n }}</span>
+            </label>
+          {% endfor %}
+        {% else %}<div class="muted" style="padding:8px">Sem dados — sincronize.</div>{% endif %}
+        <div class="statusdd-foot"><button type="submit" class="btn-sync btn-eval">Aplicar</button></div>
+      </div>
+    </details>
+
+    <select name="avaliacao" class="fsel" onchange="this.form.submit()">
+      <option value="" {{ 'selected' if not aval_sel }}>Avaliação: todas</option>
+      <option value="avaliadas" {{ 'selected' if aval_sel == 'avaliadas' }}>Só avaliadas</option>
+      <option value="pendentes" {{ 'selected' if aval_sel == 'pendentes' }}>Só pendentes</option>
+    </select>
+
+    <span class="fsearch">
+      <input type="search" name="q" value="{{ q }}" placeholder="Buscar título, pesquisador, protocolo…">
+      <button type="submit" class="btn-sync btn-eval">Buscar</button>
+    </span>
+    {% if status_sel or edital_sel or q or aval_sel %}
+      <a class="limpar" href="/propostas">limpar</a>
+    {% endif %}
+  </form>
+  <div class="selchips">
+    {% for s in status_sel %}<span class="status-chip">● {{ s }}</span>{% endfor %}
+    {% for e in edital_sel %}<span class="status-chip" style="color:var(--brand);background:var(--surface);border-color:var(--line)">{{ e[:40] }}</span>{% endfor %}
+    {% if q %}<span class="status-chip" style="color:var(--brand);background:var(--surface);border-color:var(--line)">“{{ q }}”</span>{% endif %}
+  </div>
+
+  <div class="bar">
+    <span style="font-size:12.5px;color:var(--muted)"><b style="color:var(--ink)">{{ total }}</b> proposta{{ '' if total == 1 else 's' }} no filtro</span>
+    <span style="display:flex;gap:8px;flex-wrap:wrap">
+      <button id="btnAvalSel" class="btn-sync btn-eval" type="button" disabled>▶ Avaliar selecionadas (<span id="selCount">0</span>)</button>
+      <button id="btnAvalPend" class="btn-sync btn-eval" type="button">▶ Avaliar pendentes</button>
+      <button id="btnSync" class="btn-sync" type="button">↻ Sincronizar dados</button>
+    </span>
+  </div>
+
+  <div id="syncBox" class="sync-box" hidden>
+    <div class="sync-head"><span>Baixando do SIGFAPES…</span><span id="syncMb">0 MB</span></div>
+    <div class="progress"><div class="progress-bar"></div></div>
+  </div>
+  <div id="batchBox" class="sync-box" hidden>
+    <div class="sync-head"><span id="batchLabel">Avaliando…</span><span id="batchCount">0 / 0</span></div>
+    <div class="progress"><div class="progress-bar" id="batchBar" style="position:static;width:0;animation:none;transition:width .3s"></div></div>
+    <ul id="batchItens" class="batch-itens"></ul>
+  </div>
+  <div id="syncMsg" class="sync-msg" hidden></div>
+
+  <div class="tiles">
+    <div class="tile"><div class="v">{{ total }}</div><div class="l">Propostas em prestação</div></div>
+    <div class="tile"><div class="v">{{ avaliadas }}</div><div class="l">Projetos avaliados</div></div>
+    <div class="tile ok"><div class="v">{{ aprovadas }}</div><div class="l">Acima de {{ limiar }}% (aprovados)</div></div>
+    <div class="tile bad"><div class="v">{{ reprovadas }}</div><div class="l">Não passaram (&lt; {{ limiar }}%)</div></div>
+  </div>
+
+  {% if not tem_cache %}
+    <div class="empty">
+      <strong>Sem dados em cache.</strong> As propostas vêm do SIGFAPES. Clique em
+      <strong>Sincronizar dados</strong> acima, ou rode <code>python src/sigfapes.py</code>.
+    </div>
+  {% elif total == 0 %}
+    <div class="empty">Nenhuma proposta no status <strong>{{ status }}</strong>.
+      Atualize com <strong>Sincronizar dados</strong>.</div>
+  {% else %}
+    {% for g in grupos %}
+      <div class="edital">
+        <h2>{{ g.edital }} <span class="n">{{ g.propostas|length }} proposta{{ '' if g.propostas|length == 1 else 's' }}</span></h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr><th class="chk-col"><input type="checkbox" class="rowchk chk-all" title="Selecionar pendentes do edital"></th>
+                  <th>Projeto</th><th>Pesquisador</th><th>Nota</th><th>Situação</th><th>Parecer</th><th>Ações</th></tr>
+            </thead>
+            <tbody>
+            {% for p in g.propostas %}
+              {% set a = p.aval %}
+              <tr>
+                <td class="chk-col">{% if not a %}<input type="checkbox" class="rowchk chk-row" value="{{ p.projeto_id }}">{% endif %}</td>
+                <td><a class="ttl-link" href="/propostas/{{ p.projeto_id }}">{{ p.titulo or '—' }}</a>
+                    <div class="proto">{{ p.protocolo }}</div></td>
+                <td class="pesq">{{ p.pesquisador or '—' }}</td>
+                <td>{% if a and a.nota is not none %}<span class="nota">{{ a.nota }}%</span>{% else %}<span class="proto">—</span>{% endif %}</td>
+                <td>
+                  {% if a and a.situacao == 'APROVADO' %}<span class="badge b-ok">APROVADO</span>
+                  {% elif a and a.situacao == 'REPROVADO' %}<span class="badge b-bad">REPROVADO</span>
+                  {% else %}<span class="badge b-warn">pendente</span>{% endif %}
+                </td>
+                <td>{% if a and a.parecer %}<span class="badge b-mut">{{ a.parecer }}</span>{% else %}<span class="proto">—</span>{% endif %}</td>
+                <td>
+                  <div class="acts">
+                    <a class="mini pri" href="/propostas/{{ p.projeto_id }}">Abrir</a>
+                    {% if a %}<a class="mini" href="/projetos/{{ a.id }}/pdf">PDF</a>{% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <footer>
+    Página única: propostas do SIGFAPES (export <code>csv.php</code>, filtro "{{ status }}") com a avaliação
+    de cada uma inline. Projeto baixável; avaliação roda quando há relatório técnico. Sincronização com
+    tratamento de timeout (streaming).
+  </footer>
+
+</div>
+<script>
+  (function () {
+    var btn = document.getElementById('btnSync'), msg = document.getElementById('syncMsg');
+    var box = document.getElementById('syncBox'), mbEl = document.getElementById('syncMb');
+    if (!btn) return;
+    var poll = null;
+    function show(t, c){ msg.textContent=t; msg.className='sync-msg'+(c?' '+c:''); msg.hidden=false; }
+    function busy(b){ btn.disabled=b; btn.textContent=b?'↻ Sincronizando…':'↻ Sincronizar dados'; box.hidden=!b; }
+    function check(){
+      fetch('/propostas/sync_status').then(function(r){return r.json();}).then(function(s){
+        if(typeof s.mb==='number'){ mbEl.textContent=s.mb+' MB'; }
+        if(s.status==='running'){ return; }
+        clearInterval(poll); poll=null; busy(false);
+        if(s.status==='done'){ show((s.msg||'Concluído.')+' Atualizando…','ok'); setTimeout(function(){location.reload();},1200); }
+        else if(s.status==='error'){ show('Falha: '+(s.msg||'erro'),'err'); }
+      }).catch(function(){});
+    }
+    btn.addEventListener('click', function(){
+      busy(true); msg.hidden=true;
+      fetch('/propostas/sincronizar',{method:'POST'}).then(function(r){return r.json();}).then(function(){
+        if(!poll) poll=setInterval(check,2000); check();
+      }).catch(function(){ busy(false); show('Não foi possível iniciar.','err'); });
+    });
+  })();
+
+  // ---- Avaliação em lote ----
+  (function(){
+    var rows = Array.prototype.slice.call(document.querySelectorAll('.chk-row'));
+    var selCount = document.getElementById('selCount');
+    var btnSel = document.getElementById('btnAvalSel'), btnPend = document.getElementById('btnAvalPend');
+    var box = document.getElementById('batchBox'), bar = document.getElementById('batchBar');
+    var cnt = document.getElementById('batchCount'), lst = document.getElementById('batchItens'), lbl = document.getElementById('batchLabel');
+    var msg = document.getElementById('syncMsg');
+    if(!btnSel) return;
+    var poll = null;
+
+    function selected(){ return rows.filter(function(c){return c.checked;}).map(function(c){return c.value;}); }
+    function refresh(){ var n=selected().length; selCount.textContent=n; btnSel.disabled = n===0; }
+    rows.forEach(function(c){ c.addEventListener('change', refresh); });
+    Array.prototype.forEach.call(document.querySelectorAll('.chk-all'), function(all){
+      all.addEventListener('change', function(){
+        var tbody = all.closest('table').querySelector('tbody');
+        tbody.querySelectorAll('.chk-row').forEach(function(c){ c.checked = all.checked; });
+        refresh();
+      });
+    });
+
+    function render(s){
+      var pct = s.total ? Math.round(100*s.done/s.total) : 0;
+      bar.style.width = pct+'%';
+      cnt.textContent = s.done+' / '+s.total;
+      lst.innerHTML = (s.itens||[]).map(function(it){
+        return '<li class="'+(it.ok?'ok':'err')+'"><span>'+(it.titulo||it.projeto_id).slice(0,52)+'</span><span class="r">'+(it.status||'')+'</span></li>';
+      }).join('');
+    }
+    function startPoll(){
+      if(poll) return;
+      poll = setInterval(function(){
+        fetch('/propostas/avaliar_status').then(function(r){return r.json();}).then(function(s){
+          render(s); lbl.textContent = s.status==='running' ? 'Avaliando…' : 'Concluído';
+          if(s.status!=='running'){ clearInterval(poll); poll=null; btnSel.disabled=false; btnPend.disabled=false;
+            msg.textContent=(s.msg||'')+' Atualizando…'; msg.className='sync-msg ok'; msg.hidden=false;
+            setTimeout(function(){ location.reload(); }, 2500); }
+        }).catch(function(){});
+      }, 2500);
+    }
+    function dispatch(body){
+      btnSel.disabled=true; btnPend.disabled=true; box.hidden=false; lst.innerHTML=''; bar.style.width='0';
+      fetch('/propostas/avaliar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+        .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+        .then(function(res){
+          if(!res.ok){ box.hidden=true; msg.textContent=res.j.erro||'Falha.'; msg.className='sync-msg err'; msg.hidden=false; btnPend.disabled=false; refresh(); return; }
+          cnt.textContent='0 / '+(res.j.total||0); startPoll();
+        }).catch(function(){ box.hidden=true; btnPend.disabled=false; refresh(); });
+    }
+    var STATUS_SEL = {{ status_sel|tojson }};
+    btnSel.addEventListener('click', function(){ var ids=selected(); if(ids.length) dispatch({ids:ids}); });
+    btnPend.addEventListener('click', function(){ dispatch({pendentes:true, status:STATUS_SEL}); });
+    refresh();
+  })();
+</script>
+</body>
+</html>
