@@ -31,6 +31,13 @@
                 color: #fff; padding: 16px 24px; }
     .titlebar h1 { margin: 0; font-size: 20px; }
     .titlebar p { margin: 4px 0 0; color: #c7d3ee; font-size: 13px; }
+    .titlebar { position: relative; }
+    .nav-top { position: absolute; top: 16px; right: 24px; display: flex; gap: 8px; }
+    .nav-top a { display: inline-block; background: rgba(255,255,255,.14); color: #fff;
+                 text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px;
+                 border-radius: 8px; border: 1px solid rgba(255,255,255,.28); }
+    .nav-top a:hover { background: rgba(255,255,255,.24); }
+    @media (max-width: 680px) { .nav-top { position: static; margin-top: 10px; flex-wrap: wrap; } }
     main { max-width: 980px; margin: 0 auto; padding: 24px; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
@@ -170,6 +177,10 @@
   <div class="titlebar">
     <h1>Avaliação Técnica — Prestação de Contas</h1>
     <p>Compara o <strong>previsto</strong> (projeto) com o <strong>realizado</strong> (prestação) e emite parecer técnico.</p>
+    <nav class="nav-top">
+      <a href="/propostas">📋 Propostas &amp; Avaliações</a>
+      <a href="/avaliar">➕ Avaliação individual</a>
+    </nav>
   </div>
   <main>
     <form id="form">
