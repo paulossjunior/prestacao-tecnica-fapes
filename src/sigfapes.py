@@ -25,13 +25,22 @@ import time
 import urllib.parse
 import urllib.request
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 
 load_dotenv()
+# `USER` colide com a env var padrão do Unix (nome do usuário do SO), então
+# `os.getenv("USER")` traria o usuário do SO em vez do login do SIGFAPES. Lemos
+# as credenciais direto do arquivo .env (prioridade) para evitar essa colisão.
+_ENVFILE = dotenv_values()
 
-SITE = (os.getenv("SITE") or "http://201.62.44.41/").rstrip("/")
-USUARIO = os.getenv("USER") or ""
-SENHA = os.getenv("PASSWORD") or ""
+
+def _cfg(chave: str) -> str:
+    return (_ENVFILE.get(chave) or os.getenv(chave) or "")
+
+
+SITE = (_cfg("SITE") or "http://201.62.44.41/").rstrip("/")
+USUARIO = _cfg("USER")
+SENHA = _cfg("PASSWORD")
 
 _CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache")
 CSV_CACHE = os.path.join(_CACHE_DIR, "propostas.csv")
@@ -143,7 +152,13 @@ def baixar_propostas_csv(force: bool = False, tentativas: int = 4,
 
 def _ler_csv(caminho: str) -> list[dict]:
     with open(caminho, "rb") as f:
-        texto = f.read().decode("latin-1")
+        bruto = f.read()
+    # Produção (sigfapes.es.gov.br) é UTF-8; o IP antigo era latin-1. Tenta UTF-8
+    # e cai para latin-1 (que nunca falha) preservando os acentos corretos.
+    try:
+        texto = bruto.decode("utf-8")
+    except UnicodeDecodeError:
+        texto = bruto.decode("latin-1")
     linhas = texto.splitlines()
     out = []
     for row in csv.DictReader(linhas, delimiter=";"):
