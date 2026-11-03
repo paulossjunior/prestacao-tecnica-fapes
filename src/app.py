@@ -318,13 +318,17 @@ def proposta_detalhe(projeto_id):
 
 @app.route("/propostas/<projeto_id>/projeto.pdf")
 def proposta_projeto_pdf(projeto_id):
-    """Baixa/serve o PDF do projeto (proxy autenticado do SIGFAPES, cacheado)."""
+    """Baixa/serve o PDF do projeto (proxy autenticado do SIGFAPES, cacheado).
+    O nome do arquivo inclui o status (situação) da proposta."""
+    import re
     try:
         caminho = sigfapes.baixar_projeto_pdf(projeto_id)
     except Exception as e:  # noqa: BLE001
         return jsonify({"erro": str(e)}), 502
-    return send_file(caminho, mimetype="application/pdf",
-                     download_name=f"projeto_{projeto_id}.pdf")
+    prop = sigfapes.proposta_por_projeto_id(projeto_id) or {}
+    situ = re.sub(r"[^\wÀ-ÿ -]", "", (prop.get("situacao") or "")).strip().replace(" ", "_")
+    nome = f"projeto_{projeto_id}" + (f"_{situ}" if situ else "") + ".pdf"
+    return send_file(caminho, mimetype="application/pdf", download_name=nome)
 
 
 @app.route("/projetos")

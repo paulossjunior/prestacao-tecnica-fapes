@@ -25,13 +25,22 @@ import time
 import urllib.parse
 import urllib.request
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 
 load_dotenv()
+# `USER` colide com a env var padrão do Unix (nome do usuário do SO), então
+# `os.getenv("USER")` traria o usuário do SO em vez do login do SIGFAPES. Lemos
+# as credenciais direto do arquivo .env (prioridade) para evitar essa colisão.
+_ENVFILE = dotenv_values()
 
-SITE = (os.getenv("SITE") or "http://201.62.44.41/").rstrip("/")
-USUARIO = os.getenv("USER") or ""
-SENHA = os.getenv("PASSWORD") or ""
+
+def _cfg(chave: str) -> str:
+    return (_ENVFILE.get(chave) or os.getenv(chave) or "")
+
+
+SITE = (_cfg("SITE") or "http://201.62.44.41/").rstrip("/")
+USUARIO = _cfg("USER")
+SENHA = _cfg("PASSWORD")
 
 _CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache")
 CSV_CACHE = os.path.join(_CACHE_DIR, "propostas.csv")
