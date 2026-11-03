@@ -152,7 +152,13 @@ def baixar_propostas_csv(force: bool = False, tentativas: int = 4,
 
 def _ler_csv(caminho: str) -> list[dict]:
     with open(caminho, "rb") as f:
-        texto = f.read().decode("latin-1")
+        bruto = f.read()
+    # Produção (sigfapes.es.gov.br) é UTF-8; o IP antigo era latin-1. Tenta UTF-8
+    # e cai para latin-1 (que nunca falha) preservando os acentos corretos.
+    try:
+        texto = bruto.decode("utf-8")
+    except UnicodeDecodeError:
+        texto = bruto.decode("latin-1")
     linhas = texto.splitlines()
     out = []
     for row in csv.DictReader(linhas, delimiter=";"):
