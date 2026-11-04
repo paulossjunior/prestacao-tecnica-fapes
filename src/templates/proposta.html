@@ -138,6 +138,18 @@
         <div class="muted" style="margin-bottom:14px">Parecer: <b>{{ aval.parecer or '—' }}</b></div>
         <a class="btn" href="/projetos/{{ aval.id }}" target="_blank" rel="noopener">Ver parecer completo</a>
         <a class="btn ghost" href="/projetos/{{ aval.id }}/pdf" style="margin-left:6px">PDF</a>
+
+        {% if historico and historico|length > 1 %}
+          <h2 style="margin-top:22px">Histórico de avaliações ({{ historico|length }})</h2>
+          <div class="doclist">
+            {% for h in historico %}
+              <a class="docrow{{ ' rel' if h.id == aval.id }}" href="/projetos/{{ h.id }}" target="_blank" rel="noopener">
+                <span class="dn">{{ h.nota if h.nota is not none else '—' }}% · {{ h.situacao }} · {{ h.parecer or '—' }}{{ ' (atual)' if h.id == aval.id }}</span>
+                <span class="dd">{{ h.data[:16].replace('T',' ') }}</span>
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
       {% else %}
         <span class="status st-pend">● Avaliação pendente</span>
         <p class="muted" style="margin-top:12px">

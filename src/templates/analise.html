@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avaliar por edital — SIGFAPES</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --surface:#fff; --ink:#0f1e2e; --muted:#5a6b7b; --line:#dde4ea;
+    --brand:#0a4d8c; --brand2:#0f7a5a;
+    --ok-fg:#166534; --ok-bg:#dcfce7; --ok-ln:#22c55e;
+    --bad-fg:#991b1b; --bad-bg:#fee2e2; --warn-fg:#92400e; --warn-bg:#fef3c7; --warn-ln:#f59e0b;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --shadow:0 1px 2px rgba(15,30,46,.06),0 8px 24px rgba(15,30,46,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0b1420;--surface:#121e2c;--ink:#e8eef4;--muted:#93a4b5;--line:#243445;
+      --brand:#4f9ce0;--brand2:#3fbf92;--ok-fg:#86efac;--ok-bg:#0f2e1d;--bad-fg:#fca5a5;--bad-bg:#3a1618;
+      --warn-fg:#fcd34d;--warn-bg:#352714;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);color-scheme:dark;}
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 56px;}
+  header.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
+    padding-bottom:16px;border-bottom:2px solid var(--line);margin-bottom:22px;}
+  .brandmark{display:flex;align-items:center;gap:12px;}
+  .logo{width:42px;height:42px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font:800 15px var(--sans);}
+  .t1{font:800 18px var(--sans);} .t2{font-size:12.5px;color:var(--muted);}
+  .topnav{display:flex;gap:4px;flex-wrap:wrap;}
+  .topnav a{font:600 12.5px var(--sans);text-decoration:none;color:var(--muted);padding:8px 13px;border-radius:8px;border:1px solid transparent;}
+  .topnav a:hover{color:var(--ink);background:var(--surface);border-color:var(--line);}
+  .topnav a.on{color:var(--brand);background:var(--surface);border-color:var(--line);}
+
+  .steps{display:flex;gap:10px;align-items:center;margin-bottom:18px;font:700 12.5px var(--sans);}
+  .step{display:flex;gap:8px;align-items:center;color:var(--muted);}
+  .step .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--line);color:var(--muted);font-size:12px;}
+  .step.on{color:var(--ink);} .step.on .n{background:var(--brand);color:#fff;}
+  .step.done .n{background:var(--ok-ln);color:#fff;}
+  .sep{flex:1;height:1px;background:var(--line);max-width:40px;}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:16px;}
+  .card h2{font:700 13px var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;}
+  select.edital{font:500 13px var(--sans);width:100%;max-width:640px;padding:11px 13px;border-radius:9px;
+    border:1px solid var(--line);background:var(--bg);color:var(--ink);}
+
+  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .btn{font:600 12.5px var(--sans);cursor:pointer;color:#fff;background:var(--brand2);border:1px solid var(--brand2);padding:9px 15px;border-radius:9px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn.ghost{background:transparent;color:var(--brand);border-color:var(--line);}
+  .tbl-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;min-width:620px;}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:12.5px;vertical-align:middle;}
+  th{font:700 10.5px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  tr:last-child td{border-bottom:0;}
+  .ttl-link{color:var(--brand);text-decoration:none;font-weight:600;} .ttl-link:hover{text-decoration:underline;}
+  .proto{font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .chk{width:34px;text-align:center;} .rowchk{width:15px;height:15px;cursor:pointer;}
+  .badge{display:inline-block;font:700 10px var(--sans);padding:3px 8px;border-radius:20px;}
+  .b-ok{color:var(--ok-fg);background:var(--ok-bg);} .b-bad{color:var(--bad-fg);background:var(--bad-bg);} .b-mut{color:var(--muted);background:var(--bg);}
+
+  .progress{height:8px;border-radius:5px;background:var(--line);overflow:hidden;margin-top:10px;}
+  .progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .3s;}
+  .batch-itens{list-style:none;margin:10px 0 0;padding:0;max-height:200px;overflow:auto;}
+  .batch-itens li{font:500 12px var(--sans);padding:5px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;}
+  .batch-itens li .r{font-family:var(--mono);font-size:11px;color:var(--muted);} .batch-itens li.ok .r{color:var(--ok-fg);} .batch-itens li.err .r{color:var(--bad-fg);}
+  .empty{background:var(--surface);border:1px dashed var(--warn-ln);border-radius:12px;padding:24px;color:var(--ink);}
+  .empty code{font-family:var(--mono);background:var(--bg);padding:2px 7px;border-radius:5px;border:1px solid var(--line);}
+  .muted{color:var(--muted);font-size:12.5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brandmark">
+      <div class="logo">FAP</div>
+      <div><div class="t1">Avaliar por edital</div><div class="t2">Escolha o edital, selecione as propostas e avalie</div></div>
+    </div>
+    <nav class="topnav">
+      <a href="/">Propostas &amp; Avaliações</a>
+      <a href="/analise" class="on">Avaliar por edital</a>
+      <a href="/avaliar">Avaliação individual</a>
+    </nav>
+  </header>
+
+  {% if not tem_cache %}
+    <div class="empty"><strong>Sem dados.</strong> Sincronize as propostas na página
+      <a href="/">Propostas &amp; Avaliações</a> (botão “Sincronizar dados”).</div>
+  {% else %}
+
+  <div class="steps">
+    <div class="step {{ 'done' if edital_sel else 'on' }}"><span class="n">1</span>Edital</div>
+    <div class="sep"></div>
+    <div class="step {{ 'on' if edital_sel else '' }}"><span class="n">2</span>Propostas</div>
+    <div class="sep"></div>
+    <div class="step"><span class="n">3</span>Avaliar</div>
+  </div>
+
+  <div class="card">
+    <h2>1 · Edital</h2>
+    <form method="get" id="editalForm">
+      <select class="edital" name="edital" onchange="this.form.submit()">
+        <option value="">— selecione um edital —</option>
+        {% for e in editais %}
+          <option value="{{ e.edital }}" {{ 'selected' if e.edital == edital_sel }}>{{ e.edital or '(sem edital)' }} ({{ e.n }})</option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+
+  {% if edital_sel %}
+    <div class="card">
+      <h2>2 · Propostas ({{ propostas|length }})</h2>
+      {% if propostas %}
+        <div class="bar">
+          <label style="font-size:12.5px;display:flex;gap:7px;align-items:center;cursor:pointer">
+            <input type="checkbox" id="chkAll" class="rowchk"> selecionar todas (pendentes)
+          </label>
+          <button id="btnAval" class="btn" type="button" disabled>▶ Avaliar selecionadas (<span id="selN">0</span>)</button>
+        </div>
+        <div id="batchBox" hidden>
+          <div class="bar"><span id="batchLabel" class="muted">Avaliando…</span><span id="batchCount" class="proto">0 / 0</span></div>
+          <div class="progress"><div class="progress-bar" id="bar"></div></div>
+          <ul id="batchItens" class="batch-itens"></ul>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th class="chk"></th><th>Projeto</th><th>Pesquisador</th><th>Situação</th><th>Avaliação</th></tr></thead>
+            <tbody>
+            {% for p in propostas %}
+              <tr>
+                <td class="chk"><input type="checkbox" class="rowchk chk-row" value="{{ p.projeto_id }}" {{ 'checked' if not p.aval }}></td>
+                <td><a class="ttl-link" href="/propostas/{{ p.projeto_id }}" target="_blank" rel="noopener">{{ p.titulo or '—' }}</a>
+                    <div class="proto">{{ p.protocolo }}</div></td>
+                <td>{{ p.pesquisador or '—' }}</td>
+                <td class="proto">{{ p.situacao }}</td>
+                <td>
+                  {% if p.aval %}<span class="badge {{ 'b-ok' if p.aval.situacao=='APROVADO' else 'b-bad' }}">{{ p.aval.nota }}% {{ p.aval.situacao }}</span>
+                  {% else %}<span class="badge b-mut">pendente</span>{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="muted">Nenhuma proposta neste edital no cache.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% endif %}
+
+</div>
+<script>
+  (function(){
+    var rows=[].slice.call(document.querySelectorAll('.chk-row'));
+    var btn=document.getElementById('btnAval'), selN=document.getElementById('selN'), all=document.getElementById('chkAll');
+    var box=document.getElementById('batchBox'), bar=document.getElementById('bar'), cnt=document.getElementById('batchCount'),
+        lst=document.getElementById('batchItens'), lbl=document.getElementById('batchLabel');
+    if(!btn) return;
+    var poll=null;
+    function sel(){ return rows.filter(function(c){return c.checked;}).map(function(c){return c.value;}); }
+    function refresh(){ var n=sel().length; selN.textContent=n; btn.disabled=n===0; }
+    rows.forEach(function(c){ c.addEventListener('change', refresh); });
+    if(all) all.addEventListener('change', function(){ rows.forEach(function(c){ c.checked=all.checked; }); refresh(); });
+    function render(s){
+      bar.style.width=(s.total? Math.round(100*s.done/s.total):0)+'%';
+      cnt.textContent=s.done+' / '+s.total;
+      lst.innerHTML=(s.itens||[]).map(function(it){return '<li class="'+(it.ok?'ok':'err')+'"><span>'+(it.titulo||it.projeto_id).slice(0,52)+'</span><span class="r">'+(it.status||'')+'</span></li>';}).join('');
+    }
+    function startPoll(){ if(poll)return; poll=setInterval(function(){
+      fetch('/propostas/avaliar_status').then(function(r){return r.json();}).then(function(s){
+        render(s); lbl.textContent=s.status==='running'?'Avaliando…':'Concluído';
+        if(s.status!=='running'){ clearInterval(poll); poll=null; btn.disabled=false; setTimeout(function(){location.reload();},2500); }
+      }).catch(function(){});
+    },2500); }
+    btn.addEventListener('click', function(){
+      var ids=sel(); if(!ids.length) return;
+      btn.disabled=true; box.hidden=false; lst.innerHTML=''; bar.style.width='0';
+      fetch('/propostas/avaliar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})})
+        .then(function(r){return r.json();}).then(function(){ startPoll(); }).catch(function(){ btn.disabled=false; });
+    });
+    refresh();
+  })();
+</script>
+</body>
+</html>

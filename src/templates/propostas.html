@@ -73,6 +73,14 @@
   .chk-col{width:34px;text-align:center;}
   .rowchk{width:15px;height:15px;cursor:pointer;}
 
+  .limiar-box{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface);
+    border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:14px;box-shadow:var(--shadow);}
+  .limiar-box .l{font:700 12.5px var(--sans);}
+  .limiar-box input{width:70px;font:700 15px var(--mono);text-align:center;padding:6px 8px;
+    border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);}
+  .limiar-box .pc{font:700 14px var(--sans);color:var(--muted);margin-left:-4px;}
+  .limiar-box .muted{color:var(--muted);font-size:12px;}
+  .limiar-msg{font:600 12px var(--sans);color:var(--ok-fg);}
   .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
   .tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 16px;box-shadow:var(--shadow);}
   .tile .v{font:800 24px var(--sans);font-variant-numeric:tabular-nums;}
@@ -200,6 +208,7 @@
     <span style="display:flex;gap:8px;flex-wrap:wrap">
       <button id="btnAvalSel" class="btn-sync btn-eval" type="button" disabled>▶ Avaliar selecionadas (<span id="selCount">0</span>)</button>
       <button id="btnAvalPend" class="btn-sync btn-eval" type="button">▶ Avaliar pendentes</button>
+      <button id="btnBaixar" class="btn-sync" type="button" style="background:var(--muted);border-color:var(--muted)">⬇ Baixar PDFs</button>
       <button id="btnSync" class="btn-sync" type="button">↻ Sincronizar dados</button>
     </span>
   </div>
@@ -213,7 +222,20 @@
     <div class="progress"><div class="progress-bar" id="batchBar" style="position:static;width:0;animation:none;transition:width .3s"></div></div>
     <ul id="batchItens" class="batch-itens"></ul>
   </div>
+  <div id="dlBox" class="sync-box" hidden>
+    <div class="sync-head"><span id="dlLabel">Baixando PDFs…</span><span id="dlCount">0 / 0</span></div>
+    <div class="progress"><div class="progress-bar" id="dlBar" style="position:static;width:0;animation:none;transition:width .3s"></div></div>
+  </div>
   <div id="syncMsg" class="sync-msg" hidden></div>
+
+  <div class="limiar-box">
+    <span class="l">Percentual de aprovação:</span>
+    <input type="number" id="limiarInput" min="0" max="100" step="1" value="{{ limiar }}">
+    <span class="pc">%</span>
+    <button type="button" id="limiarBtn" class="btn-sync btn-eval">Aplicar</button>
+    <span class="muted">projetos com nota &ge; este valor = APROVADO</span>
+    <span id="limiarMsg" class="limiar-msg" hidden></span>
+  </div>
 
   <div class="tiles">
     <div class="tile"><div class="v">{{ total }}</div><div class="l">Propostas (no filtro)</div></div>
@@ -356,6 +378,45 @@
     btnSel.addEventListener('click', function(){ var ids=selected(); if(ids.length) dispatch({ids:ids}); });
     btnPend.addEventListener('click', function(){ dispatch({pendentes:true, status:STATUS_SEL}); });
     refresh();
+  })();
+
+  // ---- Baixar todos os PDFs ----
+  (function(){
+    var btn=document.getElementById('btnBaixar'); if(!btn) return;
+    var box=document.getElementById('dlBox'), bar=document.getElementById('dlBar'),
+        cnt=document.getElementById('dlCount'), lbl=document.getElementById('dlLabel'), msg=document.getElementById('syncMsg');
+    var STATUS_SEL={{ status_sel|tojson }}; var poll=null;
+    function startPoll(){ if(poll)return; poll=setInterval(function(){
+      fetch('/propostas/baixar_status').then(function(r){return r.json();}).then(function(s){
+        bar.style.width=(s.total?Math.round(100*s.done/s.total):0)+'%';
+        cnt.textContent=s.done+' / '+s.total+' projetos · '+(s.arquivos||0)+' PDFs';
+        if(s.status!=='running'){ clearInterval(poll); poll=null; btn.disabled=false; lbl.textContent='Concluído';
+          msg.textContent=s.msg||'Concluído.'; msg.className='sync-msg ok'; msg.hidden=false; }
+      }).catch(function(){});
+    },2000); }
+    btn.addEventListener('click', function(){
+      if(!confirm('Baixar os PDFs (projeto + prestação) de todos os projetos do filtro atual para a pasta downloads/?')) return;
+      btn.disabled=true; box.hidden=false; bar.style.width='0'; lbl.textContent='Baixando PDFs…';
+      fetch('/propostas/baixar_pdfs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:STATUS_SEL})})
+        .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+        .then(function(res){ if(!res.ok){ box.hidden=true; btn.disabled=false; msg.textContent=res.j.erro||'Falha.'; msg.className='sync-msg err'; msg.hidden=false; return;} cnt.textContent='0 / '+(res.j.total||0); startPoll(); })
+        .catch(function(){ btn.disabled=false; box.hidden=true; });
+    });
+  })();
+
+  // ---- Percentual de aprovação (limiar) ----
+  (function(){
+    var inp=document.getElementById('limiarInput'), btn=document.getElementById('limiarBtn'), msg=document.getElementById('limiarMsg');
+    if(!btn) return;
+    btn.addEventListener('click', function(){
+      var v=parseInt(inp.value,10); if(isNaN(v)){ return; }
+      v=Math.max(0,Math.min(100,v)); btn.disabled=true;
+      var fd=new FormData(); fd.append('limiar', v);
+      fetch('/config/limiar',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(j){
+        msg.textContent='Aplicado: '+j.limiar+'%. Atualizando…'; msg.hidden=false;
+        setTimeout(function(){ location.reload(); }, 700);
+      }).catch(function(){ btn.disabled=false; });
+    });
   })();
 </script>
 </body>
