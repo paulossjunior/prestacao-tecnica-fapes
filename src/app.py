@@ -154,8 +154,9 @@ def _avaliar_um(projeto_id, prop):
         _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
         shutil.copy(sigfapes.baixar_projeto_pdf(projeto_id), _os.path.join(d, "projeto"))
         shutil.copy(rel, _os.path.join(d, "prestacao"))
-        proj = extract_folder(_os.path.join(d, "projeto"))
-        prest = extract_folder(_os.path.join(d, "prestacao"))
+        import ocr
+        proj = ocr.extract_folder_auto(_os.path.join(d, "projeto"))
+        prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
     resultado = analisar(proj, prest, perfil="inovacao")
     store.salvar(resultado, titulo=(prop.get("titulo") or f"Projeto {projeto_id}")[:80],
                  perfil="inovacao", projeto_id=projeto_id)
@@ -381,7 +382,9 @@ def projeto_resultado(aval_id):
         abort(404)
     meta = store._meta(aval_id) or {}
     titulo = meta.get("titulo") or "Prestação de Contas Técnica"
-    return Response(gerar_html(resultado, titulo=titulo), mimetype="text/html")
+    return Response(gerar_html(resultado, titulo=titulo,
+                               projeto_id=meta.get("projeto_id")),
+                    mimetype="text/html")
 
 
 @app.route("/projetos/<aval_id>/pdf")
