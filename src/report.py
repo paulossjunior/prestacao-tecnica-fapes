@@ -95,7 +95,8 @@ def _atingido_chip(v) -> str:
     return _chip(str(v).upper() if v else "—", ("#92400e", "#fef3c7"))
 
 
-def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técnica") -> str:
+def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técnica",
+               projeto_id=None) -> str:
     d = resultado or {}
     logo_uri = _logo_data_uri()
     parecer = d.get("parecer", "—")
@@ -274,6 +275,18 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
       <p class="sub">Documentos que orientam a prestação de contas técnica e sua avaliação.</p>
       <ul class="refs">{refs_li}</ul>"""
 
+    # ---- Documentos avaliados (projeto + relatório/prestação) ----
+    documentos_html = ""
+    if projeto_id:
+        documentos_html = f"""
+      <h2>Documentos avaliados</h2>
+      <p class="sub">Fontes desta análise, obtidas do SIGFAPES.</p>
+      <ul class="refs">
+        <li><a href="/propostas/{_e(projeto_id)}/projeto.pdf" target="_blank">Projeto (proposta) — PDF</a></li>
+        <li><a href="/propostas/{_e(projeto_id)}/relatorio.pdf" target="_blank">Relatório técnico — Anexo VI (prestação) — PDF</a></li>
+        <li><a href="/propostas/{_e(projeto_id)}" target="_blank">Todos os documentos da prestação</a></li>
+      </ul>"""
+
     return f"""<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -437,6 +450,7 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
 
   {detalhe_html}
 
+  {documentos_html}
   {referencias_html}
 
   <div class="foot">

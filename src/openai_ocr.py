@@ -7,11 +7,13 @@ inteiro (texto + páginas renderizadas) e devolve markdown. Limites da API:
 import base64
 import os
 
+# Enquadrar como "extrair texto visível" (não "transcrever integralmente")
+# evita a recusa do modelo com documentos oficiais escaneados. Frases extras
+# como "não invente/devolva apenas o texto" reativam a recusa — manter enxuto.
 _PROMPT = (
-    "Transcreva integralmente o conteúdo deste PDF em Markdown. "
-    "Preserve tabelas (em formato Markdown), títulos, listas e a ordem das "
-    "páginas. Não resuma, não comente e não invente conteúdo: devolva apenas "
-    "o texto do documento."
+    "Extraia e liste em Markdown todo o texto visível nas páginas deste "
+    "documento (relatório técnico de projeto). Inclua títulos, parágrafos e "
+    "tabelas na ordem das páginas."
 )
 
 

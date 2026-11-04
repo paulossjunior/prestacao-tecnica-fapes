@@ -59,6 +59,12 @@
   .st-ok{color:var(--ok-fg);background:var(--ok-bg);} .st-pend{color:var(--warn-fg);background:var(--warn-bg);}
   .aval-nota{font:800 30px var(--sans);font-variant-numeric:tabular-nums;}
   .muted{color:var(--muted);font-size:12.5px;}
+  .doclist{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+  .docrow{display:flex;justify-content:space-between;gap:12px;align-items:center;text-decoration:none;
+    color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:var(--bg);font-size:12.5px;}
+  .docrow:hover{border-color:var(--brand);} .docrow .dn{font-weight:600;}
+  .docrow .dd{color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;}
+  .docrow.rel{border-color:var(--ok-ln);background:var(--ok-bg);} .docrow.rel .dn{color:var(--ok-fg);}
   footer{margin-top:26px;font-size:11.5px;color:var(--muted);}
 </style>
 </head>
@@ -96,13 +102,30 @@
         <a class="btn" href="/propostas/{{ projeto_id }}/projeto.pdf" target="_blank" rel="noopener">Abrir PDF</a>
       </div>
       <div class="doc">
-        <div class="ic" style="opacity:.5"></div>
+        <div class="ic"{{ '' if tem_relatorio else ' style=opacity:.5' }}></div>
         <div>
-          <div class="n">Relatório técnico (prestação)</div>
-          <div class="s">Não disponível por automação ainda — cole a URL do relatório para habilitar.</div>
+          <div class="n">Relatório técnico — Anexo VI (prestação)</div>
+          <div class="s">{{ 'Relatório da prestação de contas.' if tem_relatorio else 'Não encontrado nos documentos da prestação deste projeto.' }}</div>
         </div>
-        <span class="status st-pend">pendente</span>
+        {% if tem_relatorio %}
+          <a class="btn" href="/propostas/{{ projeto_id }}/relatorio.pdf" target="_blank" rel="noopener">Abrir PDF</a>
+        {% else %}
+          <span class="status st-pend">pendente</span>
+        {% endif %}
       </div>
+
+      {% if documentos %}
+        <h2 style="margin-top:20px">Prestação de contas ({{ documentos|length }} documentos)</h2>
+        <div class="doclist">
+          {% for d in documentos %}
+            {% set ehrel = ('anexo vi' in (d.nome ~ d.descricao)|lower) or ('relatório técnic' in (d.nome ~ d.descricao)|lower) %}
+            <a class="docrow{{ ' rel' if ehrel }}" href="/propostas/{{ projeto_id }}/anexo/{{ d.file }}" target="_blank" rel="noopener">
+              <span class="dn">{{ d.nome or ('anexo ' ~ d.file) }}</span>
+              <span class="dd">{{ d.data }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
     </div>
 
     <div class="card">
@@ -112,9 +135,28 @@
           <span class="aval-nota">{{ aval.nota if aval.nota is not none else '—' }}%</span>
           <span class="status {{ 'st-ok' if aval.situacao == 'APROVADO' else 'st-pend' }}">{{ aval.situacao }}</span>
         </div>
+        {% if aval.tipo_relatorio and aval.tipo_relatorio != 'NÃO INFORMADO' %}
+          <div class="muted" style="margin-bottom:6px">Relatório: <b>{{ aval.tipo_relatorio|title }}</b>{% if aval.periodo_relatorio and aval.periodo_relatorio != 'NÃO INFORMADO' %} · {{ aval.periodo_relatorio }}{% endif %}</div>
+        {% endif %}
         <div class="muted" style="margin-bottom:14px">Parecer: <b>{{ aval.parecer or '—' }}</b></div>
         <a class="btn" href="/projetos/{{ aval.id }}" target="_blank" rel="noopener">Ver parecer completo</a>
         <a class="btn ghost" href="/projetos/{{ aval.id }}/pdf" style="margin-left:6px">PDF</a>
+
+        {% if historico and historico|length > 1 %}
+          <h2 style="margin-top:22px">Histórico de avaliações ({{ historico|length }})</h2>
+          <div class="doclist">
+            {% for h in historico %}
+              <a class="docrow{{ ' rel' if h.id == aval.id }}" href="/projetos/{{ h.id }}" target="_blank" rel="noopener">
+                <span class="dn">
+                  {% if h.tipo_relatorio and h.tipo_relatorio != 'NÃO INFORMADO' %}<b>{{ h.tipo_relatorio|title }}</b>
+                    {% if h.periodo_relatorio and h.periodo_relatorio != 'NÃO INFORMADO' %}<span class="dd">{{ h.periodo_relatorio }}</span>{% endif %} ·
+                  {% endif %}
+                  {{ h.nota if h.nota is not none else '—' }}% · {{ h.situacao }} · {{ h.parecer or '—' }}{{ ' (atual)' if h.id == aval.id }}</span>
+                <span class="dd">{{ h.data[:16].replace('T',' ') }}</span>
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
       {% else %}
         <span class="status st-pend">● Avaliação pendente</span>
         <p class="muted" style="margin-top:12px">

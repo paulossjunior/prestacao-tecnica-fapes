@@ -100,6 +100,8 @@ estruturada em JSON (e nada além do JSON), no formato:
 
 {
   "resumo_executivo": "2-3 frases sobre o estado geral do projeto",
+  "tipo_relatorio": "PARCIAL" | "FINAL" | "NÃO INFORMADO",
+  "periodo_relatorio": "período coberto pelo relatório (ex.: 01/11/2023 a 31/10/2024), ou NÃO INFORMADO",
   "grau_conformidade_geral": 0-100,
   "entregaveis": [
     {
@@ -188,6 +190,15 @@ estruturada em JSON (e nada além do JSON), no formato:
 }
 
 REGRAS:
+- IDENTIFIQUE o tipo do relatório da prestação e preencha "tipo_relatorio":
+  * PARCIAL: cobre um PERÍODO/exercício do projeto (ex.: 1º ano). Avalie a
+    conformidade RELATIVA ao que era esperado NAQUELE período, não ao projeto
+    inteiro — entregáveis cujo prazo é posterior ao período NÃO são cobrança.
+  * FINAL: cobre o PROJETO TODO (encerramento). Avalie contra todos os
+    objetivos e entregáveis previstos.
+  Extraia o período coberto (datas) para "periodo_relatorio". Pistas: nome do
+  arquivo ("Anexo VI", "Relatório Parcial/Final"), datas e seções do próprio
+  relatório. Se não der para determinar, use "NÃO INFORMADO".
 - Baseie-se APENAS no conteúdo dos documentos. Não invente evidências.
 - Se um entregável previsto não aparecer na prestação, marque
   "NÃO EVIDENCIADO", nunca "NÃO ATENDIDO" (a diferença importa).

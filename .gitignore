@@ -21,3 +21,5 @@ avaliacoes/
 
 # Cache do SIGFAPES (CSV + PDFs de projeto)
 cache/
+config.json
+downloads/

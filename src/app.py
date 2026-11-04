@@ -144,22 +144,34 @@ _batch_lock = threading.Lock()
 
 
 def _avaliar_um(projeto_id, prop):
-    """Avalia uma proposta: baixa projeto + relatório, roda LLM, salva. Devolve (ok, msg)."""
+    """Avalia uma proposta: baixa o projeto e AVALIA CADA RELATÓRIO (Anexo VI)
+    separadamente (parcial por período / final), gerando uma avaliação por
+    relatório (histórico). Devolve (ok, msg)."""
+    import os as _os
+    import shutil
     import tempfile
-    sigfapes.baixar_projeto_pdf(projeto_id)                 # projeto (ok)
-    rel = sigfapes.baixar_relatorio_pdf(projeto_id)         # relatório (bloqueio atual)
-    with tempfile.TemporaryDirectory() as d:
-        import os as _os
-        import shutil
-        _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
-        shutil.copy(sigfapes.baixar_projeto_pdf(projeto_id), _os.path.join(d, "projeto"))
-        shutil.copy(rel, _os.path.join(d, "prestacao"))
-        proj = extract_folder(_os.path.join(d, "projeto"))
-        prest = extract_folder(_os.path.join(d, "prestacao"))
-    resultado = analisar(proj, prest, perfil="inovacao")
-    store.salvar(resultado, titulo=(prop.get("titulo") or f"Projeto {projeto_id}")[:80],
-                 perfil="inovacao", projeto_id=projeto_id)
-    return True, f"nota {resultado.get('grau_conformidade_geral')}"
+    proj_pdf = sigfapes.baixar_projeto_pdf(projeto_id)
+    relatorios = sigfapes.listar_relatorios(projeto_id)
+    if not relatorios:
+        raise RuntimeError(f"Relatório técnico (Anexo VI) não encontrado no projeto {projeto_id}.")
+    titulo = (prop.get("titulo") or f"Projeto {projeto_id}")[:80]
+    perfil = "inovacao"
+    import ocr
+    notas = []
+    for rel in relatorios:
+        with tempfile.TemporaryDirectory() as d:
+            _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
+            shutil.copy(proj_pdf, _os.path.join(d, "projeto"))
+            alvo = _os.path.join(d, "prestacao", f"{rel['file']}.pdf")
+            sigfapes.baixar_anexo(rel["file"], alvo)
+            projtxt = ocr.extract_folder_auto(_os.path.join(d, "projeto"))
+            prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
+        resultado = analisar(projtxt, prest, perfil=perfil)
+        tipo = resultado.get("tipo_relatorio", "") or ""
+        suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
+        store.salvar(resultado, titulo=titulo + suf, perfil=perfil, projeto_id=projeto_id)
+        notas.append(f"{tipo[:7] or '?'}:{resultado.get('grau_conformidade_geral')}")
+    return True, f"{len(relatorios)} relatório(s) — " + " ".join(notas)
 
 
 def _run_batch(ids):
@@ -215,6 +227,83 @@ def propostas_avaliar_status():
         return jsonify(_batch)
 
 
+# Download em massa dos PDFs (projeto + documentos da prestação) para downloads/.
+_DL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "downloads")
+_dl = {"status": "idle", "total": 0, "done": 0, "arquivos": 0, "msg": ""}
+_dl_lock = threading.Lock()
+
+
+def _baixar_pdfs_projeto(pid):
+    """Baixa projeto + todos os documentos da prestação de um projeto para downloads/<pid>/."""
+    import shutil
+    destino = os.path.join(_DL_DIR, str(pid))
+    os.makedirs(destino, exist_ok=True)
+    n = 0
+    try:
+        proj = sigfapes.baixar_projeto_pdf(pid)
+        shutil.copy(proj, os.path.join(destino, f"projeto_{pid}.pdf"))
+        n += 1
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        docs = sigfapes.listar_documentos_prestacao(pid)
+    except Exception:  # noqa: BLE001
+        docs = []
+    for d in docs:
+        try:
+            import re as _re
+            nome = _re.sub(r"[^\wÀ-ÿ. -]", "", d.get("nome") or d["file"]).strip()[:50]
+            alvo = os.path.join(destino, f"{d['file']}_{nome}.pdf")
+            sigfapes.baixar_anexo(d["file"], alvo)
+            n += 1
+        except Exception:  # noqa: BLE001
+            continue
+    return n
+
+
+def _run_download(ids):
+    with _dl_lock:
+        _dl.update(status="running", total=len(ids), done=0, arquivos=0, msg="")
+    for pid in ids:
+        try:
+            n = _baixar_pdfs_projeto(pid)
+        except Exception:  # noqa: BLE001
+            n = 0
+        with _dl_lock:
+            _dl["done"] += 1
+            _dl["arquivos"] += n
+    with _dl_lock:
+        _dl["status"] = "done"
+        _dl["msg"] = f"{_dl['arquivos']} PDFs em downloads/ ({_dl['done']} projetos)."
+
+
+@app.route("/propostas/baixar_pdfs", methods=["POST"])
+def propostas_baixar_pdfs():
+    """Baixa os PDFs (projeto + prestação) dos projetos filtrados/selecionados."""
+    body = request.get_json(silent=True) or {}
+    if body.get("ids"):
+        ids = [str(i) for i in body["ids"] if str(i)]
+    else:
+        filtro = body.get("status") or [STATUS_PRESTACAO]
+        ids = [sigfapes.projeto_id_do_protocolo(p["protocolo"])
+               for p in sigfapes.listar_propostas(status=filtro)]
+        ids = [i for i in ids if i]
+    if not ids:
+        return jsonify({"erro": "Nenhum projeto no filtro/seleção."}), 400
+    with _dl_lock:
+        if _dl["status"] == "running":
+            return jsonify(_dl), 202
+        _dl.update(status="running", total=len(ids), done=0, arquivos=0, msg="")
+    threading.Thread(target=_run_download, args=(ids,), daemon=True).start()
+    return jsonify({"status": "running", "total": len(ids)}), 202
+
+
+@app.route("/propostas/baixar_status")
+def propostas_baixar_status():
+    with _dl_lock:
+        return jsonify(_dl)
+
+
 @app.route("/propostas/sync_status")
 def propostas_sync_status():
     import os as _os
@@ -249,9 +338,8 @@ def propostas_endpoint():
     notas = []
     status_opcoes = []
     # Filtros combináveis (AND): status (multi) + edital (multi) + busca + avaliação.
+    # Sem status selecionado = TODAS as propostas (padrão mostra tudo).
     status_sel = [s for s in request.args.getlist("status") if s.strip()]
-    if not status_sel:
-        status_sel = [STATUS_PRESTACAO]
     edital_sel = [e for e in request.args.getlist("edital") if e.strip()]
     q = (request.args.get("q") or "").strip()
     aval_sel = (request.args.get("avaliacao") or "").strip()  # ''|avaliadas|pendentes
@@ -269,8 +357,7 @@ def propostas_endpoint():
             props = [p for p in props if ql in (p["titulo"] + " " + p["pesquisador"]
                                                 + " " + p["protocolo"]).casefold()]
         # Anexa avaliação a cada proposta.
-        por_projeto = {str(m.get("projeto_id") or ""): m for m in store.listar()
-                       if m.get("projeto_id")}
+        por_projeto = store.por_projeto()  # projeto_id -> avaliação mais recente
         for p in props:
             pid = sigfapes.projeto_id_do_protocolo(p["protocolo"])
             p["projeto_id"] = pid
@@ -297,8 +384,42 @@ def propostas_endpoint():
         status_opcoes=status_opcoes, status_sel=status_sel,
         edital_opcoes=edital_opcoes, edital_sel=edital_sel, q=q, aval_sel=aval_sel,
         avaliadas=avaliadas, aprovadas=aprovadas, reprovadas=reprovadas,
-        media=media, limiar=store.LIMIAR_APROVACAO,
+        media=media, limiar=store.get_limiar(),
     )
+
+
+@app.route("/config/limiar", methods=["POST"])
+def config_limiar():
+    """Define o percentual de aprovação (limiar). Recalcula a situação de todos."""
+    valor = (request.form.get("limiar") or
+             (request.get_json(silent=True) or {}).get("limiar"))
+    try:
+        novo = store.set_limiar(valor)
+    except (TypeError, ValueError):
+        return jsonify({"erro": "valor inválido"}), 400
+    return jsonify({"limiar": novo})
+
+
+@app.route("/analise")
+def analise_por_edital():
+    """Tela guiada: escolhe o edital, lista suas propostas, seleciona e avalia."""
+    import os as _os
+    tem_cache = _os.path.exists(sigfapes.CSV_CACHE)
+    edital_sel = (request.args.get("edital") or "").strip()
+    editais, propostas = [], []
+    if tem_cache:
+        editais = sigfapes.editais_disponiveis()
+        if edital_sel:
+            avaliados = store.por_projeto()  # projeto_id -> avaliação mais recente
+            for p in sigfapes.listar_propostas():
+                if p["edital"] != edital_sel:
+                    continue
+                pid = sigfapes.projeto_id_do_protocolo(p["protocolo"])
+                p["projeto_id"] = pid
+                p["aval"] = avaliados.get(pid)
+                propostas.append(p)
+    return render_template("analise.html", tem_cache=tem_cache, editais=editais,
+                           edital_sel=edital_sel, propostas=propostas)
 
 
 @app.route("/propostas/<projeto_id>")
@@ -307,13 +428,44 @@ def proposta_detalhe(projeto_id):
     prop = sigfapes.proposta_por_projeto_id(projeto_id)
     if prop is None:
         abort(404)
-    # Avaliação vinculada a este projeto_id (quando já avaliado).
-    aval = None
-    for m in store.listar():
-        if str(m.get("projeto_id") or "") == str(projeto_id):
-            aval = m
-            break
-    return render_template("proposta.html", p=prop, projeto_id=projeto_id, aval=aval)
+    # Avaliação mais recente + histórico de avaliações deste projeto.
+    hist = store.historico(projeto_id)
+    aval = hist[0] if hist else None
+    # Documentos da prestação (Informações → Projeto Contratado → Documentos).
+    documentos, tem_relatorio = [], False
+    try:
+        documentos = sigfapes.listar_documentos_prestacao(projeto_id)
+        tem_relatorio = any(sigfapes._eh_relatorio_projeto(d) for d in documentos)
+    except Exception:  # noqa: BLE001 — sem acesso/sessão, página ainda renderiza
+        pass
+    return render_template("proposta.html", p=prop, projeto_id=projeto_id, aval=aval,
+                           historico=hist, documentos=documentos, tem_relatorio=tem_relatorio)
+
+
+@app.route("/propostas/<projeto_id>/relatorio.pdf")
+def proposta_relatorio_pdf(projeto_id):
+    """Baixa/serve o relatório técnico (Anexo VI) da prestação, cacheado."""
+    try:
+        caminho = sigfapes.baixar_relatorio_pdf(projeto_id)
+    except Exception as e:  # noqa: BLE001
+        return jsonify({"erro": str(e)}), 502
+    return send_file(caminho, mimetype="application/pdf",
+                     download_name=f"relatorio_tecnico_{projeto_id}.pdf")
+
+
+@app.route("/propostas/<projeto_id>/anexo/<file_id>")
+def proposta_anexo(projeto_id, file_id):
+    """Baixa/serve um anexo da prestação (contratados/downloadanexo.php)."""
+    import os as _os
+    if not file_id.isdigit():
+        abort(404)
+    destino = _os.path.join(sigfapes._REL_PDF_DIR, f"anexo_{file_id}.pdf")
+    try:
+        caminho = sigfapes.baixar_anexo(file_id, destino)
+    except Exception as e:  # noqa: BLE001
+        return jsonify({"erro": str(e)}), 502
+    return send_file(caminho, mimetype="application/pdf",
+                     download_name=f"anexo_{file_id}.pdf")
 
 
 @app.route("/propostas/<projeto_id>/projeto.pdf")
@@ -346,7 +498,9 @@ def projeto_resultado(aval_id):
         abort(404)
     meta = store._meta(aval_id) or {}
     titulo = meta.get("titulo") or "Prestação de Contas Técnica"
-    return Response(gerar_html(resultado, titulo=titulo), mimetype="text/html")
+    return Response(gerar_html(resultado, titulo=titulo,
+                               projeto_id=meta.get("projeto_id")),
+                    mimetype="text/html")
 
 
 @app.route("/projetos/<aval_id>/pdf")
