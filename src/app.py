@@ -157,21 +157,29 @@ def _avaliar_um(projeto_id, prop):
     titulo = (prop.get("titulo") or f"Projeto {projeto_id}")[:80]
     perfil = "inovacao"
     import ocr
-    notas = []
+    notas, erros = [], []
     for rel in relatorios:
-        with tempfile.TemporaryDirectory() as d:
-            _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
-            shutil.copy(proj_pdf, _os.path.join(d, "projeto"))
-            alvo = _os.path.join(d, "prestacao", f"{rel['file']}.pdf")
-            sigfapes.baixar_anexo(rel["file"], alvo)
-            projtxt = ocr.extract_folder_auto(_os.path.join(d, "projeto"))
-            prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
-        resultado = analisar(projtxt, prest, perfil=perfil)
-        tipo = resultado.get("tipo_relatorio", "") or ""
-        suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
-        store.salvar(resultado, titulo=titulo + suf, perfil=perfil, projeto_id=projeto_id)
-        notas.append(f"{tipo[:7] or '?'}:{resultado.get('grau_conformidade_geral')}")
-    return True, f"{len(relatorios)} relatório(s) — " + " ".join(notas)
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
+                shutil.copy(proj_pdf, _os.path.join(d, "projeto"))
+                alvo = _os.path.join(d, "prestacao", f"{rel['file']}.pdf")
+                sigfapes.baixar_anexo(rel["file"], alvo)
+                projtxt = ocr.extract_folder_auto(_os.path.join(d, "projeto"))
+                prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
+            resultado = analisar(projtxt, prest, perfil=perfil)
+            tipo = resultado.get("tipo_relatorio", "") or ""
+            suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
+            store.salvar(resultado, titulo=titulo + suf, perfil=perfil, projeto_id=projeto_id)
+            notas.append(f"{tipo[:7] or '?'}:{resultado.get('grau_conformidade_geral')}")
+        except Exception as e:  # noqa: BLE001 — um relatório ruim não aborta os outros
+            erros.append(f"{rel.get('nome', rel['file'])[:20]}: {str(e)[:40]}")
+    if not notas:
+        raise RuntimeError("nenhum relatório avaliado — " + "; ".join(erros))
+    msg = f"{len(notas)}/{len(relatorios)} relatório(s) — " + " ".join(notas)
+    if erros:
+        msg += f" | {len(erros)} falha(s)"
+    return True, msg
 
 
 def _run_batch(ids):
