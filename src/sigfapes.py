@@ -20,6 +20,7 @@ import csv
 import http.cookiejar
 import io
 import os
+import re
 import socket
 import time
 import urllib.parse
@@ -257,19 +258,74 @@ def baixar_projeto_pdf(projeto_id: str, force: bool = False,
 
 _REL_PDF_DIR = os.path.join(_CACHE_DIR, "relatorios")
 
+# Documentos da prestação ficam na "Área de Projeto Contratado", seção
+# "Gestão de Documentos" (passo=126), e baixam por contratados/downloadanexo.php.
+_PASSO_DOCUMENTOS = 126
+# Nome do documento que é o relatório técnico (o "realizado" da avaliação).
+_RE_RELATORIO = re.compile(r"anexo\s*vi\b|relat[óo]rio\s*t[ée]cnic", re.I)
+
+
+def listar_documentos_prestacao(projeto_id: str) -> list[dict]:
+    """Lista os documentos da prestação de contas de um projeto contratado.
+
+    Fluxo (Informações → Projeto Contratado → Documentos):
+    `contratados.php?projeto_id=<pid>&modo=1&passo=126&admin=1` → tabela de anexos,
+    cada um baixável por `contratados/downloadanexo.php?file=<fid>`.
+    Devolve [{file, nome, descricao, data, pesquisador}], mais recentes por último."""
+    projeto_id = str(projeto_id)
+    url = (f"{SITE}/contratados.php?projeto_id={projeto_id}"
+           f"&modo=1&passo={_PASSO_DOCUMENTOS}&admin=1")
+    opener = login()
+    with opener.open(urllib.request.Request(url), timeout=90) as resp:
+        html = resp.read().decode("utf-8", "replace")
+    docs = []
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", html, re.S | re.I):
+        m = re.search(r"downloadanexo\.php\?file=(\d+)", tr)
+        if not m:
+            continue
+        celulas = [" ".join(re.sub(r"<[^>]+>", " ", c).split())
+                   for c in re.findall(r"<td[^>]*>(.*?)</td>", tr, re.S | re.I)]
+        celulas = [c for c in celulas if c]
+        docs.append({
+            "file": m.group(1),
+            "nome": celulas[0] if celulas else "",
+            "descricao": celulas[1] if len(celulas) > 1 else "",
+            "data": next((c for c in celulas if re.search(r"\d{2}/\d{2}/\d{4}", c)), ""),
+            "pesquisador": celulas[-1] if len(celulas) > 2 else "",
+        })
+    return docs
+
+
+def baixar_anexo(file_id: str, destino: str, force: bool = False) -> str:
+    """Baixa um anexo da prestação (contratados/downloadanexo.php) para `destino`."""
+    if os.path.exists(destino) and os.path.getsize(destino) > 0 and not force:
+        return destino
+    opener = login()
+    url = f"{SITE}/contratados/downloadanexo.php?file={file_id}"
+    n = _baixar_stream(opener, url, destino, min_bytes=500)
+    if n < 500:
+        raise RuntimeError(f"Anexo {file_id} veio vazio ({n} bytes).")
+    return destino
+
 
 def baixar_relatorio_pdf(projeto_id: str, force: bool = False) -> str:
-    """Baixa o relatório técnico (prestação) do projeto.
+    """Baixa o relatório técnico (Anexo VI) da prestação de contas do projeto.
 
-    BLOQUEIO: o endpoint do relatório técnico no SIGFAPES ainda não foi mapeado
-    (não está na área de documentos da proposta; vive no fluxo de prestação de
-    contas). Quando a URL/endpoint for conhecido, implementar aqui o download
-    (provável `admin/relatorio/relatorio_pdf.php?relatorio_id=...`), seguindo o
-    mesmo padrão de `baixar_projeto_pdf`."""
-    raise RuntimeError(
-        "Relatório técnico indisponível: endpoint do SIGFAPES não mapeado. "
-        "Cole a URL de um relatório aberto na UI para habilitar o download."
-    )
+    Localiza, entre os documentos da prestação (passo=126), aquele cujo nome é
+    "Anexo VI - Relatório Técnico" e baixa via downloadanexo.php."""
+    projeto_id = str(projeto_id)
+    destino = os.path.join(_REL_PDF_DIR, f"{projeto_id}.pdf")
+    if os.path.exists(destino) and os.path.getsize(destino) > 0 and not force:
+        return destino
+    docs = listar_documentos_prestacao(projeto_id)
+    rel = next((d for d in docs if _RE_RELATORIO.search(d["nome"])
+                or _RE_RELATORIO.search(d["descricao"])), None)
+    if rel is None:
+        raise RuntimeError(
+            f"Relatório técnico (Anexo VI) não encontrado nos documentos do "
+            f"projeto {projeto_id}. Docs: {[d['nome'] for d in docs] or 'nenhum'}."
+        )
+    return baixar_anexo(rel["file"], destino, force=force)
 
 
 def agrupar_por_edital(props: list[dict]) -> list[dict]:

@@ -142,7 +142,7 @@
     <details class="statusdd">
       <summary>
         <span class="fl">Status</span>
-        <span class="fv">{{ status_sel|length }} selec.</span>
+        <span class="fv">{{ (status_sel|length ~ ' selec.') if status_sel else 'todos' }}</span>
       </summary>
       <div class="statusdd-body">
         {% for o in status_opcoes %}
@@ -216,7 +216,7 @@
   <div id="syncMsg" class="sync-msg" hidden></div>
 
   <div class="tiles">
-    <div class="tile"><div class="v">{{ total }}</div><div class="l">Propostas em prestação</div></div>
+    <div class="tile"><div class="v">{{ total }}</div><div class="l">Propostas (no filtro)</div></div>
     <div class="tile"><div class="v">{{ avaliadas }}</div><div class="l">Projetos avaliados</div></div>
     <div class="tile ok"><div class="v">{{ aprovadas }}</div><div class="l">Acima de {{ limiar }}% (aprovados)</div></div>
     <div class="tile bad"><div class="v">{{ reprovadas }}</div><div class="l">Não passaram (&lt; {{ limiar }}%)</div></div>

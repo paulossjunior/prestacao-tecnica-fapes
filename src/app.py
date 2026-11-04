@@ -249,9 +249,8 @@ def propostas_endpoint():
     notas = []
     status_opcoes = []
     # Filtros combináveis (AND): status (multi) + edital (multi) + busca + avaliação.
+    # Sem status selecionado = TODAS as propostas (padrão mostra tudo).
     status_sel = [s for s in request.args.getlist("status") if s.strip()]
-    if not status_sel:
-        status_sel = [STATUS_PRESTACAO]
     edital_sel = [e for e in request.args.getlist("edital") if e.strip()]
     q = (request.args.get("q") or "").strip()
     aval_sel = (request.args.get("avaliacao") or "").strip()  # ''|avaliadas|pendentes
@@ -313,7 +312,43 @@ def proposta_detalhe(projeto_id):
         if str(m.get("projeto_id") or "") == str(projeto_id):
             aval = m
             break
-    return render_template("proposta.html", p=prop, projeto_id=projeto_id, aval=aval)
+    # Documentos da prestação (Informações → Projeto Contratado → Documentos).
+    documentos, tem_relatorio = [], False
+    try:
+        documentos = sigfapes.listar_documentos_prestacao(projeto_id)
+        tem_relatorio = any(sigfapes._RE_RELATORIO.search(d["nome"])
+                            or sigfapes._RE_RELATORIO.search(d["descricao"])
+                            for d in documentos)
+    except Exception:  # noqa: BLE001 — sem acesso/sessão, página ainda renderiza
+        pass
+    return render_template("proposta.html", p=prop, projeto_id=projeto_id, aval=aval,
+                           documentos=documentos, tem_relatorio=tem_relatorio)
+
+
+@app.route("/propostas/<projeto_id>/relatorio.pdf")
+def proposta_relatorio_pdf(projeto_id):
+    """Baixa/serve o relatório técnico (Anexo VI) da prestação, cacheado."""
+    try:
+        caminho = sigfapes.baixar_relatorio_pdf(projeto_id)
+    except Exception as e:  # noqa: BLE001
+        return jsonify({"erro": str(e)}), 502
+    return send_file(caminho, mimetype="application/pdf",
+                     download_name=f"relatorio_tecnico_{projeto_id}.pdf")
+
+
+@app.route("/propostas/<projeto_id>/anexo/<file_id>")
+def proposta_anexo(projeto_id, file_id):
+    """Baixa/serve um anexo da prestação (contratados/downloadanexo.php)."""
+    import os as _os
+    if not file_id.isdigit():
+        abort(404)
+    destino = _os.path.join(sigfapes._REL_PDF_DIR, f"anexo_{file_id}.pdf")
+    try:
+        caminho = sigfapes.baixar_anexo(file_id, destino)
+    except Exception as e:  # noqa: BLE001
+        return jsonify({"erro": str(e)}), 502
+    return send_file(caminho, mimetype="application/pdf",
+                     download_name=f"anexo_{file_id}.pdf")
 
 
 @app.route("/propostas/<projeto_id>/projeto.pdf")
