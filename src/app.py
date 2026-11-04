@@ -144,23 +144,34 @@ _batch_lock = threading.Lock()
 
 
 def _avaliar_um(projeto_id, prop):
-    """Avalia uma proposta: baixa projeto + relatório, roda LLM, salva. Devolve (ok, msg)."""
+    """Avalia uma proposta: baixa o projeto e AVALIA CADA RELATÓRIO (Anexo VI)
+    separadamente (parcial por período / final), gerando uma avaliação por
+    relatório (histórico). Devolve (ok, msg)."""
+    import os as _os
+    import shutil
     import tempfile
-    sigfapes.baixar_projeto_pdf(projeto_id)                 # projeto (ok)
-    rel = sigfapes.baixar_relatorio_pdf(projeto_id)         # relatório (bloqueio atual)
-    with tempfile.TemporaryDirectory() as d:
-        import os as _os
-        import shutil
-        _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
-        shutil.copy(sigfapes.baixar_projeto_pdf(projeto_id), _os.path.join(d, "projeto"))
-        shutil.copy(rel, _os.path.join(d, "prestacao"))
-        import ocr
-        proj = ocr.extract_folder_auto(_os.path.join(d, "projeto"))
-        prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
-    resultado = analisar(proj, prest, perfil="inovacao")
-    store.salvar(resultado, titulo=(prop.get("titulo") or f"Projeto {projeto_id}")[:80],
-                 perfil="inovacao", projeto_id=projeto_id)
-    return True, f"nota {resultado.get('grau_conformidade_geral')}"
+    proj_pdf = sigfapes.baixar_projeto_pdf(projeto_id)
+    relatorios = sigfapes.listar_relatorios(projeto_id)
+    if not relatorios:
+        raise RuntimeError(f"Relatório técnico (Anexo VI) não encontrado no projeto {projeto_id}.")
+    titulo = (prop.get("titulo") or f"Projeto {projeto_id}")[:80]
+    perfil = "inovacao"
+    import ocr
+    notas = []
+    for rel in relatorios:
+        with tempfile.TemporaryDirectory() as d:
+            _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
+            shutil.copy(proj_pdf, _os.path.join(d, "projeto"))
+            alvo = _os.path.join(d, "prestacao", f"{rel['file']}.pdf")
+            sigfapes.baixar_anexo(rel["file"], alvo)
+            projtxt = ocr.extract_folder_auto(_os.path.join(d, "projeto"))
+            prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
+        resultado = analisar(projtxt, prest, perfil=perfil)
+        tipo = resultado.get("tipo_relatorio", "") or ""
+        suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
+        store.salvar(resultado, titulo=titulo + suf, perfil=perfil, projeto_id=projeto_id)
+        notas.append(f"{tipo[:7] or '?'}:{resultado.get('grau_conformidade_geral')}")
+    return True, f"{len(relatorios)} relatório(s) — " + " ".join(notas)
 
 
 def _run_batch(ids):
@@ -424,9 +435,7 @@ def proposta_detalhe(projeto_id):
     documentos, tem_relatorio = [], False
     try:
         documentos = sigfapes.listar_documentos_prestacao(projeto_id)
-        tem_relatorio = any(sigfapes._RE_RELATORIO.search(d["nome"])
-                            or sigfapes._RE_RELATORIO.search(d["descricao"])
-                            for d in documentos)
+        tem_relatorio = any(sigfapes._eh_relatorio_projeto(d) for d in documentos)
     except Exception:  # noqa: BLE001 — sem acesso/sessão, página ainda renderiza
         pass
     return render_template("proposta.html", p=prop, projeto_id=projeto_id, aval=aval,

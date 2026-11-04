@@ -93,6 +93,8 @@ def salvar(resultado: dict, titulo: str | None = None, perfil: str | None = None
         "parecer": resultado.get("parecer", ""),
         "situacao": situacao(nota),
         "projeto_id": projeto_id or "",
+        "tipo_relatorio": resultado.get("tipo_relatorio", ""),
+        "periodo_relatorio": resultado.get("periodo_relatorio", ""),
     }
     with open(os.path.join(d, "parecer.json"), "w", encoding="utf-8") as f:
         json.dump(resultado, f, ensure_ascii=False, indent=2)

@@ -261,8 +261,16 @@ _REL_PDF_DIR = os.path.join(_CACHE_DIR, "relatorios")
 # Documentos da prestação ficam na "Área de Projeto Contratado", seção
 # "Gestão de Documentos" (passo=126), e baixam por contratados/downloadanexo.php.
 _PASSO_DOCUMENTOS = 126
-# Nome do documento que é o relatório técnico (o "realizado" da avaliação).
+# Nome do documento que é o relatório técnico DO PROJETO (o "realizado").
+# "Anexo VI" ou "Relatório Técnico (Final/Parcial/de Projeto/de Pesquisa)".
 _RE_RELATORIO = re.compile(r"anexo\s*vi\b|relat[óo]rio\s*t[ée]cnic", re.I)
+# Exclui relatórios individuais de bolsista (não são o relatório do projeto).
+_RE_NAO_RELATORIO = re.compile(r"bolsista|monitora?\b", re.I)
+
+
+def _eh_relatorio_projeto(doc: dict) -> bool:
+    txt = f"{doc.get('nome','')} {doc.get('descricao','')}"
+    return bool(_RE_RELATORIO.search(txt)) and not _RE_NAO_RELATORIO.search(txt)
 
 
 def listar_documentos_prestacao(projeto_id: str) -> list[dict]:
@@ -308,6 +316,20 @@ def baixar_anexo(file_id: str, destino: str, force: bool = False) -> str:
     return destino
 
 
+def listar_relatorios(projeto_id: str) -> list[dict]:
+    """Todos os documentos de relatório técnico (Anexo VI) da prestação — pode
+    haver vários (parciais por período + final). Mais antigos primeiro."""
+    docs = listar_documentos_prestacao(projeto_id)
+    rel = [d for d in docs if _eh_relatorio_projeto(d)]
+    rel.sort(key=lambda d: d.get("data", ""))  # cronológico: parcial 1, 2, final
+    return rel
+
+
+def baixar_relatorio_por_file(file_id: str, destino: str, force: bool = False) -> str:
+    """Baixa um relatório específico (por file id) para `destino`."""
+    return baixar_anexo(file_id, destino, force=force)
+
+
 def baixar_relatorio_pdf(projeto_id: str, force: bool = False) -> str:
     """Baixa o relatório técnico (Anexo VI) da prestação de contas do projeto.
 
@@ -318,8 +340,7 @@ def baixar_relatorio_pdf(projeto_id: str, force: bool = False) -> str:
     if os.path.exists(destino) and os.path.getsize(destino) > 0 and not force:
         return destino
     docs = listar_documentos_prestacao(projeto_id)
-    rel = next((d for d in docs if _RE_RELATORIO.search(d["nome"])
-                or _RE_RELATORIO.search(d["descricao"])), None)
+    rel = next((d for d in docs if _eh_relatorio_projeto(d)), None)
     if rel is None:
         raise RuntimeError(
             f"Relatório técnico (Anexo VI) não encontrado nos documentos do "

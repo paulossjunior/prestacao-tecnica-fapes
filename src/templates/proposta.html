@@ -135,6 +135,9 @@
           <span class="aval-nota">{{ aval.nota if aval.nota is not none else '—' }}%</span>
           <span class="status {{ 'st-ok' if aval.situacao == 'APROVADO' else 'st-pend' }}">{{ aval.situacao }}</span>
         </div>
+        {% if aval.tipo_relatorio and aval.tipo_relatorio != 'NÃO INFORMADO' %}
+          <div class="muted" style="margin-bottom:6px">Relatório: <b>{{ aval.tipo_relatorio|title }}</b>{% if aval.periodo_relatorio and aval.periodo_relatorio != 'NÃO INFORMADO' %} · {{ aval.periodo_relatorio }}{% endif %}</div>
+        {% endif %}
         <div class="muted" style="margin-bottom:14px">Parecer: <b>{{ aval.parecer or '—' }}</b></div>
         <a class="btn" href="/projetos/{{ aval.id }}" target="_blank" rel="noopener">Ver parecer completo</a>
         <a class="btn ghost" href="/projetos/{{ aval.id }}/pdf" style="margin-left:6px">PDF</a>
@@ -144,7 +147,11 @@
           <div class="doclist">
             {% for h in historico %}
               <a class="docrow{{ ' rel' if h.id == aval.id }}" href="/projetos/{{ h.id }}" target="_blank" rel="noopener">
-                <span class="dn">{{ h.nota if h.nota is not none else '—' }}% · {{ h.situacao }} · {{ h.parecer or '—' }}{{ ' (atual)' if h.id == aval.id }}</span>
+                <span class="dn">
+                  {% if h.tipo_relatorio and h.tipo_relatorio != 'NÃO INFORMADO' %}<b>{{ h.tipo_relatorio|title }}</b>
+                    {% if h.periodo_relatorio and h.periodo_relatorio != 'NÃO INFORMADO' %}<span class="dd">{{ h.periodo_relatorio }}</span>{% endif %} ·
+                  {% endif %}
+                  {{ h.nota if h.nota is not none else '—' }}% · {{ h.situacao }} · {{ h.parecer or '—' }}{{ ' (atual)' if h.id == aval.id }}</span>
                 <span class="dd">{{ h.data[:16].replace('T',' ') }}</span>
               </a>
             {% endfor %}
