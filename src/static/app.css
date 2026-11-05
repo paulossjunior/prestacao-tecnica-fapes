@@ -129,6 +129,11 @@ select.edital{width:100%;max-width:660px;}
 .tile .v{font:680 24px var(--sans);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
 .tile .l{font-size:11.5px;color:var(--muted);margin-top:3px;}
 .tile.ok .v{color:var(--ok);} .tile.bad .v{color:var(--bad);}
+/* Variante compacta: dashboard por edital */
+.tiles.mini{gap:8px;margin:0 0 14px;}
+.tiles.mini .tile{padding:9px 12px;background:var(--surface-2);}
+.tiles.mini .tile .v{font-size:18px;}
+.tiles.mini .tile .l{font-size:10.5px;margin-top:1px;}
 @media (max-width:640px){ .tiles{grid-template-columns:repeat(2,1fr);} }
 
 /* Grupos por edital */
@@ -136,6 +141,7 @@ select.edital{width:100%;max-width:660px;}
 .edital>h2{margin:0;font:650 13px var(--sans);padding:13px 16px;background:var(--surface-2);
   border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:baseline;}
 .edital>h2 .n{margin-left:auto;font:600 11.5px var(--mono);color:var(--faint);}
+.edital-body{padding:14px 16px 0;border-bottom:1px solid var(--line);}
 
 /* Tabelas */
 .tbl-wrap{overflow-x:auto;}

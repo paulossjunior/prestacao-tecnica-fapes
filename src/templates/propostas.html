@@ -132,8 +132,18 @@
       Atualize com <strong>Sincronizar dados</strong>.</div>
   {% else %}
     {% for g in grupos %}
+      {% set g_aval = g.propostas|selectattr('aval')|list %}
+      {% set g_ok = g_aval|selectattr('aval.situacao','equalto','APROVADO')|list|length %}
       <div class="edital">
         <h2>{{ g.edital }} <span class="n">{{ g.propostas|length }} proposta{{ '' if g.propostas|length == 1 else 's' }}</span></h2>
+        <div class="edital-body">
+          <div class="tiles mini">
+            <div class="tile"><div class="v">{{ g.propostas|length }}</div><div class="l">Propostas</div></div>
+            <div class="tile"><div class="v">{{ g_aval|length }}</div><div class="l">Avaliados</div></div>
+            <div class="tile ok"><div class="v">{{ g_ok }}</div><div class="l">Acima de {{ limiar }}%</div></div>
+            <div class="tile bad"><div class="v">{{ g_aval|length - g_ok }}</div><div class="l">Não passaram</div></div>
+          </div>
+        </div>
         <div class="tbl-wrap">
           <table>
             <thead>
