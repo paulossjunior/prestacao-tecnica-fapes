@@ -144,6 +144,14 @@ class LLM:
             from openai_ocr import ocr_pdf
         return ocr_pdf(self.raw, path, self.ocr_model)
 
+    def ocr_image(self, path: str, mime: str | None = None) -> str:
+        """Transcreve uma IMAGEM (JPEG/PNG/…) para markdown via visão do provedor."""
+        if self.provider == "mistral":
+            from mistral_ocr import ocr_image
+        else:
+            from openai_ocr import ocr_image
+        return ocr_image(self.raw, path, self.ocr_model, mime=mime or "image/png")
+
 
 def get_llm(provider: str | None = None) -> LLM:
     """Cria o cliente do provedor escolhido, lendo modelos do ambiente."""

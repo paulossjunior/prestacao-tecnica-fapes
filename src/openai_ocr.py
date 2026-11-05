@@ -37,3 +37,22 @@ def ocr_pdf(client, path: str, model: str) -> str:
         }],
     )
     return (resp.output_text or "").strip()
+
+
+def ocr_image(client, path: str, model: str, mime: str = "image/png") -> str:
+    """Transcreve uma IMAGEM (JPEG/PNG/…) via visão do modelo. Usado quando um
+    anexo chega como imagem (às vezes com extensão .pdf trocada)."""
+    with open(path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode()
+
+    resp = client.responses.create(
+        model=model,
+        input=[{
+            "role": "user",
+            "content": [
+                {"type": "input_image", "image_url": f"data:{mime};base64,{b64}"},
+                {"type": "input_text", "text": _PROMPT},
+            ],
+        }],
+    )
+    return (resp.output_text or "").strip()
