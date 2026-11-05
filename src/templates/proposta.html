@@ -75,38 +75,57 @@
 
     <div class="card">
       <h2>Avaliação</h2>
-      {% if aval %}
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
-          <span class="aval-nota">{{ aval.nota if aval.nota is not none else '—' }}%</span>
-          <span class="status {{ 'st-ok' if aval.situacao == 'APROVADO' else 'st-pend' }}">{{ aval.situacao }}</span>
+      {% if resumo %}
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">
+          <span class="aval-nota">{{ resumo.nota if resumo.nota is not none else '—' }}%</span>
+          <span class="status {{ 'st-ok' if resumo.situacao == 'APROVADO' else 'st-pend' }}">{{ resumo.situacao }}</span>
         </div>
-        {% if aval.tipo_relatorio and aval.tipo_relatorio != 'NÃO INFORMADO' %}
-          <div class="muted" style="margin-bottom:6px">Relatório: <b>{{ aval.tipo_relatorio|title }}</b>{% if aval.periodo_relatorio and aval.periodo_relatorio != 'NÃO INFORMADO' %} · {{ aval.periodo_relatorio }}{% endif %}</div>
-        {% endif %}
-        <div class="muted" style="margin-bottom:14px">Parecer: <b>{{ aval.parecer or '—' }}</b></div>
-        <a class="btn" href="/projetos/{{ aval.id }}" target="_blank" rel="noopener">Ver parecer completo</a>
-        <a class="btn ghost" href="/projetos/{{ aval.id }}/pdf" style="margin-left:6px">PDF</a>
+        <div class="muted" style="margin-bottom:16px">
+          Nota geral da proposta = <b>mediana</b> das notas de {{ resumo.n_docs }} documento{{ '' if resumo.n_docs == 1 else 's' }}.
+        </div>
 
-        {% if historico and historico|length > 1 %}
-          <h2 style="margin-top:22px">Histórico de avaliações ({{ historico|length }})</h2>
-          <div class="doclist">
-            {% for h in historico %}
-              <a class="docrow{{ ' rel' if h.id == aval.id }}" href="/projetos/{{ h.id }}" target="_blank" rel="noopener">
-                <span class="dn">
-                  {% if h.tipo_relatorio and h.tipo_relatorio != 'NÃO INFORMADO' %}<b>{{ h.tipo_relatorio|title }}</b>
-                    {% if h.periodo_relatorio and h.periodo_relatorio != 'NÃO INFORMADO' %}<span class="dd">{{ h.periodo_relatorio }}</span>{% endif %} ·
-                  {% endif %}
-                  {{ h.nota if h.nota is not none else '—' }}% · {{ h.situacao }} · {{ h.parecer or '—' }}{{ ' (atual)' if h.id == aval.id }}</span>
-                <span class="dd">{{ h.data[:16].replace('T',' ') }}</span>
-              </a>
-            {% endfor %}
-          </div>
+        <h2 style="margin-top:4px">Notas por documento ({{ por_doc|length }})</h2>
+        <div class="doclist">
+          {% for d in por_doc %}
+            <a class="docrow{{ ' rel' if (d.tipo_relatorio or '')|upper == 'FINAL' }}" href="/projetos/{{ d.id }}" target="_blank" rel="noopener">
+              <span class="dn">
+                <b>{{ d.tipo_relatorio|title if d.tipo_relatorio and d.tipo_relatorio != 'NÃO INFORMADO' else 'Relatório' }}</b>
+                {% if d.periodo_relatorio and d.periodo_relatorio != 'NÃO INFORMADO' %}<span class="dd">{{ d.periodo_relatorio }}</span>{% endif %}
+                · <b>{{ d.nota if d.nota is not none else '—' }}%</b> · {{ d.situacao }} · {{ d.parecer or '—' }}
+                {% if d.relatorio_nome %}<br><span class="dd">{{ d.relatorio_nome[:48] }}</span>{% endif %}
+              </span>
+              <span class="dd">{{ d.data[:16].replace('T',' ') }}</span>
+            </a>
+          {% endfor %}
+        </div>
+
+        <div style="margin-top:14px">
+          <a class="btn" href="/projetos/{{ resumo.id }}" target="_blank" rel="noopener">Ver parecer ({{ resumo.tipo_relatorio|title if resumo.tipo_relatorio and resumo.tipo_relatorio != 'NÃO INFORMADO' else 'representativo' }})</a>
+          <a class="btn ghost" href="/projetos/{{ resumo.id }}/pdf" style="margin-left:6px">PDF</a>
+        </div>
+
+        {% if historico and historico|length > por_doc|length %}
+          <details style="margin-top:18px">
+            <summary class="muted" style="cursor:pointer">Histórico completo ({{ historico|length }} avaliações, incl. rodadas anteriores)</summary>
+            <div class="doclist" style="margin-top:10px">
+              {% for h in historico %}
+                <a class="docrow" href="/projetos/{{ h.id }}" target="_blank" rel="noopener">
+                  <span class="dn">
+                    {% if h.tipo_relatorio and h.tipo_relatorio != 'NÃO INFORMADO' %}<b>{{ h.tipo_relatorio|title }}</b> · {% endif %}
+                    {{ h.nota if h.nota is not none else '—' }}% · {{ h.situacao }} · {{ h.parecer or '—' }}
+                  </span>
+                  <span class="dd">{{ h.data[:16].replace('T',' ') }}</span>
+                </a>
+              {% endfor %}
+            </div>
+          </details>
         {% endif %}
       {% else %}
         <span class="status st-pend">● Avaliação pendente</span>
         <p class="muted" style="margin-top:12px">
-          A avaliação compara o <b>projeto</b> (previsto) com o <b>relatório técnico</b> (realizado).
-          O projeto já está disponível; falta o relatório técnico da prestação para rodar a análise.
+          A avaliação compara o <b>projeto</b> (previsto) com cada <b>relatório técnico</b> (realizado):
+          cada relatório parcial e o final recebem nota individual, e a nota geral da proposta é a
+          <b>mediana</b> dessas notas. Falta o relatório técnico da prestação para rodar a análise.
         </p>
       {% endif %}
     </div>

@@ -217,7 +217,8 @@ def _avaliar_um(projeto_id, prop):
             resultado = analisar(projtxt, prest, perfil=perfil)
             tipo = resultado.get("tipo_relatorio", "") or ""
             suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
-            store.salvar(resultado, titulo=titulo + suf, perfil=perfil, projeto_id=projeto_id)
+            store.salvar(resultado, titulo=titulo + suf, perfil=perfil, projeto_id=projeto_id,
+                         relatorio_file=rel.get("file"), relatorio_nome=rel.get("nome"))
             notas.append(f"{tipo[:7] or '?'}:{resultado.get('grau_conformidade_geral')}")
         except Exception as e:  # noqa: BLE001 — um relatório ruim não aborta os outros
             erros.append(f"{rel.get('nome', rel['file'])[:20]}: {str(e)[:40]}")
@@ -551,9 +552,12 @@ def proposta_detalhe(projeto_id):
     prop = sigfapes.proposta_por_projeto_id(projeto_id)
     if prop is None:
         abort(404)
-    # Avaliação mais recente + histórico de avaliações deste projeto.
+    # Avaliação por documento (um projeto tem vários parciais + final) + nota
+    # geral (mediana) + histórico completo.
     hist = store.historico(projeto_id)
-    aval = hist[0] if hist else None
+    por_doc = store.por_documento(projeto_id)   # nota atual de cada documento
+    resumo = store.resumo_projeto(projeto_id)   # nota geral = mediana
+    aval = resumo                               # resumo é a "avaliação" do projeto
     # Documentos da prestação (Informações → Projeto Contratado → Documentos).
     documentos, tem_relatorio = [], False
     try:
@@ -562,6 +566,7 @@ def proposta_detalhe(projeto_id):
     except Exception:  # noqa: BLE001 — sem acesso/sessão, página ainda renderiza
         pass
     return render_template("proposta.html", p=prop, projeto_id=projeto_id, aval=aval,
+                           resumo=resumo, por_doc=por_doc,
                            historico=hist, documentos=documentos, tem_relatorio=tem_relatorio)
 
 
