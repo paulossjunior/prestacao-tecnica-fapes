@@ -12,6 +12,34 @@ from llm import get_llm
 # texto) e enviado ao OCR do provedor.
 MIN_CHARS_PDF = 100
 
+# Assinaturas (magic bytes) para descobrir o tipo REAL do arquivo, independente
+# da extensão — anexos do SIGFAPES às vezes são uma imagem salva como ".pdf".
+_MAGIC = (
+    (b"%PDF", "pdf", None),
+    (b"\xff\xd8\xff", "image", "image/jpeg"),
+    (b"\x89PNG\r\n\x1a\n", "image", "image/png"),
+    (b"GIF87a", "image", "image/gif"),
+    (b"GIF89a", "image", "image/gif"),
+)
+
+
+def _sniff(path: str) -> tuple[str, str | None]:
+    """(tipo, mime) pelo CONTEÚDO real: 'pdf' | 'image' | 'other'. O mime só vem
+    para imagens (p/ montar o data URI do OCR por visão)."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(16)
+    except OSError:
+        return "other", None
+    for sig, tipo, mime in _MAGIC:
+        if head.startswith(sig):
+            return tipo, mime
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+        return "image", "image/webp"
+    if head[:4] in (b"II*\x00", b"MM\x00*"):
+        return "image", "image/tiff"
+    return "other", None
+
 
 def _truncar(texto: str) -> str:
     texto = texto.strip()
@@ -32,8 +60,15 @@ def pdf_escaneado(path: str) -> bool:
 
 
 def extract_file_auto(path: str, llm=None, _ocr_cb=None) -> str:
-    """Extrai texto de um arquivo. PDF escaneado cai automaticamente no OCR do LLM;
-    PDF com texto e demais formatos usam o extrator local (rápido, sem custo)."""
+    """Extrai texto de um arquivo. Imagem (mesmo com extensão .pdf trocada) e PDF
+    escaneado caem no OCR do LLM; PDF com texto e demais formatos usam o extrator
+    local (rápido, sem custo)."""
+    tipo, mime = _sniff(path)
+    if tipo == "image":  # arquivo é imagem de verdade → OCR por visão
+        llm = llm or get_llm()
+        if _ocr_cb:
+            _ocr_cb(path)
+        return _truncar(llm.ocr_image(path, mime=mime))
     if path.lower().endswith(".pdf") and pdf_escaneado(path):
         llm = llm or get_llm()
         if _ocr_cb:

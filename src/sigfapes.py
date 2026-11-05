@@ -36,7 +36,11 @@ _ENVFILE = dotenv_values()
 
 
 def _cfg(chave: str) -> str:
-    return (_ENVFILE.get(chave) or os.getenv(chave) or "")
+    # Aceita também SIGFAPES_<chave>: em hosts como o Render, `USER` colide com o
+    # usuário do SO, então definimos SIGFAPES_USER/SIGFAPES_PASSWORD/SIGFAPES_SITE.
+    # Ordem: .env local → SIGFAPES_<chave> (env) → <chave> (.env) → <chave> (env).
+    return (_ENVFILE.get(chave) or os.getenv("SIGFAPES_" + chave)
+            or _ENVFILE.get("SIGFAPES_" + chave) or os.getenv(chave) or "")
 
 
 SITE = (_cfg("SITE") or "http://201.62.44.41/").rstrip("/")

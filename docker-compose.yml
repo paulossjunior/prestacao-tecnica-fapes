@@ -6,10 +6,18 @@ services:
     ports:
       - "8080:8000"          # host:container -> acesse http://localhost:8080
     env_file:
-      - .env                 # carrega o .env inteiro no container (chaves, modelos)
+      - .env                 # carrega o .env inteiro no container (chaves, modelos, login)
     environment:
       # fallbacks caso não estejam no .env
-      - LLM_PROVIDER=${LLM_PROVIDER:-}
-      - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-large-latest}
+      - PORT=8000
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - OPENAI_OCR_MODEL=${OPENAI_OCR_MODEL:-gpt-5.4-nano}
+    volumes:
+      - avaliacoes:/app/avaliacoes   # persiste avaliações entre recriações
+      - cache:/app/cache             # persiste o CSV de propostas (cache)
     restart: unless-stopped
+
+volumes:
+  avaliacoes:
+  cache:

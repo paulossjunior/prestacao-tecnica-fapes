@@ -2,20 +2,28 @@ services:
   - type: web
     name: prestacao-tecnica-fapes
     runtime: python
-    plan: free
+    plan: free                 # efêmero: avaliações somem a cada deploy/restart/sleep
     buildCommand: pip install -r requirements.txt
     # timeout alto + threads: no free tier a análise pode levar vários minutos.
     startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 600
     envVars:
+      # ---- LLM (OpenAI) ----
       - key: LLM_PROVIDER
-        value: mistral         # troque para "openai" se for usar a OpenAI
-      - key: MISTRAL_API_KEY
-        sync: false            # definir manualmente no dashboard (secret)
-      - key: MISTRAL_MODEL
-        value: mistral-large-latest
+        value: openai
       - key: OPENAI_API_KEY
-        sync: false            # secret; só necessário com LLM_PROVIDER=openai
+        sync: false            # SECRET: definir no dashboard
       - key: OPENAI_MODEL
-        value: gpt-4o
+        value: gpt-4o          # análise (qualidade)
+      - key: OPENAI_OCR_MODEL
+        value: gpt-5.4-nano    # OCR (barato)
+      # ---- Login SIGFAPES ----
+      # NÃO use "USER": colide com o usuário do SO no Render. Use SIGFAPES_*.
+      - key: SIGFAPES_USER
+        sync: false            # SECRET: login do SIGFAPES
+      - key: SIGFAPES_PASSWORD
+        sync: false            # SECRET: senha do SIGFAPES
+      - key: SIGFAPES_SITE
+        value: https://www.sigfapes.es.gov.br
+      # ---- Runtime ----
       - key: PYTHON_VERSION
         value: "3.12.8"

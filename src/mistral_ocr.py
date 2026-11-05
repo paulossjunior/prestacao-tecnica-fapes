@@ -31,3 +31,18 @@ def ocr_pdf(client, path: str, model: str) -> str:
 
     paginas = [p.markdown for p in resp.pages if getattr(p, "markdown", "")]
     return "\n\n".join(paginas).strip()
+
+
+def ocr_image(client, path: str, model: str, mime: str = "image/png") -> str:
+    """OCR da Mistral em uma IMAGEM (base64 inline). Usado quando um anexo chega
+    como imagem (às vezes com extensão .pdf trocada)."""
+    import base64
+
+    with open(path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode()
+    resp = client.ocr.process(
+        model=model,
+        document={"type": "image_url", "image_url": f"data:{mime};base64,{b64}"},
+    )
+    paginas = [p.markdown for p in resp.pages if getattr(p, "markdown", "")]
+    return "\n\n".join(paginas).strip()

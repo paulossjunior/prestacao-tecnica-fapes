@@ -16,7 +16,19 @@ COPY src ./src
 # Skill de escrita executiva injetada nos prompts (prompts.py lê ../.agents).
 COPY .agents ./.agents
 
+# Usuário não-root. /app precisa ser gravável: o app escreve avaliações, cache e
+# config.json em runtime (efêmeros — monte um volume p/ persistir, veja abaixo).
+RUN useradd --create-home --uid 10001 appuser \
+    && mkdir -p /app/avaliacoes /app/cache \
+    && chown -R appuser:appuser /app
+USER appuser
+
+# Persistência opcional: monte um volume em /app/avaliacoes (e /app/cache) p/ as
+# avaliações sobreviverem a redeploys. Sem volume, somem ao recriar o container.
+VOLUME ["/app/avaliacoes"]
+
+# A plataforma (Dokploy/Dokku/Render) injeta $PORT; default 8000 se ausente.
 EXPOSE 8000
 
-# threaded + timeout alto: a análise via Mistral pode levar minutos.
-CMD ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:8000", "--workers", "1", "--threads", "4", "--timeout", "600"]
+# shell-form p/ expandir ${PORT}. threaded + timeout alto: análise leva minutos.
+CMD gunicorn wsgi:app --bind 0.0.0.0:${PORT:-8000} --workers 1 --threads 4 --timeout 600
