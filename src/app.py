@@ -143,10 +143,48 @@ _batch = {"status": "idle", "total": 0, "done": 0, "ok": 0, "itens": [], "msg": 
 _batch_lock = threading.Lock()
 
 
+# Evidências complementares: nº máximo de docs e teto de bytes por doc (evita
+# OCR dispendioso em arquivos enormes). Produção técnica que comprova entregáveis.
+_MAX_EVIDENCIAS = 6
+_EVIDENCIA_MAX_BYTES = 9_000_000
+
+
+def _slug(texto: str) -> str:
+    """Nome de arquivo seguro a partir do nome do documento (p/ rótulo no LLM)."""
+    import re as _re
+    s = _re.sub(r"[^\w]+", "_", (texto or "").strip())[:50].strip("_")
+    return s or "doc"
+
+
+def _coletar_evidencias(projeto_id, destino_dir):
+    """Baixa as evidências complementares (artigos, trabalhos, complementos) numa
+    pasta e devolve (texto_extraído, [nomes_incluídos]). Vazio se não houver."""
+    import os as _os
+    import ocr
+    evid = sigfapes.listar_evidencias_complementares(projeto_id)
+    incluidos = []
+    for doc in evid[:_MAX_EVIDENCIAS]:
+        alvo = _os.path.join(destino_dir, f"evidencia__{_slug(doc.get('nome'))}.pdf")
+        try:
+            sigfapes.baixar_anexo(doc["file"], alvo)
+            if _os.path.getsize(alvo) > _EVIDENCIA_MAX_BYTES:
+                _os.remove(alvo)  # grande demais p/ OCR — ignora
+                continue
+            incluidos.append(doc.get("nome", doc["file"]))
+        except Exception:  # noqa: BLE001 — evidência ruim não aborta a avaliação
+            if _os.path.exists(alvo):
+                _os.remove(alvo)
+    if not incluidos:
+        return "", []
+    return ocr.extract_folder_auto(destino_dir), incluidos
+
+
 def _avaliar_um(projeto_id, prop):
     """Avalia uma proposta: baixa o projeto e AVALIA CADA RELATÓRIO (Anexo VI)
     separadamente (parcial por período / final), gerando uma avaliação por
-    relatório (histórico). Devolve (ok, msg)."""
+    relatório (histórico). As EVIDÊNCIAS COMPLEMENTARES da prestação (artigos,
+    trabalhos, complementos) entram como comprovação em todas as avaliações.
+    Devolve (ok, msg)."""
     import os as _os
     import shutil
     import tempfile
@@ -157,16 +195,25 @@ def _avaliar_um(projeto_id, prop):
     titulo = (prop.get("titulo") or f"Projeto {projeto_id}")[:80]
     perfil = "inovacao"
     import ocr
+    # Evidências complementares: baixa e extrai UMA vez (compartilhado entre os
+    # relatórios), evitando re-OCR por relatório.
+    with tempfile.TemporaryDirectory() as ed:
+        evid_txt, evid_nomes = _coletar_evidencias(projeto_id, ed)
+    if evid_nomes:
+        print(f"[evidências] {projeto_id}: {len(evid_nomes)} doc(s) — "
+              + ", ".join(n[:28] for n in evid_nomes), flush=True)
     notas, erros = [], []
     for rel in relatorios:
         try:
             with tempfile.TemporaryDirectory() as d:
                 _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
                 shutil.copy(proj_pdf, _os.path.join(d, "projeto"))
-                alvo = _os.path.join(d, "prestacao", f"{rel['file']}.pdf")
+                alvo = _os.path.join(d, "prestacao", f"relatorio__{rel['file']}.pdf")
                 sigfapes.baixar_anexo(rel["file"], alvo)
                 projtxt = ocr.extract_folder_auto(_os.path.join(d, "projeto"))
                 prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
+            if evid_txt:
+                prest += "\n\n" + evid_txt  # evidências já vêm rotuladas por arquivo
             resultado = analisar(projtxt, prest, perfil=perfil)
             tipo = resultado.get("tipo_relatorio", "") or ""
             suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
@@ -176,7 +223,8 @@ def _avaliar_um(projeto_id, prop):
             erros.append(f"{rel.get('nome', rel['file'])[:20]}: {str(e)[:40]}")
     if not notas:
         raise RuntimeError("nenhum relatório avaliado — " + "; ".join(erros))
-    msg = f"{len(notas)}/{len(relatorios)} relatório(s) — " + " ".join(notas)
+    ev_sfx = f" +{len(evid_nomes)} evid." if evid_nomes else ""
+    msg = f"{len(notas)}/{len(relatorios)} relatório(s){ev_sfx} — " + " ".join(notas)
     if erros:
         msg += f" | {len(erros)} falha(s)"
     return True, msg

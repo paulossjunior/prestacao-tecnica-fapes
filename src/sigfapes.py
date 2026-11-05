@@ -273,6 +273,59 @@ def _eh_relatorio_projeto(doc: dict) -> bool:
     return bool(_RE_RELATORIO.search(txt)) and not _RE_NAO_RELATORIO.search(txt)
 
 
+# Evidência técnica COMPLEMENTAR: produção associada ao projeto (artigos,
+# trabalhos/publicações, apresentação em eventos, complementos do relatório,
+# relatórios parciais com fotos). Comprovam entregáveis e indicadores de
+# produção, mas NÃO são o relatório técnico principal (Anexo VI).
+_RE_EVIDENCIA = re.compile(
+    r"artigo|trabalho\s+completo|public|resumo\b|p[oô]ster|anais|peri[oó]dic|"
+    r"congress|semin[aá]rio|simp[oó]si|confer|\bevento|cap[ií]tulo|livro|"
+    r"patente|software|registro\s+de\s+programa|\bproduto|disserta|\btese\b|"
+    r"monografia|comunica|divulga|complemento|relat[oó]rio\s+parcial|"
+    r"relat[oó]rio\s+de\s+atividade",
+    re.I,
+)
+# Documentos financeiros/administrativos: NÃO entram na avaliação técnica.
+_RE_FINANCEIRO = re.compile(
+    r"extrato|concilia|comprovante|relaç[aã]o\s+de\s+bens|encaminhamento|"
+    r"cronograma|devolu|transfer|tal[aã]o|nota\s+fiscal|or[cç]ament|"
+    r"financ|banc[aá]ri|aplica[cç][aã]o|\bGRU\b|guia\s+de|concess[aã]o",
+    re.I,
+)
+
+
+def classificar_documento(doc: dict) -> str:
+    """Classifica um documento da prestação:
+    'relatorio' (Anexo VI, peça principal), 'evidencia' (produção técnica
+    complementar), 'financeiro' (contábil/administrativo, fora da técnica) ou
+    'outro'. Financeiro tem precedência sobre evidência para evitar falso
+    positivo (ex.: 'Comprovante de apresentação')."""
+    if _eh_relatorio_projeto(doc):
+        return "relatorio"
+    nome = doc.get("nome", "")
+    desc = doc.get("descricao", "")
+    # O NOME do documento é o rótulo mais confiável: se ele indica produção
+    # (artigo, seminário, trabalho...), é evidência mesmo que a descrição traga
+    # palavras financeiras ("comprovante de apresentação").
+    if _RE_EVIDENCIA.search(nome):
+        return "evidencia"
+    if _RE_FINANCEIRO.search(f"{nome} {desc}"):
+        return "financeiro"
+    if _RE_EVIDENCIA.search(desc):
+        return "evidencia"
+    return "outro"
+
+
+def listar_evidencias_complementares(projeto_id: str) -> list[dict]:
+    """Documentos de produção técnica complementar da prestação (artigos,
+    trabalhos, publicações, complementos), que comprovam entregáveis/indicadores
+    sem serem o relatório técnico principal. Mais antigos primeiro."""
+    docs = listar_documentos_prestacao(projeto_id)
+    ev = [d for d in docs if classificar_documento(d) == "evidencia"]
+    ev.sort(key=lambda d: d.get("data", ""))
+    return ev
+
+
 def listar_documentos_prestacao(projeto_id: str) -> list[dict]:
     """Lista os documentos da prestação de contas de um projeto contratado.
 
