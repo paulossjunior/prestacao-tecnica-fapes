@@ -202,14 +202,20 @@ def _avaliar_um(projeto_id, prop):
     if evid_nomes:
         print(f"[evidências] {projeto_id}: {len(evid_nomes)} doc(s) — "
               + ", ".join(n[:28] for n in evid_nomes), flush=True)
+    # Agrupa relatórios multi-parte ("Anexo VI - final (1 de 3)"…): cada grupo é
+    # UM documento lógico avaliado de uma vez (uma nota), não uma nota por parte.
+    grupos = sigfapes.agrupar_relatorios(relatorios)
     notas, erros = [], []
-    for rel in relatorios:
+    for grupo in grupos:
+        rep = grupo[0]  # parte representativa (identidade do documento)
+        nome_doc = sigfapes._RE_PARTE.sub("", rep.get("nome", "")).strip() or rep.get("nome", "")
         try:
             with tempfile.TemporaryDirectory() as d:
                 _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
                 shutil.copy(proj_pdf, _os.path.join(d, "projeto"))
-                alvo = _os.path.join(d, "prestacao", f"relatorio__{rel['file']}.pdf")
-                sigfapes.baixar_anexo(rel["file"], alvo)
+                for parte in grupo:  # todas as partes juntas = relatório completo
+                    alvo = _os.path.join(d, "prestacao", f"relatorio__{parte['file']}.pdf")
+                    sigfapes.baixar_anexo(parte["file"], alvo)
                 projtxt = ocr.extract_folder_auto(_os.path.join(d, "projeto"))
                 prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
             if evid_txt:
@@ -217,15 +223,17 @@ def _avaliar_um(projeto_id, prop):
             resultado = analisar(projtxt, prest, perfil=perfil)
             tipo = resultado.get("tipo_relatorio", "") or ""
             suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
+            # file id do documento = partes unidas, p/ deduplicar como um só doc.
+            file_doc = "+".join(p.get("file", "") for p in grupo)
             store.salvar(resultado, titulo=titulo + suf, perfil=perfil, projeto_id=projeto_id,
-                         relatorio_file=rel.get("file"), relatorio_nome=rel.get("nome"))
+                         relatorio_file=file_doc, relatorio_nome=nome_doc)
             notas.append(f"{tipo[:7] or '?'}:{resultado.get('grau_conformidade_geral')}")
         except Exception as e:  # noqa: BLE001 — um relatório ruim não aborta os outros
-            erros.append(f"{rel.get('nome', rel['file'])[:20]}: {str(e)[:40]}")
+            erros.append(f"{nome_doc[:20]}: {str(e)[:40]}")
     if not notas:
         raise RuntimeError("nenhum relatório avaliado — " + "; ".join(erros))
     ev_sfx = f" +{len(evid_nomes)} evid." if evid_nomes else ""
-    msg = f"{len(notas)}/{len(relatorios)} relatório(s){ev_sfx} — " + " ".join(notas)
+    msg = f"{len(notas)}/{len(grupos)} relatório(s){ev_sfx} — " + " ".join(notas)
     if erros:
         msg += f" | {len(erros)} falha(s)"
     return True, msg
