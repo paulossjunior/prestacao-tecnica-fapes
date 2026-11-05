@@ -9,10 +9,17 @@
 <body>
 <div class="wrap">
 
-  <nav class="topnav">
-    <a href="/propostas">Propostas &amp; Avaliações</a>
-    <a href="/avaliar">Avaliação individual</a>
-  </nav>
+  <header class="top">
+    <div class="brandmark">
+      <div class="logo">FAP</div>
+      <div><div class="t1">Detalhe da proposta</div><div class="t2">Projeto, prestação de contas e parecer</div></div>
+    </div>
+    <nav class="topnav">
+      <a href="/propostas">Propostas &amp; Avaliações</a>
+      <a href="/analise">Avaliar por edital</a>
+      <a href="/avaliar">Avaliação individual</a>
+    </nav>
+  </header>
 
   <div class="crumbs"><a href="/propostas">Propostas</a> › {{ p.protocolo }}</div>
   <h1>{{ p.titulo or 'Proposta sem título' }}</h1>

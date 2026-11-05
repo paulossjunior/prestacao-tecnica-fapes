@@ -37,18 +37,18 @@ REFERENCIAS = [
      "https://fapes.es.gov.br/prestacao-de-contas"),
 ]
 
-# Paleta por parecer: (cor_texto, cor_fundo, cor_borda)
+# Paleta por parecer: (cor_texto, cor_fundo, cor_borda) — tokens minimalistas
 PARECER_CORES = {
-    "APROVAR": ("#166534", "#dcfce7", "#22c55e"),
-    "APROVAR COM RESSALVAS": ("#92400e", "#fef3c7", "#f59e0b"),
-    "DILIGÊNCIA": ("#9a3412", "#ffedd5", "#f97316"),
-    "REPROVAR": ("#991b1b", "#fee2e2", "#ef4444"),
+    "APROVAR": ("#157347", "#e8f3ec", "#bfe0cb"),
+    "APROVAR COM RESSALVAS": ("#8a5a00", "#fbf1dd", "#eccf93"),
+    "DILIGÊNCIA": ("#8a5a00", "#fbf1dd", "#eccf93"),
+    "REPROVAR": ("#b42318", "#fcecea", "#f2c3bd"),
 }
 STATUS_CORES = {
-    "ATENDIDO": ("#166534", "#dcfce7"),
-    "PARCIAL": ("#92400e", "#fef3c7"),
-    "NÃO ATENDIDO": ("#991b1b", "#fee2e2"),
-    "NÃO EVIDENCIADO": ("#475569", "#e2e8f0"),
+    "ATENDIDO": ("#157347", "#e8f3ec"),
+    "PARCIAL": ("#8a5a00", "#fbf1dd"),
+    "NÃO ATENDIDO": ("#b42318", "#fcecea"),
+    "NÃO EVIDENCIADO": ("#687280", "#f1f3f6"),
 }
 
 
@@ -75,24 +75,24 @@ def _chip(texto, cores) -> str:
 def _gauge(grau: int) -> str:
     """Donut de conformidade via conic-gradient."""
     grau = max(0, min(100, int(grau or 0)))
-    cor = "#22c55e" if grau >= 80 else "#f59e0b" if grau >= 50 else "#ef4444"
+    cor = "#157347" if grau >= 80 else "#8a5a00" if grau >= 50 else "#b42318"
     return f"""<div class="gauge" style="background:
-        conic-gradient({cor} {grau*3.6:.0f}deg, #e2e8f0 0)">
+        conic-gradient({cor} {grau*3.6:.0f}deg, #e4e7ec 0)">
         <div class="gauge-hole"><span class="gauge-num">{grau}%</span>
         <span class="gauge-lbl">conformidade</span></div></div>"""
 
 
-def _tile(valor, rotulo, cor="#0f172a") -> str:
+def _tile(valor, rotulo, cor="#15181e") -> str:
     return (f'<div class="tile"><div class="tile-num" style="color:{cor}">'
             f'{valor}</div><div class="tile-lbl">{_e(rotulo)}</div></div>')
 
 
 def _atingido_chip(v) -> str:
     if v is True:
-        return _chip("ATINGIDO", ("#166534", "#dcfce7"))
+        return _chip("ATINGIDO", ("#157347", "#e8f3ec"))
     if v is False:
-        return _chip("NÃO ATINGIDO", ("#991b1b", "#fee2e2"))
-    return _chip(str(v).upper() if v else "—", ("#92400e", "#fef3c7"))
+        return _chip("NÃO ATINGIDO", ("#b42318", "#fcecea"))
+    return _chip(str(v).upper() if v else "—", ("#8a5a00", "#fbf1dd"))
 
 
 def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técnica",
@@ -101,7 +101,7 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
     logo_uri = _logo_data_uri()
     parecer = d.get("parecer", "—")
     fg, bg, brd = PARECER_CORES.get(str(parecer).strip().upper(),
-                                    ("#334155", "#f1f5f9", "#94a3b8"))
+                                    ("#687280", "#f1f3f6", "#d4d8df"))
     grau = d.get("grau_conformidade_geral", 0)
 
     entregaveis = d.get("entregaveis", []) or []
@@ -156,9 +156,9 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
         cards = []
         for a in por_arquivo:
             conj = str(a.get("conjunto", "")).strip().upper()
-            conj_cor = ("#1d4ed8", "#dbeafe") if conj.startswith("PROJ") else ("#7c3aed", "#ede9fe")
+            conj_cor = ("#2458d6", "#e7edfb") if conj.startswith("PROJ") else ("#687280", "#f1f3f6")
             itens = a.get("itens_relacionados", []) or []
-            itens_html = " ".join(_chip(x, ("#334155", "#e2e8f0")) for x in itens) or '<span class="muted">—</span>'
+            itens_html = " ".join(_chip(x, ("#687280", "#f1f3f6")) for x in itens) or '<span class="muted">—</span>'
             cards.append(f"""
               <div class="doc">
                 <div class="doc-head">
@@ -203,7 +203,7 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
               <div class="det">
                 <div class="det-head">
                   <span class="det-nome">📑 {_e(det.get('arquivo'))}</span>
-                  {_chip('Período: ' + str(det.get('periodo') or '—'), ('#334155', '#e2e8f0'))}
+                  {_chip('Período: ' + str(det.get('periodo') or '—'), ('#687280', '#f1f3f6'))}
                 </div>
                 <p class="det-res">{_e(det.get('resumo_detalhado'))}</p>
                 <div class="det-sub">Entregáveis evidenciados neste documento</div>
@@ -240,7 +240,7 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
       <div class="cols">
         <div class="doc">
           <div class="det-sub" style="margin-top:0">Objetivos alcançados</div>
-          {_chip(_e(obj.get('situacao') or '—'), ('#1b2a63', '#e6ecf6'))}
+          {_chip(_e(obj.get('situacao') or '—'), ('#2458d6', '#e7edfb'))}
           <p style="margin:8px 0 0">{_e(obj.get('descricao'))}</p>
           <div class="det-sub">Indicadores de produção</div>
           {_defrow('Bibliográfica', indp.get('bibliografica'))}
@@ -292,94 +292,100 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Parecer Técnico Executivo — {_e(titulo)}</title>
 <style>
-  :root {{ --ink:#1f2937; --muted:#5b6b86; --line:#d9e0ee; --bg:#eef2f8;
-    --navy:#1b2a63; --magenta:#d6296a; --lime:#a8c81e; }}
+  :root {{ --ink:#15181e; --muted:#687280; --faint:#9aa3b0;
+    --line:#e4e7ec; --line-strong:#d4d8df; --bg:#f6f7f9;
+    --surface:#ffffff; --surface-2:#f1f3f6; --accent:#2458d6; }}
   * {{ box-sizing:border-box; }}
   body {{ margin:0; background:var(--bg); color:var(--ink);
-    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-    font-size:13px; line-height:1.5; }}
-  .page {{ max-width:920px; margin:0 auto; padding:0 28px 28px; background:#fff; }}
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px; line-height:1.55; -webkit-font-smoothing:antialiased; }}
+  .page {{ max-width:920px; margin:0 auto; padding:0 28px 28px; background:var(--surface); }}
   .fapes-hd {{ display:flex; align-items:center; justify-content:space-between;
-    gap:16px; padding:16px 0 12px; border-bottom:3px solid var(--lime); margin-bottom:6px; }}
-  .fapes-hd .logo {{ height:42px; width:auto; display:block; }}
-  .gov-id {{ text-align:right; color:var(--navy); font-size:11px; line-height:1.3; }}
-  .gov-id strong {{ display:block; font-size:12px; }}
-  .kicker {{ letter-spacing:.14em; font-size:11px; color:var(--magenta);
-    text-transform:uppercase; font-weight:700; margin-top:14px; }}
-  h1 {{ font-size:22px; margin:2px 0 2px; color:var(--navy); }}
-  h2 {{ font-size:14px; text-transform:uppercase; letter-spacing:.06em;
-    color:var(--navy); border-bottom:2px solid var(--line);
-    border-left:4px solid var(--magenta); padding:0 0 6px 8px; margin:26px 0 12px; }}
+    gap:16px; padding:18px 0 14px; border-bottom:1px solid var(--line); margin-bottom:6px; }}
+  .fapes-hd .brand {{ display:flex; align-items:center; gap:11px; }}
+  .fapes-hd .logo {{ width:38px; height:38px; border-radius:8px; display:grid;
+    place-items:center; background:var(--accent); color:#fff; font-weight:700;
+    font-size:13px; letter-spacing:.02em; }}
+  .fapes-hd .brand .n1 {{ font-weight:650; font-size:14px; letter-spacing:-.01em; }}
+  .fapes-hd .brand .n2 {{ font-size:11px; color:var(--muted); }}
+  .gov-id {{ text-align:right; color:var(--muted); font-size:10.5px; line-height:1.35; }}
+  .gov-id strong {{ display:block; font-size:11px; color:var(--ink); font-weight:600; }}
+  .kicker {{ letter-spacing:.1em; font-size:10.5px; color:var(--muted);
+    text-transform:uppercase; font-weight:700; margin-top:16px; }}
+  h1 {{ font-size:22px; margin:3px 0 2px; color:var(--ink); letter-spacing:-.01em; }}
+  h2 {{ font-size:12px; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--muted); border-bottom:1px solid var(--line);
+    padding:0 0 6px; margin:28px 0 12px; font-weight:700; }}
   .sub {{ color:var(--muted); font-size:12px; }}
   /* HERO */
   .hero {{ display:flex; gap:22px; align-items:center; margin-top:18px;
-    padding:18px; border:1px solid var(--line); border-radius:14px;
-    background:linear-gradient(180deg,#fff,#fbfdff); }}
+    padding:18px; border:1px solid var(--line); border-radius:12px;
+    background:var(--surface); }}
   .verdict {{ flex:1; }}
   .verdict .badge {{ display:inline-block; padding:7px 16px; border-radius:999px;
-    font-weight:800; font-size:15px; color:{fg}; background:{bg};
+    font-weight:700; font-size:15px; color:{fg}; background:{bg};
     border:1px solid {brd}; }}
-  .verdict .just {{ margin-top:10px; color:#334155; }}
+  .verdict .just {{ margin-top:10px; color:var(--ink); }}
   .gauge {{ width:118px; height:118px; border-radius:50%; display:flex;
     align-items:center; justify-content:center; flex:0 0 auto; }}
-  .gauge-hole {{ width:86px; height:86px; background:#fff; border-radius:50%;
+  .gauge-hole {{ width:86px; height:86px; background:var(--surface); border-radius:50%;
     display:flex; flex-direction:column; align-items:center; justify-content:center; }}
-  .gauge-num {{ font-size:24px; font-weight:800; }}
+  .gauge-num {{ font-size:24px; font-weight:700; }}
   .gauge-lbl {{ font-size:9px; text-transform:uppercase; letter-spacing:.08em;
     color:var(--muted); }}
   /* KPIs */
   .tiles {{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
     margin-top:14px; }}
-  .tile {{ border:1px solid var(--line); border-radius:12px; padding:14px;
-    text-align:center; background:#fff; }}
-  .tile-num {{ font-size:26px; font-weight:800; }}
+  .tile {{ border:1px solid var(--line); border-radius:10px; padding:14px;
+    text-align:center; background:var(--surface); }}
+  .tile-num {{ font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; }}
   .tile-lbl {{ font-size:11px; color:var(--muted); margin-top:2px; }}
-  .summary {{ margin-top:18px; padding:16px; background:#eef2f8;
-    border-left:4px solid var(--navy); border-radius:8px; font-size:14px; }}
+  .summary {{ margin-top:18px; padding:16px; background:var(--surface-2);
+    border:1px solid var(--line); border-radius:10px; font-size:14px; }}
   table {{ width:100%; border-collapse:collapse; font-size:12px; }}
   th,td {{ text-align:left; padding:8px 9px; border-bottom:1px solid var(--line);
     vertical-align:top; }}
   th {{ color:var(--muted); font-size:10px; text-transform:uppercase;
-    letter-spacing:.05em; background:#f8fafc; }}
+    letter-spacing:.05em; background:var(--surface-2); font-weight:700; }}
   .chip {{ display:inline-block; padding:2px 9px; border-radius:999px;
     font-size:11px; font-weight:700; white-space:nowrap; }}
   .mono {{ font-variant-numeric:tabular-nums; }}
-  .ev {{ color:#475569; font-size:11px; }}
+  .ev {{ color:var(--muted); font-size:11px; }}
   .cols {{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }}
   .col h3 {{ font-size:12px; margin:0 0 6px; }}
   ul {{ margin:6px 0; padding-left:18px; }} li {{ margin:3px 0; }}
-  .alert {{ margin-top:18px; border:1px solid #fca5a5; background:#fef2f2;
-    border-radius:12px; padding:14px 16px; }}
-  .alert-title {{ font-weight:800; color:#991b1b; margin-bottom:4px; }}
-  .crit {{ color:#7f1d1d; }}
+  .alert {{ margin-top:18px; border:1px solid #f2c3bd; background:#fcecea;
+    border-radius:10px; padding:14px 16px; }}
+  .alert-title {{ font-weight:700; color:#b42318; margin-bottom:4px; }}
+  .crit {{ color:#b42318; }}
   .muted {{ color:var(--muted); }}
   .docs {{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }}
-  .doc {{ border:1px solid var(--line); border-radius:12px; padding:14px;
-    background:#fff; break-inside:avoid; }}
+  .doc {{ border:1px solid var(--line); border-radius:10px; padding:14px;
+    background:var(--surface); break-inside:avoid; }}
   .doc-head {{ display:flex; justify-content:space-between; align-items:center;
     gap:8px; margin-bottom:2px; }}
-  .doc-nome {{ font-weight:700; font-size:12px; overflow:hidden;
+  .doc-nome {{ font-weight:650; font-size:12px; overflow:hidden;
     text-overflow:ellipsis; white-space:nowrap; }}
   .doc-nat {{ color:var(--muted); font-size:11px; margin-bottom:6px; }}
   .doc-res {{ margin:6px 0; }}
   .doc-row {{ font-size:11px; margin-top:5px; }}
   .doc-lbl {{ color:var(--muted); font-weight:600; text-transform:uppercase;
     letter-spacing:.04em; font-size:10px; }}
-  .det {{ border:1px solid var(--line); border-radius:12px; padding:16px;
-    margin-top:14px; background:#fff; break-inside:avoid; }}
+  .det {{ border:1px solid var(--line); border-radius:10px; padding:16px;
+    margin-top:14px; background:var(--surface); break-inside:avoid; }}
   .det-head {{ display:flex; justify-content:space-between; align-items:center;
     gap:10px; margin-bottom:6px; }}
-  .det-nome {{ font-weight:800; font-size:14px; }}
+  .det-nome {{ font-weight:700; font-size:14px; }}
   .det-res {{ margin:4px 0 12px; }}
   .det-sub {{ font-size:11px; text-transform:uppercase; letter-spacing:.05em;
     color:var(--muted); font-weight:700; margin:14px 0 4px; }}
   .refs {{ font-size:12px; }} .refs li {{ margin:5px 0; }}
-  .refs a {{ color:var(--navy); text-decoration:none; }}
+  .refs a {{ color:var(--accent); text-decoration:none; }}
   .refs a:hover {{ text-decoration:underline; }}
   .foot {{ margin-top:22px; padding:16px; border:1px solid var(--line);
-    border-radius:12px; background:#fff; }}
+    border-radius:10px; background:var(--surface); }}
   .foot .badge {{ display:inline-block; padding:5px 14px; border-radius:999px;
-    font-weight:800; color:{fg}; background:{bg}; border:1px solid {brd}; }}
+    font-weight:700; color:{fg}; background:{bg}; border:1px solid {brd}; }}
   @media print {{
     body {{ background:#fff; font-size:11px; }}
     .page {{ max-width:none; padding:0; }}
@@ -391,7 +397,11 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
 </style></head>
 <body><div class="page">
   <div class="fapes-hd">
-    <img class="logo" src="{logo_uri}" alt="FAPES">
+    <div class="brand">
+      <div class="logo">FAP</div>
+      <div><div class="n1">Prestação de Contas Técnica</div>
+        <div class="n2">FAPES — avaliação previsto × realizado</div></div>
+    </div>
     <span class="gov-id"><strong>GOVERNO DO ESTADO DO ESPÍRITO SANTO</strong>
       Secretaria da Ciência, Tecnologia, Inovação e Educação Profissional</span>
   </div>
