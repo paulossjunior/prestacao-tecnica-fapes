@@ -86,7 +86,7 @@
     <span style="display:flex;gap:8px;flex-wrap:wrap">
       <button id="btnAvalSel" class="btn-sync btn-eval" type="button" disabled>▶ Avaliar selecionadas (<span id="selCount">0</span>)</button>
       <button id="btnAvalPend" class="btn-sync btn-eval" type="button">▶ Avaliar pendentes</button>
-      <button id="btnBaixar" class="btn-sync" type="button" style="background:var(--muted);border-color:var(--muted)">⬇ Baixar PDFs</button>
+      <button id="btnBaixar" class="btn-sync" type="button" style="background:var(--muted);border-color:var(--muted)">⬇ Baixar PDFs (zip)</button>
       <button id="btnSync" class="btn-sync" type="button">↻ Sincronizar dados</button>
     </span>
   </div>
@@ -101,8 +101,8 @@
     <ul id="batchItens" class="batch-itens"></ul>
   </div>
   <div id="dlBox" class="sync-box" hidden>
-    <div class="sync-head"><span id="dlLabel">Baixando PDFs…</span><span id="dlCount">0 / 0</span></div>
-    <div class="progress"><div class="progress-bar" id="dlBar" style="position:static;width:0;animation:none;transition:width .3s"></div></div>
+    <div class="sync-head"><span id="dlLabel">Preparando download…</span></div>
+    <div class="progress"><div class="progress-bar"></div></div>
   </div>
   <div id="syncMsg" class="sync-msg" hidden></div>
 
@@ -147,14 +147,14 @@
         <div class="tbl-wrap">
           <table>
             <thead>
-              <tr><th class="chk-col"><input type="checkbox" class="rowchk chk-all" title="Selecionar pendentes do edital"></th>
+              <tr><th class="chk-col"><input type="checkbox" class="rowchk chk-all" title="Selecionar todos do edital"></th>
                   <th>Projeto</th><th>Pesquisador</th><th>Nota</th><th>Situação</th><th>Parecer</th><th>Ações</th></tr>
             </thead>
             <tbody>
             {% for p in g.propostas %}
               {% set a = p.aval %}
               <tr>
-                <td class="chk-col">{% if not a %}<input type="checkbox" class="rowchk chk-row" value="{{ p.projeto_id }}">{% endif %}</td>
+                <td class="chk-col"><input type="checkbox" class="rowchk chk-row" value="{{ p.projeto_id }}"{{ ' data-aval="1"' if a }}></td>
                 <td><a class="ttl-link" href="/propostas/{{ p.projeto_id }}">{{ p.titulo or '—' }}</a>
                     <div class="proto">{{ p.protocolo }}</div></td>
                 <td class="pesq">{{ p.pesquisador or '—' }}</td>
@@ -268,27 +268,29 @@
     refresh();
   })();
 
-  // ---- Baixar todos os PDFs ----
+  // ---- Baixar PDFs da seleção (zip no navegador) ----
   (function(){
     var btn=document.getElementById('btnBaixar'); if(!btn) return;
-    var box=document.getElementById('dlBox'), bar=document.getElementById('dlBar'),
-        cnt=document.getElementById('dlCount'), lbl=document.getElementById('dlLabel'), msg=document.getElementById('syncMsg');
-    var STATUS_SEL={{ status_sel|tojson }}; var poll=null;
-    function startPoll(){ if(poll)return; poll=setInterval(function(){
-      fetch('/propostas/baixar_status').then(function(r){return r.json();}).then(function(s){
-        bar.style.width=(s.total?Math.round(100*s.done/s.total):0)+'%';
-        cnt.textContent=s.done+' / '+s.total+' projetos · '+(s.arquivos||0)+' PDFs';
-        if(s.status!=='running'){ clearInterval(poll); poll=null; btn.disabled=false; lbl.textContent='Concluído';
-          msg.textContent=s.msg||'Concluído.'; msg.className='sync-msg ok'; msg.hidden=false; }
-      }).catch(function(){});
-    },2000); }
+    var box=document.getElementById('dlBox'), lbl=document.getElementById('dlLabel'), msg=document.getElementById('syncMsg');
+    function selIds(){ return Array.prototype.slice.call(document.querySelectorAll('.chk-row:checked')).map(function(c){return c.value;}); }
     btn.addEventListener('click', function(){
-      if(!confirm('Baixar os PDFs (projeto + prestação) de todos os projetos do filtro atual para a pasta downloads/?')) return;
-      btn.disabled=true; box.hidden=false; bar.style.width='0'; lbl.textContent='Baixando PDFs…';
-      fetch('/propostas/baixar_pdfs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:STATUS_SEL})})
-        .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
-        .then(function(res){ if(!res.ok){ box.hidden=true; btn.disabled=false; msg.textContent=res.j.erro||'Falha.'; msg.className='sync-msg err'; msg.hidden=false; return;} cnt.textContent='0 / '+(res.j.total||0); startPoll(); })
-        .catch(function(){ btn.disabled=false; box.hidden=true; });
+      var ids=selIds();
+      if(!ids.length){ msg.textContent='Selecione um ou mais projetos (ou todos de um edital) para baixar.'; msg.className='sync-msg err'; msg.hidden=false; return; }
+      btn.disabled=true; var orig=btn.textContent; btn.textContent='⬇ Preparando…';
+      box.hidden=false; lbl.textContent='Preparando PDFs de '+ids.length+' projeto'+(ids.length>1?'s':'')+'…'; msg.hidden=true;
+      fetch('/propostas/baixar.zip?ids='+encodeURIComponent(ids.join(',')))
+        .then(function(r){ if(!r.ok){ return r.text().then(function(t){ throw new Error(t||('HTTP '+r.status)); }); }
+          var cd=r.headers.get('Content-Disposition')||''; var m=cd.match(/filename="?([^"]+)"?/);
+          return r.blob().then(function(b){ return {blob:b, name:(m&&m[1])||'prestacao.zip'}; }); })
+        .then(function(res){
+          var url=URL.createObjectURL(res.blob); var a=document.createElement('a');
+          a.href=url; a.download=res.name; document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+          box.hidden=true; btn.disabled=false; btn.textContent=orig;
+          msg.textContent='Download iniciado: '+res.name; msg.className='sync-msg ok'; msg.hidden=false;
+        })
+        .catch(function(e){ box.hidden=true; btn.disabled=false; btn.textContent=orig;
+          msg.textContent='Falha ao gerar download: '+(e.message||'erro'); msg.className='sync-msg err'; msg.hidden=false; });
     });
   })();
 

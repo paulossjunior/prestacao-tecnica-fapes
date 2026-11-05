@@ -360,6 +360,73 @@ def propostas_baixar_status():
         return jsonify(_dl)
 
 
+def _slug_arq(texto: str) -> str:
+    """Nome de arquivo/pasta seguro (preserva acentos, troca o resto por _)."""
+    import re as _re
+    s = _re.sub(r"[^\wÀ-ÿ. -]+", "_", (texto or "").strip())[:50].strip("_ .")
+    return s or "doc"
+
+
+def _coletar_pdfs_projeto(pid, prop):
+    """[(arcname, bytes)] com o projeto + relatório(s) técnico(s) de um projeto."""
+    import tempfile
+    base = f"{pid}_{_slug_arq(prop.get('titulo'))}"
+    out = []
+    try:
+        pj = sigfapes.baixar_projeto_pdf(pid)
+        with open(pj, "rb") as f:
+            out.append((f"{base}/projeto_{pid}.pdf", f.read()))
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        rels = sigfapes.listar_relatorios(pid)
+    except Exception:  # noqa: BLE001
+        rels = []
+    for i, r in enumerate(rels, 1):
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                alvo = os.path.join(d, f"{r['file']}.pdf")
+                sigfapes.baixar_anexo(r["file"], alvo)
+                with open(alvo, "rb") as f:
+                    out.append((f"{base}/relatorio_{i}_{_slug_arq(r.get('nome'))}.pdf", f.read()))
+        except Exception:  # noqa: BLE001
+            continue
+    return out
+
+
+@app.route("/propostas/baixar.zip")
+def propostas_baixar_zip():
+    """Baixa, no navegador, os PDFs (projeto + relatório técnico) dos projetos
+    selecionados. 1 arquivo = PDF direto; mais de 1 = .zip."""
+    import io
+    import zipfile
+    ids = [i.strip() for i in (request.args.get("ids") or "").split(",") if i.strip()]
+    if not ids:
+        abort(400, "Nenhum projeto selecionado.")
+    try:
+        por_id = {sigfapes.projeto_id_do_protocolo(p["protocolo"]): p
+                  for p in sigfapes.listar_propostas()}
+    except Exception:  # noqa: BLE001
+        por_id = {}
+    arquivos = []
+    for pid in ids:
+        arquivos.extend(_coletar_pdfs_projeto(pid, por_id.get(pid, {})))
+    if not arquivos:
+        abort(404, "Nenhum PDF disponível para a seleção.")
+    if len(arquivos) == 1:
+        nome, data = arquivos[0]
+        return Response(data, mimetype="application/pdf", headers={
+            "Content-Disposition": f'attachment; filename="{os.path.basename(nome)}"'})
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for nome, data in arquivos:
+            z.writestr(nome, data)
+    fname = (f"prestacao_{ids[0]}.zip" if len(ids) == 1
+             else f"prestacao_{len(ids)}_projetos.zip")
+    return Response(buf.getvalue(), mimetype="application/zip", headers={
+        "Content-Disposition": f'attachment; filename="{fname}"'})
+
+
 @app.route("/propostas/sync_status")
 def propostas_sync_status():
     import os as _os
