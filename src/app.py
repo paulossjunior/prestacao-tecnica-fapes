@@ -143,10 +143,48 @@ _batch = {"status": "idle", "total": 0, "done": 0, "ok": 0, "itens": [], "msg": 
 _batch_lock = threading.Lock()
 
 
+# Evidências complementares: nº máximo de docs e teto de bytes por doc (evita
+# OCR dispendioso em arquivos enormes). Produção técnica que comprova entregáveis.
+_MAX_EVIDENCIAS = 6
+_EVIDENCIA_MAX_BYTES = 9_000_000
+
+
+def _slug(texto: str) -> str:
+    """Nome de arquivo seguro a partir do nome do documento (p/ rótulo no LLM)."""
+    import re as _re
+    s = _re.sub(r"[^\w]+", "_", (texto or "").strip())[:50].strip("_")
+    return s or "doc"
+
+
+def _coletar_evidencias(projeto_id, destino_dir):
+    """Baixa as evidências complementares (artigos, trabalhos, complementos) numa
+    pasta e devolve (texto_extraído, [nomes_incluídos]). Vazio se não houver."""
+    import os as _os
+    import ocr
+    evid = sigfapes.listar_evidencias_complementares(projeto_id)
+    incluidos = []
+    for doc in evid[:_MAX_EVIDENCIAS]:
+        alvo = _os.path.join(destino_dir, f"evidencia__{_slug(doc.get('nome'))}.pdf")
+        try:
+            sigfapes.baixar_anexo(doc["file"], alvo)
+            if _os.path.getsize(alvo) > _EVIDENCIA_MAX_BYTES:
+                _os.remove(alvo)  # grande demais p/ OCR — ignora
+                continue
+            incluidos.append(doc.get("nome", doc["file"]))
+        except Exception:  # noqa: BLE001 — evidência ruim não aborta a avaliação
+            if _os.path.exists(alvo):
+                _os.remove(alvo)
+    if not incluidos:
+        return "", []
+    return ocr.extract_folder_auto(destino_dir), incluidos
+
+
 def _avaliar_um(projeto_id, prop):
     """Avalia uma proposta: baixa o projeto e AVALIA CADA RELATÓRIO (Anexo VI)
     separadamente (parcial por período / final), gerando uma avaliação por
-    relatório (histórico). Devolve (ok, msg)."""
+    relatório (histórico). As EVIDÊNCIAS COMPLEMENTARES da prestação (artigos,
+    trabalhos, complementos) entram como comprovação em todas as avaliações.
+    Devolve (ok, msg)."""
     import os as _os
     import shutil
     import tempfile
@@ -157,21 +195,48 @@ def _avaliar_um(projeto_id, prop):
     titulo = (prop.get("titulo") or f"Projeto {projeto_id}")[:80]
     perfil = "inovacao"
     import ocr
-    notas = []
-    for rel in relatorios:
-        with tempfile.TemporaryDirectory() as d:
-            _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
-            shutil.copy(proj_pdf, _os.path.join(d, "projeto"))
-            alvo = _os.path.join(d, "prestacao", f"{rel['file']}.pdf")
-            sigfapes.baixar_anexo(rel["file"], alvo)
-            projtxt = ocr.extract_folder_auto(_os.path.join(d, "projeto"))
-            prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
-        resultado = analisar(projtxt, prest, perfil=perfil)
-        tipo = resultado.get("tipo_relatorio", "") or ""
-        suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
-        store.salvar(resultado, titulo=titulo + suf, perfil=perfil, projeto_id=projeto_id)
-        notas.append(f"{tipo[:7] or '?'}:{resultado.get('grau_conformidade_geral')}")
-    return True, f"{len(relatorios)} relatório(s) — " + " ".join(notas)
+    # Evidências complementares: baixa e extrai UMA vez (compartilhado entre os
+    # relatórios), evitando re-OCR por relatório.
+    with tempfile.TemporaryDirectory() as ed:
+        evid_txt, evid_nomes = _coletar_evidencias(projeto_id, ed)
+    if evid_nomes:
+        print(f"[evidências] {projeto_id}: {len(evid_nomes)} doc(s) — "
+              + ", ".join(n[:28] for n in evid_nomes), flush=True)
+    # Agrupa relatórios multi-parte ("Anexo VI - final (1 de 3)"…): cada grupo é
+    # UM documento lógico avaliado de uma vez (uma nota), não uma nota por parte.
+    grupos = sigfapes.agrupar_relatorios(relatorios)
+    notas, erros = [], []
+    for grupo in grupos:
+        rep = grupo[0]  # parte representativa (identidade do documento)
+        nome_doc = sigfapes._RE_PARTE.sub("", rep.get("nome", "")).strip() or rep.get("nome", "")
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                _os.makedirs(_os.path.join(d, "projeto")); _os.makedirs(_os.path.join(d, "prestacao"))
+                shutil.copy(proj_pdf, _os.path.join(d, "projeto"))
+                for parte in grupo:  # todas as partes juntas = relatório completo
+                    alvo = _os.path.join(d, "prestacao", f"relatorio__{parte['file']}.pdf")
+                    sigfapes.baixar_anexo(parte["file"], alvo)
+                projtxt = ocr.extract_folder_auto(_os.path.join(d, "projeto"))
+                prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
+            if evid_txt:
+                prest += "\n\n" + evid_txt  # evidências já vêm rotuladas por arquivo
+            resultado = analisar(projtxt, prest, perfil=perfil)
+            tipo = resultado.get("tipo_relatorio", "") or ""
+            suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
+            # file id do documento = partes unidas, p/ deduplicar como um só doc.
+            file_doc = "+".join(p.get("file", "") for p in grupo)
+            store.salvar(resultado, titulo=titulo + suf, perfil=perfil, projeto_id=projeto_id,
+                         relatorio_file=file_doc, relatorio_nome=nome_doc)
+            notas.append(f"{tipo[:7] or '?'}:{resultado.get('grau_conformidade_geral')}")
+        except Exception as e:  # noqa: BLE001 — um relatório ruim não aborta os outros
+            erros.append(f"{nome_doc[:20]}: {str(e)[:40]}")
+    if not notas:
+        raise RuntimeError("nenhum relatório avaliado — " + "; ".join(erros))
+    ev_sfx = f" +{len(evid_nomes)} evid." if evid_nomes else ""
+    msg = f"{len(notas)}/{len(grupos)} relatório(s){ev_sfx} — " + " ".join(notas)
+    if erros:
+        msg += f" | {len(erros)} falha(s)"
+    return True, msg
 
 
 def _run_batch(ids):
@@ -304,6 +369,73 @@ def propostas_baixar_status():
         return jsonify(_dl)
 
 
+def _slug_arq(texto: str) -> str:
+    """Nome de arquivo/pasta seguro (preserva acentos, troca o resto por _)."""
+    import re as _re
+    s = _re.sub(r"[^\wÀ-ÿ. -]+", "_", (texto or "").strip())[:50].strip("_ .")
+    return s or "doc"
+
+
+def _coletar_pdfs_projeto(pid, prop):
+    """[(arcname, bytes)] com o projeto + relatório(s) técnico(s) de um projeto."""
+    import tempfile
+    base = f"{pid}_{_slug_arq(prop.get('titulo'))}"
+    out = []
+    try:
+        pj = sigfapes.baixar_projeto_pdf(pid)
+        with open(pj, "rb") as f:
+            out.append((f"{base}/projeto_{pid}.pdf", f.read()))
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        rels = sigfapes.listar_relatorios(pid)
+    except Exception:  # noqa: BLE001
+        rels = []
+    for i, r in enumerate(rels, 1):
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                alvo = os.path.join(d, f"{r['file']}.pdf")
+                sigfapes.baixar_anexo(r["file"], alvo)
+                with open(alvo, "rb") as f:
+                    out.append((f"{base}/relatorio_{i}_{_slug_arq(r.get('nome'))}.pdf", f.read()))
+        except Exception:  # noqa: BLE001
+            continue
+    return out
+
+
+@app.route("/propostas/baixar.zip")
+def propostas_baixar_zip():
+    """Baixa, no navegador, os PDFs (projeto + relatório técnico) dos projetos
+    selecionados. 1 arquivo = PDF direto; mais de 1 = .zip."""
+    import io
+    import zipfile
+    ids = [i.strip() for i in (request.args.get("ids") or "").split(",") if i.strip()]
+    if not ids:
+        abort(400, "Nenhum projeto selecionado.")
+    try:
+        por_id = {sigfapes.projeto_id_do_protocolo(p["protocolo"]): p
+                  for p in sigfapes.listar_propostas()}
+    except Exception:  # noqa: BLE001
+        por_id = {}
+    arquivos = []
+    for pid in ids:
+        arquivos.extend(_coletar_pdfs_projeto(pid, por_id.get(pid, {})))
+    if not arquivos:
+        abort(404, "Nenhum PDF disponível para a seleção.")
+    if len(arquivos) == 1:
+        nome, data = arquivos[0]
+        return Response(data, mimetype="application/pdf", headers={
+            "Content-Disposition": f'attachment; filename="{os.path.basename(nome)}"'})
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for nome, data in arquivos:
+            z.writestr(nome, data)
+    fname = (f"prestacao_{ids[0]}.zip" if len(ids) == 1
+             else f"prestacao_{len(ids)}_projetos.zip")
+    return Response(buf.getvalue(), mimetype="application/zip", headers={
+        "Content-Disposition": f'attachment; filename="{fname}"'})
+
+
 @app.route("/propostas/sync_status")
 def propostas_sync_status():
     import os as _os
@@ -428,9 +560,12 @@ def proposta_detalhe(projeto_id):
     prop = sigfapes.proposta_por_projeto_id(projeto_id)
     if prop is None:
         abort(404)
-    # Avaliação mais recente + histórico de avaliações deste projeto.
+    # Avaliação por documento (um projeto tem vários parciais + final) + nota
+    # geral (mediana) + histórico completo.
     hist = store.historico(projeto_id)
-    aval = hist[0] if hist else None
+    por_doc = store.por_documento(projeto_id)   # nota atual de cada documento
+    resumo = store.resumo_projeto(projeto_id)   # nota geral = mediana
+    aval = resumo                               # resumo é a "avaliação" do projeto
     # Documentos da prestação (Informações → Projeto Contratado → Documentos).
     documentos, tem_relatorio = [], False
     try:
@@ -439,6 +574,7 @@ def proposta_detalhe(projeto_id):
     except Exception:  # noqa: BLE001 — sem acesso/sessão, página ainda renderiza
         pass
     return render_template("proposta.html", p=prop, projeto_id=projeto_id, aval=aval,
+                           resumo=resumo, por_doc=por_doc,
                            historico=hist, documentos=documentos, tem_relatorio=tem_relatorio)
 
 

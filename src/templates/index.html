@@ -4,153 +4,55 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Avaliação Técnica — Prestação de Contas (FAPES/IFES)</title>
+  <link rel="stylesheet" href="/static/app.css">
   <style>
-    /* Identidade visual FAPES / Governo do Espírito Santo */
-    :root {
-      --bg: #eef2f8; --card: #ffffff; --line: #d9e0ee; --txt: #1f2937;
-      --muted: #5b6b86; --accent: #1f4fa3;              /* azul links/botões */
-      --navy: #1b2a63; --magenta: #d6296a; --lime: #a8c81e;
-      --ok: #15803d; --warn: #b45309; --bad: #dc2626; --info: #5b6b86;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-           background: var(--bg); color: var(--txt); line-height: 1.5; }
-    /* Cabeçalho institucional */
-    .gov-bar { background: var(--navy); color: #dfe6f5; font-size: 12px;
-               padding: 6px 24px; text-align: right; letter-spacing: .02em; }
-    header { background: #fff; border-bottom: 3px solid var(--lime);
-             padding: 16px 24px; display: flex; align-items: center;
-             justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .brand { display: flex; align-items: center; gap: 14px; }
-    .brand .logo { height: 46px; width: auto; display: block; }
-    .brand .tag { color: var(--muted); font-size: 11px; max-width: 190px;
-                  text-transform: uppercase; letter-spacing: .03em; line-height: 1.25; }
-    .gov-id { text-align: right; color: var(--navy); font-size: 12px; line-height: 1.3; }
-    .gov-id strong { display: block; font-size: 13px; }
-    .titlebar { background: linear-gradient(90deg, var(--navy), #24408c);
-                color: #fff; padding: 16px 24px; }
-    .titlebar h1 { margin: 0; font-size: 20px; }
-    .titlebar p { margin: 4px 0 0; color: #c7d3ee; font-size: 13px; }
-    .titlebar { position: relative; }
-    .nav-top { position: absolute; top: 16px; right: 24px; display: flex; gap: 8px; }
-    .nav-top a { display: inline-block; background: rgba(255,255,255,.14); color: #fff;
-                 text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 14px;
-                 border-radius: 8px; border: 1px solid rgba(255,255,255,.28); }
-    .nav-top a:hover { background: rgba(255,255,255,.24); }
-    @media (max-width: 680px) { .nav-top { position: static; margin-top: 10px; flex-wrap: wrap; } }
-    main { max-width: 980px; margin: 0 auto; padding: 24px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
-    .card { background: var(--card); border: 1px solid var(--line);
-            border-radius: 10px; padding: 16px; box-shadow: 0 1px 2px rgba(27,42,99,.04); }
-    .card h2 { margin: 0 0 10px; font-size: 15px; color: var(--navy);
-               border-left: 4px solid var(--magenta); padding-left: 8px; }
-    input[type=file] { width: 100%; font-size: 13px; color: var(--muted); }
-    button.add { background: #fff; color: var(--accent); border: 1px dashed var(--accent);
-                 padding: 9px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
-    button.add:hover { background: #eef3fb; }
-    .hint { color: var(--muted); font-size: 12px; margin: 8px 0 4px; }
-    .filelist { list-style: none; margin: 8px 0 0; padding: 0; }
-    .filelist li { display: flex; justify-content: space-between; align-items: center; gap: 8px;
-                   background: #f4f7fc; border: 1px solid var(--line); border-radius: 7px;
-                   padding: 6px 10px; margin-top: 6px; font-size: 12px; }
-    .filelist .nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .filelist .tam { color: var(--muted); flex: 0 0 auto; }
-    .filelist .rm { background: none; border: 0; color: var(--bad); cursor: pointer;
-                    font-size: 15px; line-height: 1; padding: 0 2px; flex: 0 0 auto; }
-    .filelist .vazio { color: var(--muted); border: 0; background: none; padding: 0; }
-    .actions { margin: 20px 0; display: flex; gap: 12px; align-items: center; }
-    button { background: var(--accent); color: #fff; border: 0; font-weight: 700;
-             padding: 11px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-    button:hover { background: #1a4491; }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    #status { color: var(--muted); font-size: 14px; }
-    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px;
-             font-size: 12px; font-weight: 700; }
-    .b-ATENDIDO, .b-APROVAR { background: #dcfce7; color: #166534; }
-    .b-PARCIAL, .b-APROVAR.ressalvas, .b-DILIGÊNCIA { background: #fef3c7; color: #92400e; }
-    .b-NÃO { background: #fee2e2; color: #991b1b; }
-    .b-EVID { background: #e6ecf6; color: var(--navy); }
-    .result { margin-top: 24px; display: none; }
-    .kpi { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-    .meter { flex: 1; min-width: 200px; height: 12px; background: #e2e8f0;
-             border-radius: 999px; overflow: hidden; }
-    .meter > div { height: 100%; background: linear-gradient(90deg,var(--bad),var(--warn),var(--ok)); }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-    th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line);
-             vertical-align: top; }
-    th { color: var(--muted); font-weight: 600; background: #f4f7fc; }
-    section.block { margin-top: 24px; }
-    section.block h3 { font-size: 15px; color: var(--navy);
-                       border-bottom: 2px solid var(--line); padding-bottom: 6px; }
-    ul { margin: 8px 0; padding-left: 20px; }
-    li { margin: 4px 0; }
-    .muted { color: var(--muted); }
-    .docs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 680px) { .docs { grid-template-columns: 1fr; } }
-    .doc { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--card); }
-    .doc-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .doc-nome { font-weight: 700; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .doc-nat { color: var(--muted); font-size: 12px; margin: 2px 0 6px; }
-    .doc-row { font-size: 12px; margin-top: 5px; }
-    .doc-lbl { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
-    .b-PROJ { background: var(--navy); color: #dbeafe; }
-    .b-PREST { background: var(--magenta); color: #fff; }
-    .det { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-top: 12px;
-           background: var(--card); border-top: 3px solid var(--navy); }
-    .det-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .det-nome { font-weight: 800; font-size: 14px; color: var(--navy); }
-    .det-sub { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; margin: 14px 0 4px; }
-    /* Abas (Documentos / Prompt) */
-    .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 16px; }
-    .tab { background: none; color: var(--muted); border: 0; border-bottom: 3px solid transparent;
-           border-radius: 0; padding: 10px 16px; font-size: 14px; font-weight: 600;
-           cursor: pointer; margin-bottom: -2px; }
-    .tab:hover { background: #e9eefa; color: var(--navy); }
-    .tab.on { color: var(--navy); border-bottom-color: var(--magenta); background: none; }
-    .tab .dot { display: none; width: 7px; height: 7px; border-radius: 50%;
-                background: var(--magenta); margin-left: 7px; vertical-align: middle; }
-    .tab.editado .dot { display: inline-block; }
-    .painel { display: none; } .painel.on { display: block; }
-    #promptTxt { width: 100%; min-height: 420px; resize: vertical; font-size: 12px;
-                 font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-                 line-height: 1.45; color: var(--txt); background: #f9fbff;
-                 border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
-    #promptTxt:focus { outline: 2px solid var(--accent); outline-offset: -1px; background: #fff; }
-    .prompt-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
-    .prompt-bar button { padding: 8px 14px; font-size: 13px; }
-    .aviso { background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
-             padding: 10px 12px; border-radius: 8px; font-size: 12px; margin: 0 0 12px; }
-    select { font-size: 14px; padding: 9px 12px; border: 1px solid var(--line);
-             border-radius: 8px; background: #fff; color: var(--txt); min-width: 240px; }
-    select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-    .perfil-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .perfil-desc { color: var(--muted); font-size: 12px; flex: 1; min-width: 200px; }
-    .err { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
-           padding: 12px; border-radius: 8px; margin-top: 16px; }
-    details { margin-top: 24px; } summary { cursor: pointer; color: var(--muted); }
-    pre { background: #f4f7fc; border: 1px solid var(--line); color: #1f2937;
-          padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; }
-    /* Loading overlay */
-    #overlay { position: fixed; inset: 0; background: rgba(15,23,49,.86);
-               display: none; align-items: center; justify-content: center; z-index: 999;
-               backdrop-filter: blur(3px); }
-    #overlay.on { display: flex; }
-    .loader { text-align: center; color: #fff; max-width: 420px; padding: 24px; }
-    .spinner { width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%;
-               border: 6px solid rgba(255,255,255,.25); border-top-color: var(--lime);
-               animation: spin 0.9s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loader h3 { margin: 0 0 6px; font-size: 18px; }
-    .loader .tempo { font-size: 32px; font-weight: 800; color: var(--lime);
-                     font-variant-numeric: tabular-nums; margin: 4px 0; }
-    .loader p { margin: 6px 0 0; color: #c7d3ee; font-size: 13px; }
-    .bar { height: 4px; width: 220px; margin: 16px auto 0; border-radius: 999px;
-           background: rgba(255,255,255,.2); overflow: hidden; position: relative; }
-    .bar::after { content: ''; position: absolute; left: -40%; top: 0; height: 100%; width: 40%;
-                  background: var(--lime); border-radius: 999px;
-                  animation: slide 1.2s ease-in-out infinite; }
-    @keyframes slide { 0% { left: -40%; } 100% { left: 100%; } }
+    /* Específico desta tela (upload + resultado); tokens de app.css */
+    main{max-width:1000px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:26px 64px;}
+    .grid{grid-template-columns:1fr 1fr;} @media(max-width:680px){.grid{grid-template-columns:1fr;}}
+    .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;}
+    .tab{background:none;color:var(--muted);border:0;border-bottom:2px solid transparent;padding:10px 14px;font:600 13px var(--sans);cursor:pointer;margin-bottom:-1px;}
+    .tab:hover{color:var(--ink);} .tab.on{color:var(--ink);border-bottom-color:var(--accent);}
+    .tab .dot{display:none;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;vertical-align:middle;} .tab.editado .dot{display:inline-block;}
+    .painel{display:none;} .painel.on{display:block;}
+    input[type=file]{width:100%;font-size:13px;color:var(--muted);}
+    button.add{background:var(--surface);color:var(--accent);border:1px dashed var(--accent);padding:9px 14px;border-radius:var(--r-sm);cursor:pointer;font:600 13px var(--sans);}
+    button.add:hover{background:var(--surface-2);}
+    .hint{color:var(--muted);font-size:12px;margin:8px 0 4px;}
+    .filelist{list-style:none;margin:8px 0 0;padding:0;}
+    .filelist li{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:6px 10px;margin-top:6px;font-size:12px;}
+    .filelist .nome{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .filelist .tam{color:var(--muted);flex:0 0 auto;}
+    .filelist .rm{background:none;border:0;color:var(--bad);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;} .filelist .vazio{color:var(--muted);border:0;background:none;padding:0;}
+    .actions{margin:20px 0;display:flex;gap:12px;align-items:center;}
+    button[type=submit],#btn{background:var(--accent);color:var(--accent-ink);border:0;font:700 14px var(--sans);padding:11px 20px;border-radius:var(--r-sm);cursor:pointer;}
+    button[type=submit]:hover,#btn:hover{filter:brightness(1.06);} button:disabled{opacity:.5;cursor:not-allowed;filter:none;}
+    #status,#statusRel{color:var(--muted);font-size:13px;}
+    .result{margin-top:24px;display:none;}
+    .kpi{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+    .meter{flex:1;min-width:200px;height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden;} .meter>div{height:100%;background:var(--accent);}
+    section.block{margin-top:24px;} section.block h3{font:650 14px var(--sans);border-bottom:1px solid var(--line);padding-bottom:6px;}
+    .docs{display:grid;grid-template-columns:1fr 1fr;gap:12px;} @media(max-width:680px){.docs{grid-template-columns:1fr;}}
+    .doc,.det{border:1px solid var(--line);border-radius:var(--r);padding:14px;background:var(--surface);}
+    .doc-head,.det-head{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+    .doc-nome{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .doc-nat{color:var(--muted);font-size:12px;margin:2px 0 6px;}
+    .doc-row{font-size:12px;margin-top:5px;} .doc-lbl{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.04em;}
+    .det-nome{font-weight:700;font-size:14px;} .det-sub{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin:14px 0 4px;}
+    .b-ATENDIDO,.b-APROVAR{background:var(--ok-bg);color:var(--ok);} .b-PARCIAL,.b-DILIGÊNCIA{background:var(--warn-bg);color:var(--warn);} .b-NÃO{background:var(--bad-bg);color:var(--bad);} .b-EVID{background:var(--surface-2);color:var(--muted);} .b-PROJ{background:var(--accent);color:var(--accent-ink);} .b-PREST{background:var(--ok);color:#fff;}
+    #promptTxt{width:100%;min-height:420px;resize:vertical;font:12px/1.45 var(--mono);color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;}
+    #promptTxt:focus{outline:2px solid var(--accent);outline-offset:-1px;background:var(--surface);}
+    .prompt-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;}
+    .aviso{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn);padding:10px 12px;border-radius:var(--r-sm);font-size:12px;margin:0 0 12px;}
+    .perfil-box{display:flex;align-items:center;gap:12px;flex-wrap:wrap;} .perfil-desc{color:var(--muted);font-size:12px;flex:1;min-width:200px;}
+    .err{background:var(--bad-bg);border:1px solid var(--bad-line);color:var(--bad);padding:12px;border-radius:var(--r-sm);margin-top:16px;}
+    details{margin-top:24px;} summary{cursor:pointer;color:var(--muted);}
+    pre{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);padding:12px;border-radius:var(--r-sm);overflow:auto;font:12px var(--mono);}
+    #overlay{position:fixed;inset:0;background:rgba(10,12,16,.72);display:none;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(3px);}
+    #overlay.on{display:flex;} .loader{text-align:center;color:#fff;max-width:420px;padding:24px;}
+    .spinner{width:56px;height:56px;margin:0 auto 20px;border-radius:50%;border:5px solid rgba(255,255,255,.25);border-top-color:var(--accent);animation:spin .9s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .loader h3{margin:0 0 6px;font-size:17px;} .loader .tempo{font:800 30px var(--sans);color:#fff;font-variant-numeric:tabular-nums;margin:4px 0;} .loader p{margin:6px 0 0;color:#c7d3ee;font-size:13px;}
+    #overlay .bar{height:4px;width:220px;margin:16px auto 0;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden;position:relative;display:block;}
+    #overlay .bar::after{content:'';position:absolute;left:-40%;top:0;height:100%;width:40%;background:var(--accent);border-radius:999px;animation:ovslide 1.2s ease-in-out infinite;}
+    @keyframes ovslide{0%{left:-40%;}100%{left:100%;}}
   </style>
 </head>
 <body>
@@ -163,26 +65,18 @@
       <p id="ovMsg">Comparando previsto × realizado. Pode levar 1-3 min para PDFs grandes.</p>
     </div>
   </div>
-  <div class="gov-bar">Governo do Estado do Espírito Santo · Secretaria da Ciência, Tecnologia, Inovação e Educação Profissional</div>
-  <header>
-    <div class="brand">
-      <img class="logo" src="/static/logo.png" alt="FAPES — Fundação de Amparo à Pesquisa e Inovação do Espírito Santo">
-      <span class="tag">Fundação de Amparo à Pesquisa e Inovação do Espírito Santo</span>
-    </div>
-    <div class="gov-id">
-      <strong>GOVERNO DO ESTADO</strong>
-      DO ESPÍRITO SANTO
-    </div>
-  </header>
-  <div class="titlebar">
-    <h1>Avaliação Técnica — Prestação de Contas</h1>
-    <p>Compara o <strong>previsto</strong> (projeto) com o <strong>realizado</strong> (prestação) e emite parecer técnico.</p>
-    <nav class="nav-top">
-      <a href="/propostas">📋 Propostas &amp; Avaliações</a>
-      <a href="/avaliar">➕ Avaliação individual</a>
-    </nav>
-  </div>
   <main>
+    <header class="top">
+      <div class="brandmark">
+        <div class="logo">FAP</div>
+        <div><div class="t1">Avaliação individual</div><div class="t2">Envie projeto + prestação e gere o parecer</div></div>
+      </div>
+      <nav class="topnav">
+        <a href="/propostas">Propostas &amp; Avaliações</a>
+        <a href="/analise">Avaliar por edital</a>
+        <a href="/avaliar" class="on">Avaliação individual</a>
+      </nav>
+    </header>
     <form id="form">
       <div class="tabs">
         <button type="button" class="tab on" data-painel="documentos">Documentos</button>

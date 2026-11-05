@@ -263,14 +263,78 @@ _REL_PDF_DIR = os.path.join(_CACHE_DIR, "relatorios")
 _PASSO_DOCUMENTOS = 126
 # Nome do documento que é o relatório técnico DO PROJETO (o "realizado").
 # "Anexo VI" ou "Relatório Técnico (Final/Parcial/de Projeto/de Pesquisa)".
+_RE_ANEXO_VI = re.compile(r"anexo\s*vi\b", re.I)
 _RE_RELATORIO = re.compile(r"anexo\s*vi\b|relat[óo]rio\s*t[ée]cnic", re.I)
-# Exclui relatórios individuais de bolsista (não são o relatório do projeto).
-_RE_NAO_RELATORIO = re.compile(r"bolsista|monitora?\b", re.I)
+# Exclui relatórios INDIVIDUAIS de participante (bolsista, monitor, aluno de
+# iniciação científica júnior — "INIC Jr"/"IC Jr"). São relatórios por pessoa,
+# não o relatório do PROJETO; cada um vira um documento com nota e, somados,
+# distorcem a mediana do projeto (ex.: PICJr com 9 relatórios INIC Jr).
+_RE_NAO_RELATORIO = re.compile(
+    r"bolsista|monitora?\b|inic\s*jr|\bic\s*jr|"
+    r"inicia[çc][aã]o\s+cient[íi]fica\s+j[úu]nior",
+    re.I,
+)
 
 
 def _eh_relatorio_projeto(doc: dict) -> bool:
     txt = f"{doc.get('nome','')} {doc.get('descricao','')}"
+    # "Anexo VI" é rótulo inequívoco do relatório do PROJETO: sempre conta.
+    if _RE_ANEXO_VI.search(txt):
+        return True
     return bool(_RE_RELATORIO.search(txt)) and not _RE_NAO_RELATORIO.search(txt)
+
+
+# Evidência técnica COMPLEMENTAR: produção associada ao projeto (artigos,
+# trabalhos/publicações, apresentação em eventos, complementos do relatório,
+# relatórios parciais com fotos). Comprovam entregáveis e indicadores de
+# produção, mas NÃO são o relatório técnico principal (Anexo VI).
+_RE_EVIDENCIA = re.compile(
+    r"artigo|trabalho\s+completo|public|resumo\b|p[oô]ster|anais|peri[oó]dic|"
+    r"congress|semin[aá]rio|simp[oó]si|confer|\bevento|cap[ií]tulo|livro|"
+    r"patente|software|registro\s+de\s+programa|\bproduto|disserta|\btese\b|"
+    r"monografia|comunica|divulga|complemento|relat[oó]rio\s+parcial|"
+    r"relat[oó]rio\s+de\s+atividade",
+    re.I,
+)
+# Documentos financeiros/administrativos: NÃO entram na avaliação técnica.
+_RE_FINANCEIRO = re.compile(
+    r"extrato|concilia|comprovante|relaç[aã]o\s+de\s+bens|encaminhamento|"
+    r"cronograma|devolu|transfer|tal[aã]o|nota\s+fiscal|or[cç]ament|"
+    r"financ|banc[aá]ri|aplica[cç][aã]o|\bGRU\b|guia\s+de|concess[aã]o",
+    re.I,
+)
+
+
+def classificar_documento(doc: dict) -> str:
+    """Classifica um documento da prestação:
+    'relatorio' (Anexo VI, peça principal), 'evidencia' (produção técnica
+    complementar), 'financeiro' (contábil/administrativo, fora da técnica) ou
+    'outro'. Financeiro tem precedência sobre evidência para evitar falso
+    positivo (ex.: 'Comprovante de apresentação')."""
+    if _eh_relatorio_projeto(doc):
+        return "relatorio"
+    nome = doc.get("nome", "")
+    desc = doc.get("descricao", "")
+    # O NOME do documento é o rótulo mais confiável: se ele indica produção
+    # (artigo, seminário, trabalho...), é evidência mesmo que a descrição traga
+    # palavras financeiras ("comprovante de apresentação").
+    if _RE_EVIDENCIA.search(nome):
+        return "evidencia"
+    if _RE_FINANCEIRO.search(f"{nome} {desc}"):
+        return "financeiro"
+    if _RE_EVIDENCIA.search(desc):
+        return "evidencia"
+    return "outro"
+
+
+def listar_evidencias_complementares(projeto_id: str) -> list[dict]:
+    """Documentos de produção técnica complementar da prestação (artigos,
+    trabalhos, publicações, complementos), que comprovam entregáveis/indicadores
+    sem serem o relatório técnico principal. Mais antigos primeiro."""
+    docs = listar_documentos_prestacao(projeto_id)
+    ev = [d for d in docs if classificar_documento(d) == "evidencia"]
+    ev.sort(key=lambda d: d.get("data", ""))
+    return ev
 
 
 def listar_documentos_prestacao(projeto_id: str) -> list[dict]:
@@ -317,12 +381,48 @@ def baixar_anexo(file_id: str, destino: str, force: bool = False) -> str:
 
 
 def listar_relatorios(projeto_id: str) -> list[dict]:
-    """Todos os documentos de relatório técnico (Anexo VI) da prestação — pode
-    haver vários (parciais por período + final). Mais antigos primeiro."""
+    """Relatórios técnicos DO PROJETO (Anexo VI) da prestação — pode haver vários
+    (parciais por período + final). Mais antigos primeiro.
+
+    Quando o projeto tem documentos "Anexo VI", eles são o relatório OFICIAL e os
+    relatórios por pessoa (bolsista/monitor/aluno de iniciação) são ignorados —
+    senão a mediana do projeto é distorcida por dezenas de relatórios individuais
+    (ex.: PICJr tinha 14 "relatórios", mas só 4 são Anexo VI do projeto). Só
+    quando não há nenhum Anexo VI é que recorremos ao rótulo genérico
+    "Relatório Técnico" (menos os individuais)."""
     docs = listar_documentos_prestacao(projeto_id)
-    rel = [d for d in docs if _eh_relatorio_projeto(d)]
+    anexos_vi = [d for d in docs
+                 if _RE_ANEXO_VI.search(f"{d.get('nome','')} {d.get('descricao','')}")]
+    rel = anexos_vi if anexos_vi else [d for d in docs if _eh_relatorio_projeto(d)]
     rel.sort(key=lambda d: d.get("data", ""))  # cronológico: parcial 1, 2, final
     return rel
+
+
+# "(1 de 3)", "(2 de 3)", "parte 2/3"… — relatório único partido em vários PDFs.
+_RE_PARTE = re.compile(
+    r"\s*[\(\[]?\s*(?:parte\s*)?(\d+)\s*(?:de|/)\s*(\d+)\s*[\)\]]?\s*$", re.I)
+
+
+def agrupar_relatorios(relatorios: list[dict]) -> list[list[dict]]:
+    """Agrupa relatórios multi-parte ("Anexo VI - final (1 de 3)", "(2 de 3)"…)
+    em um só documento lógico, para avaliar o relatório completo de uma vez (uma
+    nota, não uma por parte). Devolve lista de grupos; cada grupo é a lista de
+    partes em ordem. Relatório sem marcador "(i de n)" é um grupo de um."""
+    grupos: dict[str, list] = {}
+    ordem: list[str] = []
+    for i, d in enumerate(relatorios):
+        nome = d.get("nome", "")
+        m = _RE_PARTE.search(nome)
+        if m:
+            chave = "base:" + _RE_PARTE.sub("", nome).strip().lower()
+            idx = int(m.group(1))
+        else:
+            chave, idx = f"solo:{i}", 0  # sem marcador → grupo próprio
+        if chave not in grupos:
+            grupos[chave] = []
+            ordem.append(chave)
+        grupos[chave].append((idx, d))
+    return [[d for _, d in sorted(grupos[k], key=lambda x: x[0])] for k in ordem]
 
 
 def baixar_relatorio_por_file(file_id: str, destino: str, force: bool = False) -> str:

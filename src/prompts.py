@@ -200,8 +200,19 @@ REGRAS:
   arquivo ("Anexo VI", "Relatório Parcial/Final"), datas e seções do próprio
   relatório. Se não der para determinar, use "NÃO INFORMADO".
 - Baseie-se APENAS no conteúdo dos documentos. Não invente evidências.
-- Se um entregável previsto não aparecer na prestação, marque
-  "NÃO EVIDENCIADO", nunca "NÃO ATENDIDO" (a diferença importa).
+- EVIDÊNCIAS COMPLEMENTARES: além do relatório técnico (arquivo
+  "relatorio__..."), a PRESTAÇÃO pode trazer arquivos "evidencia__..."
+  (artigos científicos, trabalhos completos, publicações, apresentações em
+  eventos, complementos do relatório, relatórios parciais). TRATE-OS COMO
+  COMPROVAÇÃO: um entregável ou indicador sustentado por essas evidências é
+  ATENDIDO/ATINGIDO, mesmo que o relatório técnico não o detalhe. Elas contam
+  especialmente para "indicadores_producao" (bibliografica, tecnica_tecnologica,
+  orientacoes) e para "publicacoes_tecnico_cientificas" / "difusao_divulgacao".
+  Conte a produção real (ex.: 1 artigo + 1 trabalho em evento = 2 na
+  bibliográfica) e cite o arquivo na "evidencia". O relatório técnico (Anexo VI)
+  segue como peça principal; não há documentos financeiros aqui.
+- Se um entregável previsto não aparecer em NENHUM documento (nem relatório nem
+  evidências), marque "NÃO EVIDENCIADO", nunca "NÃO ATENDIDO" (a diferença importa).
 - Seja específico: cite documento e trecho na "evidencia".
 - Priorize entregáveis e indicadores contratualmente exigidos.
 - Os documentos vêm rotulados com cabeçalhos "--- ARQUIVO: nome ---".

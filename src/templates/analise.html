@@ -4,71 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Avaliar por edital — SIGFAPES</title>
-<style>
-  :root{
-    --bg:#f4f6f8; --surface:#fff; --ink:#0f1e2e; --muted:#5a6b7b; --line:#dde4ea;
-    --brand:#0a4d8c; --brand2:#0f7a5a;
-    --ok-fg:#166534; --ok-bg:#dcfce7; --ok-ln:#22c55e;
-    --bad-fg:#991b1b; --bad-bg:#fee2e2; --warn-fg:#92400e; --warn-bg:#fef3c7; --warn-ln:#f59e0b;
-    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
-    --shadow:0 1px 2px rgba(15,30,46,.06),0 8px 24px rgba(15,30,46,.06);
-  }
-  @media (prefers-color-scheme:dark){
-    :root{--bg:#0b1420;--surface:#121e2c;--ink:#e8eef4;--muted:#93a4b5;--line:#243445;
-      --brand:#4f9ce0;--brand2:#3fbf92;--ok-fg:#86efac;--ok-bg:#0f2e1d;--bad-fg:#fca5a5;--bad-bg:#3a1618;
-      --warn-fg:#fcd34d;--warn-bg:#352714;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);color-scheme:dark;}
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;}
-  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 56px;}
-  header.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
-    padding-bottom:16px;border-bottom:2px solid var(--line);margin-bottom:22px;}
-  .brandmark{display:flex;align-items:center;gap:12px;}
-  .logo{width:42px;height:42px;border-radius:9px;display:grid;place-items:center;
-    background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font:800 15px var(--sans);}
-  .t1{font:800 18px var(--sans);} .t2{font-size:12.5px;color:var(--muted);}
-  .topnav{display:flex;gap:4px;flex-wrap:wrap;}
-  .topnav a{font:600 12.5px var(--sans);text-decoration:none;color:var(--muted);padding:8px 13px;border-radius:8px;border:1px solid transparent;}
-  .topnav a:hover{color:var(--ink);background:var(--surface);border-color:var(--line);}
-  .topnav a.on{color:var(--brand);background:var(--surface);border-color:var(--line);}
-
-  .steps{display:flex;gap:10px;align-items:center;margin-bottom:18px;font:700 12.5px var(--sans);}
-  .step{display:flex;gap:8px;align-items:center;color:var(--muted);}
-  .step .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--line);color:var(--muted);font-size:12px;}
-  .step.on{color:var(--ink);} .step.on .n{background:var(--brand);color:#fff;}
-  .step.done .n{background:var(--ok-ln);color:#fff;}
-  .sep{flex:1;height:1px;background:var(--line);max-width:40px;}
-
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:16px;}
-  .card h2{font:700 13px var(--sans);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;}
-  select.edital{font:500 13px var(--sans);width:100%;max-width:640px;padding:11px 13px;border-radius:9px;
-    border:1px solid var(--line);background:var(--bg);color:var(--ink);}
-
-  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;}
-  .btn{font:600 12.5px var(--sans);cursor:pointer;color:#fff;background:var(--brand2);border:1px solid var(--brand2);padding:9px 15px;border-radius:9px;}
-  .btn:disabled{opacity:.5;cursor:not-allowed;}
-  .btn.ghost{background:transparent;color:var(--brand);border-color:var(--line);}
-  .tbl-wrap{overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;min-width:620px;}
-  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:12.5px;vertical-align:middle;}
-  th{font:700 10.5px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
-  tr:last-child td{border-bottom:0;}
-  .ttl-link{color:var(--brand);text-decoration:none;font-weight:600;} .ttl-link:hover{text-decoration:underline;}
-  .proto{font-family:var(--mono);font-size:11px;color:var(--muted);}
-  .chk{width:34px;text-align:center;} .rowchk{width:15px;height:15px;cursor:pointer;}
-  .badge{display:inline-block;font:700 10px var(--sans);padding:3px 8px;border-radius:20px;}
-  .b-ok{color:var(--ok-fg);background:var(--ok-bg);} .b-bad{color:var(--bad-fg);background:var(--bad-bg);} .b-mut{color:var(--muted);background:var(--bg);}
-
-  .progress{height:8px;border-radius:5px;background:var(--line);overflow:hidden;margin-top:10px;}
-  .progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .3s;}
-  .batch-itens{list-style:none;margin:10px 0 0;padding:0;max-height:200px;overflow:auto;}
-  .batch-itens li{font:500 12px var(--sans);padding:5px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;}
-  .batch-itens li .r{font-family:var(--mono);font-size:11px;color:var(--muted);} .batch-itens li.ok .r{color:var(--ok-fg);} .batch-itens li.err .r{color:var(--bad-fg);}
-  .empty{background:var(--surface);border:1px dashed var(--warn-ln);border-radius:12px;padding:24px;color:var(--ink);}
-  .empty code{font-family:var(--mono);background:var(--bg);padding:2px 7px;border-radius:5px;border:1px solid var(--line);}
-  .muted{color:var(--muted);font-size:12.5px;}
-</style>
+<link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
 <div class="wrap">

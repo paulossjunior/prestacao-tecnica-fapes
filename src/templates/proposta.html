@@ -4,81 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ p.titulo[:40] or 'Proposta' }} — SIGFAPES</title>
-<style>
-  :root{
-    --bg:#f4f6f8; --surface:#fff; --ink:#0f1e2e; --muted:#5a6b7b; --line:#dde4ea;
-    --brand:#0a4d8c; --brand2:#0f7a5a;
-    --ok-fg:#166534; --ok-bg:#dcfce7; --ok-ln:#22c55e;
-    --warn-fg:#92400e; --warn-bg:#fef3c7; --warn-ln:#f59e0b;
-    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
-    --shadow:0 1px 2px rgba(15,30,46,.06),0 8px 24px rgba(15,30,46,.06);
-  }
-  @media (prefers-color-scheme:dark){
-    :root{--bg:#0b1420;--surface:#121e2c;--ink:#e8eef4;--muted:#93a4b5;--line:#243445;
-      --brand:#4f9ce0;--brand2:#3fbf92;--ok-fg:#86efac;--ok-bg:#0f2e1d;
-      --warn-fg:#fcd34d;--warn-bg:#352714;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
-      color-scheme:dark;}
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;}
-  .wrap{max-width:900px;margin:0 auto;padding:24px 20px 56px;}
-  .topnav{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:18px;}
-  .topnav a{font:600 12.5px var(--sans);text-decoration:none;color:var(--muted);
-    padding:8px 13px;border-radius:8px;border:1px solid transparent;}
-  .topnav a:hover{color:var(--ink);background:var(--surface);border-color:var(--line);}
-  .crumbs{font-size:12.5px;color:var(--muted);margin-bottom:10px;}
-  .crumbs a{color:var(--brand);text-decoration:none;}
-  h1{font:800 22px var(--sans);margin:0 0 6px;text-wrap:balance;}
-  .edital{font-size:13px;color:var(--muted);margin-bottom:20px;}
-
-  .grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
-  @media (max-width:720px){ .grid{grid-template-columns:1fr;} }
-  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
-    box-shadow:var(--shadow);padding:18px 20px;}
-  .card h2{font:700 13px var(--sans);letter-spacing:.04em;text-transform:uppercase;
-    color:var(--muted);margin:0 0 14px;}
-  dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:9px 16px;}
-  dt{font-size:12px;color:var(--muted);} dd{margin:0;font-size:13px;font-weight:600;}
-  .proto{font-family:var(--mono);font-size:12px;}
-
-  .doc{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;
-    padding:12px 14px;margin-top:10px;background:var(--bg);}
-  .doc .ic{flex:none;width:34px;height:42px;border-radius:5px;background:var(--surface);
-    border:1px solid var(--line);position:relative;}
-  .doc .ic::after{content:"PDF";position:absolute;inset:auto 0 5px;text-align:center;
-    font:700 8px var(--mono);color:var(--muted);}
-  .doc .n{font-weight:600;font-size:13px;} .doc .s{font-size:11.5px;color:var(--muted);}
-  .doc a.btn{margin-left:auto;}
-  .btn{font:600 12.5px var(--sans);text-decoration:none;padding:8px 13px;border-radius:8px;
-    border:1px solid var(--brand);color:#fff;background:var(--brand);white-space:nowrap;}
-  .btn.ghost{color:var(--brand);background:transparent;}
-
-  .status{display:inline-flex;align-items:center;gap:7px;font:700 12px var(--sans);
-    padding:6px 11px;border-radius:20px;}
-  .st-ok{color:var(--ok-fg);background:var(--ok-bg);} .st-pend{color:var(--warn-fg);background:var(--warn-bg);}
-  .aval-nota{font:800 30px var(--sans);font-variant-numeric:tabular-nums;}
-  .muted{color:var(--muted);font-size:12.5px;}
-  .doclist{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
-  .docrow{display:flex;justify-content:space-between;gap:12px;align-items:center;text-decoration:none;
-    color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:var(--bg);font-size:12.5px;}
-  .docrow:hover{border-color:var(--brand);} .docrow .dn{font-weight:600;}
-  .docrow .dd{color:var(--muted);font-family:var(--mono);font-size:11px;white-space:nowrap;}
-  .docrow.rel{border-color:var(--ok-ln);background:var(--ok-bg);} .docrow.rel .dn{color:var(--ok-fg);}
-  footer{margin-top:26px;font-size:11.5px;color:var(--muted);}
-</style>
+<link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
 <div class="wrap">
 
-  <nav class="topnav">
-    <a href="/propostas">Propostas &amp; Avaliações</a>
-    <a href="/avaliar">Avaliação individual</a>
-  </nav>
+  <header class="top">
+    <div class="brandmark">
+      <div class="logo">FAP</div>
+      <div><div class="t1">Detalhe da proposta</div><div class="t2">Projeto, prestação de contas e parecer</div></div>
+    </div>
+    <nav class="topnav">
+      <a href="/propostas">Propostas &amp; Avaliações</a>
+      <a href="/analise">Avaliar por edital</a>
+      <a href="/avaliar">Avaliação individual</a>
+    </nav>
+  </header>
 
   <div class="crumbs"><a href="/propostas">Propostas</a> › {{ p.protocolo }}</div>
   <h1>{{ p.titulo or 'Proposta sem título' }}</h1>
-  <div class="edital">{{ p.edital }}</div>
+  <div class="edital-sub">{{ p.edital }}</div>
 
   <div class="grid">
     <div class="card">
@@ -130,38 +75,57 @@
 
     <div class="card">
       <h2>Avaliação</h2>
-      {% if aval %}
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
-          <span class="aval-nota">{{ aval.nota if aval.nota is not none else '—' }}%</span>
-          <span class="status {{ 'st-ok' if aval.situacao == 'APROVADO' else 'st-pend' }}">{{ aval.situacao }}</span>
+      {% if resumo %}
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">
+          <span class="aval-nota">{{ resumo.nota if resumo.nota is not none else '—' }}%</span>
+          <span class="status {{ 'st-ok' if resumo.situacao == 'APROVADO' else 'st-pend' }}">{{ resumo.situacao }}</span>
         </div>
-        {% if aval.tipo_relatorio and aval.tipo_relatorio != 'NÃO INFORMADO' %}
-          <div class="muted" style="margin-bottom:6px">Relatório: <b>{{ aval.tipo_relatorio|title }}</b>{% if aval.periodo_relatorio and aval.periodo_relatorio != 'NÃO INFORMADO' %} · {{ aval.periodo_relatorio }}{% endif %}</div>
-        {% endif %}
-        <div class="muted" style="margin-bottom:14px">Parecer: <b>{{ aval.parecer or '—' }}</b></div>
-        <a class="btn" href="/projetos/{{ aval.id }}" target="_blank" rel="noopener">Ver parecer completo</a>
-        <a class="btn ghost" href="/projetos/{{ aval.id }}/pdf" style="margin-left:6px">PDF</a>
+        <div class="muted" style="margin-bottom:16px">
+          Nota geral da proposta = <b>mediana</b> das notas de {{ resumo.n_docs }} documento{{ '' if resumo.n_docs == 1 else 's' }}.
+        </div>
 
-        {% if historico and historico|length > 1 %}
-          <h2 style="margin-top:22px">Histórico de avaliações ({{ historico|length }})</h2>
-          <div class="doclist">
-            {% for h in historico %}
-              <a class="docrow{{ ' rel' if h.id == aval.id }}" href="/projetos/{{ h.id }}" target="_blank" rel="noopener">
-                <span class="dn">
-                  {% if h.tipo_relatorio and h.tipo_relatorio != 'NÃO INFORMADO' %}<b>{{ h.tipo_relatorio|title }}</b>
-                    {% if h.periodo_relatorio and h.periodo_relatorio != 'NÃO INFORMADO' %}<span class="dd">{{ h.periodo_relatorio }}</span>{% endif %} ·
-                  {% endif %}
-                  {{ h.nota if h.nota is not none else '—' }}% · {{ h.situacao }} · {{ h.parecer or '—' }}{{ ' (atual)' if h.id == aval.id }}</span>
-                <span class="dd">{{ h.data[:16].replace('T',' ') }}</span>
-              </a>
-            {% endfor %}
-          </div>
+        <h2 style="margin-top:4px">Notas por documento ({{ por_doc|length }})</h2>
+        <div class="doclist">
+          {% for d in por_doc %}
+            <a class="docrow{{ ' rel' if (d.tipo_relatorio or '')|upper == 'FINAL' }}" href="/projetos/{{ d.id }}" target="_blank" rel="noopener">
+              <span class="dn">
+                <b>{{ d.tipo_relatorio|title if d.tipo_relatorio and d.tipo_relatorio != 'NÃO INFORMADO' else 'Relatório' }}</b>
+                {% if d.periodo_relatorio and d.periodo_relatorio != 'NÃO INFORMADO' %}<span class="dd">{{ d.periodo_relatorio }}</span>{% endif %}
+                · <b>{{ d.nota if d.nota is not none else '—' }}%</b> · {{ d.situacao }} · {{ d.parecer or '—' }}
+                {% if d.relatorio_nome %}<br><span class="dd">{{ d.relatorio_nome[:48] }}</span>{% endif %}
+              </span>
+              <span class="dd">{{ d.data[:16].replace('T',' ') }}</span>
+            </a>
+          {% endfor %}
+        </div>
+
+        <div style="margin-top:14px">
+          <a class="btn" href="/projetos/{{ resumo.id }}" target="_blank" rel="noopener">Ver parecer ({{ resumo.tipo_relatorio|title if resumo.tipo_relatorio and resumo.tipo_relatorio != 'NÃO INFORMADO' else 'representativo' }})</a>
+          <a class="btn ghost" href="/projetos/{{ resumo.id }}/pdf" style="margin-left:6px">PDF</a>
+        </div>
+
+        {% if historico and historico|length > por_doc|length %}
+          <details style="margin-top:18px">
+            <summary class="muted" style="cursor:pointer">Histórico completo ({{ historico|length }} avaliações, incl. rodadas anteriores)</summary>
+            <div class="doclist" style="margin-top:10px">
+              {% for h in historico %}
+                <a class="docrow" href="/projetos/{{ h.id }}" target="_blank" rel="noopener">
+                  <span class="dn">
+                    {% if h.tipo_relatorio and h.tipo_relatorio != 'NÃO INFORMADO' %}<b>{{ h.tipo_relatorio|title }}</b> · {% endif %}
+                    {{ h.nota if h.nota is not none else '—' }}% · {{ h.situacao }} · {{ h.parecer or '—' }}
+                  </span>
+                  <span class="dd">{{ h.data[:16].replace('T',' ') }}</span>
+                </a>
+              {% endfor %}
+            </div>
+          </details>
         {% endif %}
       {% else %}
         <span class="status st-pend">● Avaliação pendente</span>
         <p class="muted" style="margin-top:12px">
-          A avaliação compara o <b>projeto</b> (previsto) com o <b>relatório técnico</b> (realizado).
-          O projeto já está disponível; falta o relatório técnico da prestação para rodar a análise.
+          A avaliação compara o <b>projeto</b> (previsto) com cada <b>relatório técnico</b> (realizado):
+          cada relatório parcial e o final recebem nota individual, e a nota geral da proposta é a
+          <b>mediana</b> dessas notas. Falta o relatório técnico da prestação para rodar a análise.
         </p>
       {% endif %}
     </div>

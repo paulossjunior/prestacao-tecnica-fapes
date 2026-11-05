@@ -77,22 +77,29 @@ def _titulo_do_resultado(resultado: dict) -> str:
 
 
 def salvar(resultado: dict, titulo: str | None = None, perfil: str | None = None,
-           aval_id: str | None = None, projeto_id: str | None = None) -> str:
+           aval_id: str | None = None, projeto_id: str | None = None,
+           relatorio_file: str | None = None, relatorio_nome: str | None = None) -> str:
     """Grava uma avaliação e devolve seu id. Reusa o id se fornecido (idempotente).
-    `projeto_id` liga a avaliação à proposta do SIGFAPES."""
+    `projeto_id` liga a avaliação à proposta do SIGFAPES; `relatorio_file`/
+    `relatorio_nome` identificam O DOCUMENTO avaliado (um projeto tem vários
+    relatórios parciais + um final, cada um com sua nota)."""
     aval_id = aval_id or uuid.uuid4().hex[:12]
     d = _dir(aval_id)
     os.makedirs(d, exist_ok=True)
     nota = resultado.get("grau_conformidade_geral")
+    agora = _dt.datetime.now()
     meta = {
         "id": aval_id,
         "titulo": (titulo or _titulo_do_resultado(resultado)),
-        "data": _dt.datetime.now().isoformat(timespec="seconds"),
+        "data": agora.isoformat(timespec="seconds"),
+        "ts": agora.timestamp(),  # alta resolução p/ ordenar sem empate
         "perfil": perfil or "",
         "nota": nota,
         "parecer": resultado.get("parecer", ""),
         "situacao": situacao(nota),
         "projeto_id": projeto_id or "",
+        "relatorio_file": str(relatorio_file or ""),
+        "relatorio_nome": relatorio_nome or "",
         "tipo_relatorio": resultado.get("tipo_relatorio", ""),
         "periodo_relatorio": resultado.get("periodo_relatorio", ""),
     }
@@ -122,7 +129,8 @@ def listar() -> list[dict]:
                 itens.append(m)
             except (OSError, ValueError):
                 continue
-    itens.sort(key=lambda m: m.get("data", ""), reverse=True)
+    # ts (alta resolução) quebra empates de same-second; fallback p/ data.
+    itens.sort(key=lambda m: (m.get("ts", 0.0), m.get("data", "")), reverse=True)
     return itens
 
 
@@ -132,19 +140,93 @@ def historico(projeto_id: str) -> list[dict]:
     return [m for m in listar() if str(m.get("projeto_id") or "") == pid]
 
 
+def _chave_doc(m: dict) -> str:
+    """Identidade do DOCUMENTO avaliado (relatório), para deduplicar por doc.
+    Novo: file id exato do relatório. Legado (sem file): agrupa por tipo+período
+    para colapsar rodadas repetidas do mesmo documento."""
+    f = m.get("relatorio_file")
+    if f:
+        return f"file:{f}"
+    return "tp:" + (m.get("tipo_relatorio") or "?") + "|" + (m.get("periodo_relatorio") or "?")
+
+
+def _latest_por_doc(hist: list[dict]) -> list[dict]:
+    """Dada uma lista de avaliações (mais recentes primeiro), mantém a mais
+    recente de CADA documento. Um projeto tem vários relatórios (parciais +
+    final); cada documento tem sua própria nota atual."""
+    vistos, out = set(), []
+    for m in hist:
+        chave = _chave_doc(m)
+        if chave in vistos:
+            continue
+        vistos.add(chave)
+        out.append(m)
+    return out
+
+
+def por_documento(projeto_id: str) -> list[dict]:
+    """Avaliação atual de CADA documento (relatório) do projeto, em ordem
+    cronológica (parciais → final). Uma nota por documento."""
+    docs = _latest_por_doc(historico(projeto_id))
+    return sorted(docs, key=lambda m: (m.get("ts", 0.0), m.get("data", "")))
+
+
+def _mediana(nums: list) -> float | None:
+    vals = sorted(float(n) for n in nums if isinstance(n, (int, float)))
+    if not vals:
+        return None
+    meio = len(vals) // 2
+    if len(vals) % 2:
+        return vals[meio]
+    return (vals[meio - 1] + vals[meio]) / 2
+
+
 def avaliacao_atual(projeto_id: str) -> dict | None:
-    """A avaliação mais recente de um projeto (ou None)."""
+    """A avaliação mais recente de um projeto (ou None). Para referência pontual."""
     h = historico(projeto_id)
     return h[0] if h else None
 
 
+def _resumo_de_docs(projeto_id: str, docs: list[dict]) -> dict | None:
+    """Monta o resumo do projeto a partir das avaliações (uma por documento):
+    nota geral = MEDIANA das notas; `id`/`parecer` apontam para um parecer
+    representativo (o final, senão o mais recente) para abrir/baixar."""
+    if not docs:
+        return None
+    med = _mediana([d.get("nota") for d in docs])
+    finais = [d for d in docs if (d.get("tipo_relatorio") or "").upper().startswith("FINAL")]
+    rep = max(finais or docs, key=lambda m: (m.get("ts", 0.0), m.get("data", "")))
+    return {
+        "projeto_id": str(projeto_id),
+        "nota": round(med) if med is not None else None,
+        "situacao": situacao(med) if med is not None else "—",
+        "n_docs": len(docs),
+        "id": rep.get("id"),
+        "parecer": rep.get("parecer", ""),
+        "tipo_relatorio": rep.get("tipo_relatorio", ""),
+        "periodo_relatorio": rep.get("periodo_relatorio", ""),
+    }
+
+
+def resumo_projeto(projeto_id: str) -> dict | None:
+    """Nota GERAL da proposta = MEDIANA das notas dos documentos (parciais +
+    final). None se não há avaliação."""
+    return _resumo_de_docs(projeto_id, por_documento(projeto_id))
+
+
 def por_projeto() -> dict:
-    """Mapa projeto_id -> avaliação mais recente (dedupe mantendo a mais nova)."""
-    mapa = {}
-    for m in listar():  # já vem ordenado por data desc
+    """Mapa projeto_id -> RESUMO do projeto (nota geral = mediana dos documentos)."""
+    por_pid: dict[str, list] = {}
+    for m in listar():  # ordenado por data desc
         pid = str(m.get("projeto_id") or "")
         if pid:
-            mapa.setdefault(pid, m)  # mantém a primeira = mais recente
+            por_pid.setdefault(pid, []).append(m)
+    mapa = {}
+    for pid, hist in por_pid.items():
+        docs = sorted(_latest_por_doc(hist), key=lambda m: (m.get("ts", 0.0), m.get("data", "")))
+        resumo = _resumo_de_docs(pid, docs)
+        if resumo:
+            mapa[pid] = resumo
     return mapa
 
 
