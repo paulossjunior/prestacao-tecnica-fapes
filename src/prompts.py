@@ -211,6 +211,19 @@ REGRAS:
   Conte a produção real (ex.: 1 artigo + 1 trabalho em evento = 2 na
   bibliográfica) e cite o arquivo na "evidencia". O relatório técnico (Anexo VI)
   segue como peça principal; não há documentos financeiros aqui.
+- COERÊNCIA OBRIGATÓRIA (não se contradiga): o "resumo_executivo", a
+  "justificativa_parecer", as "pendencias_criticas"/"pontos_de_melhoria" e a nota
+  "grau_conformidade_geral" DEVEM ser consistentes com o que você mesmo preencheu
+  nos campos estruturados. Em especial:
+  * Se "indicadores_producao.bibliografica" > 0 ou
+    "resultados_periodo.publicacoes_tecnico_cientificas" estiver evidenciado, é
+    PROIBIDO dizer que "faltam/não houve publicações científicas" e é proibido
+    penalizar a nota por isso. Trate a produção comprovada como PONTO POSITIVO.
+  * Só liste como pendência/ressalva o que de fato está "NÃO EVIDENCIADO" nos
+    campos estruturados. Não cite como falta algo que você contou como presente.
+  * A nota deve refletir a produção e os entregáveis efetivamente comprovados
+    (incluindo pelas evidências complementares); não desconte por itens que as
+    evidências já suprem.
 - Se um entregável previsto não aparecer em NENHUM documento (nem relatório nem
   evidências), marque "NÃO EVIDENCIADO", nunca "NÃO ATENDIDO" (a diferença importa).
 - Seja específico: cite documento e trecho na "evidencia".
