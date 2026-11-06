@@ -47,8 +47,11 @@ primeiro `SIGFAPES_USER`/`SIGFAPES_PASSWORD`/`SIGFAPES_SITE`; só caia em
 
 ## 3. Instalar pela imagem do GitHub Packages (ghcr.io) — recomendado
 
-A cada push na `main`/tag, o CI publica a imagem em
-`ghcr.io/paulossjunior/prestacao-tecnica-fapes`.
+A cada push na `main`, o CI **versiona automaticamente** (semver por Conventional
+Commits: `feat`→minor, `fix`/`docs`/`chore`→patch, `BREAKING CHANGE`/`!`→major),
+cria a tag + GitHub Release e publica a imagem em
+`ghcr.io/paulossjunior/prestacao-tecnica-fapes` com as tags `latest`, `X.Y.Z` e `X.Y`.
+Para fixar uma versão, troque `:latest` por `:X.Y.Z` (ex.: `:1.2.0`).
 
 ```bash
 docker run -d --name prestacao -p 8080:8000 \

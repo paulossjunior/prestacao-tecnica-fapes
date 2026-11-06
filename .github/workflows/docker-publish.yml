@@ -1,26 +1,68 @@
-name: Publicar imagem Docker (ghcr.io)
+name: Release & publicar imagem (ghcr.io)
 
-# Publica a imagem no GitHub Packages (ghcr.io/<owner>/<repo>) a cada push na
-# main e a cada tag "vX.Y.Z". Assim dá pra instalar com `docker pull` sem buildar.
+# A cada push na main: calcula a PRÓXIMA versão (semver automático por
+# Conventional Commits), cria a tag + GitHub Release, builda a imagem multi-arch
+# e publica no GitHub Packages (ghcr.io/<owner>/<repo>) com as tags X.Y.Z, X.Y e
+# latest. Instala com `docker pull` sem buildar.
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      bump:
+        description: "Forçar incremento (patch|minor|major)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write # criar tag + release
+  packages: write # publicar no ghcr
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # histórico completo p/ ler tags e commits
+
+      - name: Próxima versão (semver automático)
+        id: ver
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          last=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+          [ -z "$last" ] && last="v0.0.0"
+          IFS=. read -r MA MI PA <<< "${last#v}"
+          # commits desde a última tag (ou todos, se não há tag)
+          if [ "$last" = "v0.0.0" ]; then range=""; else range="${last}..HEAD"; fi
+          log=$(git log ${range} --pretty=%B || true)
+          # bump por Conventional Commits: feat -> minor; BREAKING/! -> major; senão patch
+          bump=patch
+          echo "$log" | grep -qiE '^[a-z]+(\(.+\))?!:|BREAKING CHANGE' && bump=major || \
+          { echo "$log" | grep -qiE '^feat(\(.+\))?:' && bump=minor; } || true
+          # override manual via workflow_dispatch
+          manual="${{ github.event.inputs.bump }}"
+          [ -n "$manual" ] && bump="$manual"
+          case "$bump" in
+            major) MA=$((MA+1)); MI=0; PA=0;;
+            minor) MI=$((MI+1)); PA=0;;
+            *)     PA=$((PA+1));;
+          esac
+          new="v${MA}.${MI}.${PA}"
+          echo "bump=$bump  nova_versao=$new  (anterior=$last)"
+          echo "new_tag=$new"        >> "$GITHUB_OUTPUT"
+          echo "version=${MA}.${MI}.${PA}" >> "$GITHUB_OUTPUT"
+          echo "minor=${MA}.${MI}"   >> "$GITHUB_OUTPUT"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$new" -m "Release $new"
+          git push origin "$new"
 
       - name: Setup QEMU (multi-arch)
         uses: docker/setup-qemu-action@v3
@@ -41,11 +83,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+            type=raw,value=${{ steps.ver.outputs.version }}
+            type=raw,value=${{ steps.ver.outputs.minor }}
             type=sha,format=short
-            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build e push (amd64 + arm64)
         uses: docker/build-push-action@v6
@@ -57,3 +98,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.ver.outputs.new_tag }}" \
+            --title "${{ steps.ver.outputs.new_tag }}" \
+            --generate-notes
