@@ -148,6 +148,43 @@ _batch_lock = threading.Lock()
 _MAX_EVIDENCIAS = 6
 _EVIDENCIA_MAX_BYTES = 9_000_000
 
+# Estabilização da nota: roda a análise N vezes por documento e usa a MEDIANA das
+# notas (reduz a variância do LLM que, perto do limiar, vira aprova/reprova por
+# ruído). Reaproveita o texto OCR, então o custo extra é só das chamadas ao LLM.
+# Ajustável por env AVAL_AMOSTRAS (1 = sem repetição).
+try:
+    _AVAL_AMOSTRAS = max(1, int(os.getenv("AVAL_AMOSTRAS", "3")))
+except (TypeError, ValueError):
+    _AVAL_AMOSTRAS = 3
+
+
+def _analisar_estavel(projtxt, prest, perfil, n=None):
+    """Roda `analisar` n vezes e devolve UM resultado com a nota = mediana das
+    notas das rodadas (representante = rodada cuja nota é a mais próxima da
+    mediana, p/ o texto casar com o número). n=1 equivale a uma única rodada."""
+    import statistics
+    n = _AVAL_AMOSTRAS if n is None else max(1, n)
+    rodadas = []
+    for _ in range(n):
+        try:
+            rodadas.append(analisar(projtxt, prest, perfil=perfil))
+        except Exception:  # noqa: BLE001 — uma rodada ruim não aborta a estabilização
+            continue
+    if not rodadas:
+        return analisar(projtxt, prest, perfil=perfil)  # deixa o erro propagar
+    notas = [r.get("grau_conformidade_geral") for r in rodadas
+             if isinstance(r.get("grau_conformidade_geral"), (int, float))]
+    if not notas:
+        return rodadas[-1]
+    med = statistics.median(notas)
+    rep = min((r for r in rodadas if isinstance(r.get("grau_conformidade_geral"), (int, float))),
+              key=lambda r: abs(r["grau_conformidade_geral"] - med))
+    # Guarda o histórico das notas amostradas (registro da estabilização).
+    rep["notas_amostras"] = [round(x) for x in notas]
+    rep["nota_mediana"] = round(med)
+    rep["grau_conformidade_geral"] = round(med)
+    return rep
+
 
 def _slug(texto: str) -> str:
     """Nome de arquivo seguro a partir do nome do documento (p/ rótulo no LLM)."""
@@ -220,7 +257,7 @@ def _avaliar_um(projeto_id, prop):
                 prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
             if evid_txt:
                 prest += "\n\n" + evid_txt  # evidências já vêm rotuladas por arquivo
-            resultado = analisar(projtxt, prest, perfil=perfil)
+            resultado = _analisar_estavel(projtxt, prest, perfil)
             # O NOME do anexo é mais confiável que o palpite do modelo p/ parcial/final.
             tipo_nome = sigfapes.tipo_relatorio_por_nome(nome_doc, rep.get("descricao", ""))
             if tipo_nome:

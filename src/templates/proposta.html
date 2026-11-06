@@ -94,6 +94,7 @@
                 <b>{{ d.tipo_relatorio|title if d.tipo_relatorio and d.tipo_relatorio != 'NÃO INFORMADO' else 'Relatório' }}</b>
                 {% if d.periodo_relatorio and d.periodo_relatorio != 'NÃO INFORMADO' %}<span class="dd">{{ d.periodo_relatorio }}</span>{% endif %}
                 · <b>{{ d.nota if d.nota is not none else '—' }}%</b> · {{ d.situacao }} · {{ d.parecer or '—' }}
+                {% if d.notas_amostras and d.notas_amostras|length > 1 %}<br><span class="dd" title="Notas das {{ d.notas_amostras|length }} rodadas do LLM; a nota é a mediana">histórico: {{ d.notas_amostras|join(' · ') }} → mediana {{ d.nota }}%</span>{% endif %}
                 {% if d.relatorio_nome %}<br><span class="dd">{{ d.relatorio_nome[:48] }}</span>{% endif %}
               </span>
               <span class="dd">{{ d.data[:16].replace('T',' ') }}</span>

@@ -525,6 +525,7 @@ def gerar_html_projeto(titulo: str, resumo: dict, itens: list[dict]) -> str:
             {_chip(it.get('parecer') or '—', pc[:2])}
           </span>
         </div>
+        {('<div class="hist">Histórico de notas (' + str(len(it.get('amostras'))) + ' rodadas): ' + ' · '.join(str(x) for x in it.get('amostras')) + ' → mediana ' + str(it.get('nota')) + '%</div>') if (it.get('amostras') and len(it.get('amostras')) > 1) else ''}
         <p class="resumo">{_e(d.get('resumo_executivo'))}</p>
         <div class="just"><strong>Justificativa do parecer:</strong> {_e(d.get('justificativa_parecer'))}</div>
         <div class="cols">
@@ -588,6 +589,7 @@ def gerar_html_projeto(titulo: str, resumo: dict, itens: list[dict]) -> str:
   .docblk-t {{ font-weight:650; font-size:13.5px; }} .docblk-t .per {{ color:var(--muted); font-weight:400; font-size:11.5px; margin-left:6px; }}
   .docblk-n {{ display:flex; gap:6px; }}
   .resumo {{ margin:0 0 8px; }} .just {{ font-size:12.5px; color:#333; margin-bottom:10px; }}
+  .hist {{ font-size:11px; color:var(--muted); margin:0 0 8px; font-variant-numeric:tabular-nums; }}
   .cols {{ display:flex; gap:18px; flex-wrap:wrap; }} .col {{ flex:1; min-width:220px; }}
   .sub {{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:3px; }}
   ul {{ margin:0; padding-left:18px; }} li {{ margin:2px 0; }} li.crit {{ color:#b42318; }} li.muted,.muted {{ color:var(--faint); }}

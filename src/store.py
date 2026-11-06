@@ -102,6 +102,8 @@ def salvar(resultado: dict, titulo: str | None = None, perfil: str | None = None
         "relatorio_nome": relatorio_nome or "",
         "tipo_relatorio": resultado.get("tipo_relatorio", ""),
         "periodo_relatorio": resultado.get("periodo_relatorio", ""),
+        # Histórico das notas amostradas na estabilização (N rodadas do LLM).
+        "notas_amostras": resultado.get("notas_amostras") or [],
     }
     with open(os.path.join(d, "parecer.json"), "w", encoding="utf-8") as f:
         json.dump(resultado, f, ensure_ascii=False, indent=2)
@@ -317,6 +319,7 @@ def pdf_path_projeto(projeto_id: str, titulo: str | None = None) -> str | None:
         "periodo": d.get("periodo_relatorio"),
         "nota": d.get("nota"),
         "parecer": d.get("parecer"),
+        "amostras": d.get("notas_amostras") or [],
         "resultado": carregar(d.get("id")) or {},
     } for d in docs]
     if not titulo:
