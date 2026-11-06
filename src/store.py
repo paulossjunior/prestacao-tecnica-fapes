@@ -102,6 +102,8 @@ def salvar(resultado: dict, titulo: str | None = None, perfil: str | None = None
         "relatorio_nome": relatorio_nome or "",
         "tipo_relatorio": resultado.get("tipo_relatorio", ""),
         "periodo_relatorio": resultado.get("periodo_relatorio", ""),
+        # Histórico das notas amostradas na estabilização (N rodadas do LLM).
+        "notas_amostras": resultado.get("notas_amostras") or [],
     }
     with open(os.path.join(d, "parecer.json"), "w", encoding="utf-8") as f:
         json.dump(resultado, f, ensure_ascii=False, indent=2)
@@ -188,19 +190,29 @@ def avaliacao_atual(projeto_id: str) -> dict | None:
 
 
 def _resumo_de_docs(projeto_id: str, docs: list[dict]) -> dict | None:
-    """Monta o resumo do projeto a partir das avaliações (uma por documento):
-    nota geral = MEDIANA das notas; `id`/`parecer` apontam para um parecer
-    representativo (o final, senão o mais recente) para abrir/baixar."""
+    """Monta o resumo do projeto a partir das avaliações (uma por documento).
+
+    Nota GERAL do projeto (regra de negócio):
+    - se existe relatório FINAL, vale a nota do relatório final (o mais recente,
+      se houver mais de um);
+    - caso contrário, vale a nota do ÚLTIMO relatório (parcial mais recente).
+    `id`/`parecer`/`tipo` apontam para esse mesmo documento (o que define a nota),
+    usado para abrir/baixar o parecer representativo."""
     if not docs:
         return None
-    med = _mediana([d.get("nota") for d in docs])
+    _recente = lambda m: (m.get("ts", 0.0), m.get("data", ""))  # noqa: E731
     finais = [d for d in docs if (d.get("tipo_relatorio") or "").upper().startswith("FINAL")]
-    rep = max(finais or docs, key=lambda m: (m.get("ts", 0.0), m.get("data", "")))
+    parciais = [d for d in docs if (d.get("tipo_relatorio") or "").upper().startswith("PARCIAL")]
+    # Final manda; senão o último relatório (parcial mais recente); senão qualquer.
+    rep = max(finais or parciais or docs, key=_recente)
+    nota = rep.get("nota")
     return {
         "projeto_id": str(projeto_id),
-        "nota": round(med) if med is not None else None,
-        "situacao": situacao(med) if med is not None else "—",
+        "nota": round(nota) if isinstance(nota, (int, float)) else None,
+        "situacao": situacao(nota),
         "n_docs": len(docs),
+        "n_parciais": len(parciais),
+        "n_finais": len(finais),
         "id": rep.get("id"),
         "parecer": rep.get("parecer", ""),
         "tipo_relatorio": rep.get("tipo_relatorio", ""),
@@ -209,13 +221,42 @@ def _resumo_de_docs(projeto_id: str, docs: list[dict]) -> dict | None:
 
 
 def resumo_projeto(projeto_id: str) -> dict | None:
-    """Nota GERAL da proposta = MEDIANA das notas dos documentos (parciais +
-    final). None se não há avaliação."""
+    """Nota GERAL da proposta: a nota do relatório FINAL (se houver), senão a nota
+    do último relatório (parcial mais recente). None se não há avaliação."""
     return _resumo_de_docs(projeto_id, por_documento(projeto_id))
 
 
+def retag_tipo_por_nome() -> int:
+    """Reclassifica tipo_relatorio (PARCIAL/FINAL) das avaliações já salvas pelo
+    NOME do relatório (mais confiável que o palpite do LLM que gerou o dado). Útil
+    p/ corrigir dados antigos sem re-rodar a análise. Devolve quantas mudaram."""
+    import sigfapes
+    if not os.path.isdir(BASE):
+        return 0
+    n = 0
+    for nome_dir in os.listdir(BASE):
+        mp = os.path.join(BASE, nome_dir, "meta.json")
+        if not os.path.isfile(mp):
+            continue
+        try:
+            with open(mp, encoding="utf-8") as f:
+                m = json.load(f)
+        except (OSError, ValueError):
+            continue
+        tipo = sigfapes.tipo_relatorio_por_nome(m.get("relatorio_nome", ""))
+        if tipo and tipo != (m.get("tipo_relatorio") or ""):
+            m["tipo_relatorio"] = tipo
+            try:
+                with open(mp, "w", encoding="utf-8") as f:
+                    json.dump(m, f, ensure_ascii=False, indent=2)
+                n += 1
+            except OSError:
+                continue  # arquivo sem permissão de escrita: ignora, não aborta
+    return n
+
+
 def por_projeto() -> dict:
-    """Mapa projeto_id -> RESUMO do projeto (nota geral = mediana dos documentos)."""
+    """Mapa projeto_id -> RESUMO do projeto (nota geral: final, senão último parcial)."""
     por_pid: dict[str, list] = {}
     for m in listar():  # ordenado por data desc
         pid = str(m.get("projeto_id") or "")
@@ -262,4 +303,34 @@ def pdf_path(aval_id: str) -> str | None:
     meta = _meta(aval_id) or {}
     titulo = meta.get("titulo") or "Prestação de Contas Técnica"
     html = gerar_html(resultado, titulo=titulo)
+    return html_para_pdf(html, out)
+
+
+def pdf_path_projeto(projeto_id: str, titulo: str | None = None) -> str | None:
+    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral pela
+    mediana + resumo do parecer de cada relatório). Regenera sempre (reflete o
+    estado atual das avaliações). None se o projeto não tem avaliação."""
+    docs = por_documento(projeto_id)
+    resumo = resumo_projeto(projeto_id)
+    if not docs or not resumo:
+        return None
+    itens = [{
+        "tipo": d.get("tipo_relatorio"),
+        "periodo": d.get("periodo_relatorio"),
+        "nota": d.get("nota"),
+        "parecer": d.get("parecer"),
+        "amostras": d.get("notas_amostras") or [],
+        "resultado": carregar(d.get("id")) or {},
+    } for d in docs]
+    if not titulo:
+        rep = _meta(resumo.get("id")) or {}
+        # Remove o sufixo de tipo (ex.: " [Final]") do título salvo por documento.
+        titulo = re.sub(r"\s*\[[^\]]+\]\s*$", "", rep.get("titulo") or "").strip() \
+            or f"Projeto {projeto_id}"
+    out_dir = os.path.join(BASE, "_consolidado")
+    os.makedirs(out_dir, exist_ok=True)
+    out = os.path.join(out_dir, f"{projeto_id}.pdf")
+    from pdf import html_para_pdf
+    from report import gerar_html_projeto
+    html = gerar_html_projeto(titulo, resumo, itens)
     return html_para_pdf(html, out)

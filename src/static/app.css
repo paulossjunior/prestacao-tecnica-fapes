@@ -146,12 +146,16 @@ select.edital{width:100%;max-width:660px;}
 /* Tabelas */
 .tbl-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;min-width:620px;}
-th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);font-size:12.5px;vertical-align:middle;}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:12.5px;vertical-align:middle;}
 th{font:650 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--faint);}
 tr:last-child td{border-bottom:0;} tbody tr:hover{background:var(--surface-2);}
 .ttl-link{color:var(--ink);text-decoration:none;font-weight:600;} .ttl-link:hover{color:var(--accent);}
+/* Projeto ocupa o espaço livre; as demais colunas ficam compactas. */
+td:nth-child(2){min-width:230px;} th:nth-child(2){width:40%;}
 .proto{font-family:var(--mono);font-size:11px;color:var(--faint);}
-.pesq{white-space:nowrap;} .nota{font:680 15px var(--mono);font-variant-numeric:tabular-nums;}
+/* Pesquisador e parecer quebram linha em vez de alargar a tabela (sem scroll-x). */
+.pesq{white-space:normal;min-width:110px;max-width:160px;} .nota{font:680 15px var(--mono);font-variant-numeric:tabular-nums;}
+.rel-cnt{font:600 12px var(--mono);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;}
 .acts{display:flex;gap:6px;} .chk-col,.chk{width:34px;text-align:center;}
 .rowchk{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);}
 
@@ -161,7 +165,7 @@ tr:last-child td{border-bottom:0;} tbody tr:hover{background:var(--surface-2);}
 .b-ok,.st-ok{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-line);}
 .b-bad{color:var(--bad);background:var(--bad-bg);border-color:var(--bad-line);}
 .b-warn,.st-pend{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-line);}
-.b-mut{color:var(--muted);background:var(--surface-2);}
+.b-mut{color:var(--muted);background:var(--surface-2);white-space:normal;line-height:1.25;text-align:center;}
 .status{display:inline-flex;align-items:center;gap:7px;font:650 11.5px var(--sans);padding:5px 11px;border-radius:999px;border:1px solid transparent;}
 .st-ok{}
 .st-pend{}

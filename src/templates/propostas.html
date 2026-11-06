@@ -148,7 +148,7 @@
           <table>
             <thead>
               <tr><th class="chk-col"><input type="checkbox" class="rowchk chk-all" title="Selecionar todos do edital"></th>
-                  <th>Projeto</th><th>Pesquisador</th><th>Nota</th><th>Situação</th><th>Parecer</th><th>Ações</th></tr>
+                  <th>Projeto</th><th>Pesquisador</th><th>Relatórios</th><th>Nota</th><th>Situação</th><th>Parecer</th><th>Ações</th></tr>
             </thead>
             <tbody>
             {% for p in g.propostas %}
@@ -158,6 +158,7 @@
                 <td><a class="ttl-link" href="/propostas/{{ p.projeto_id }}">{{ p.titulo or '—' }}</a>
                     <div class="proto">{{ p.protocolo }}</div></td>
                 <td class="pesq">{{ p.pesquisador or '—' }}</td>
+                <td>{% if a %}<span class="rel-cnt" title="{{ a.n_parciais }} parcial(is) · {{ a.n_finais }} final(is)">{{ a.n_parciais }}P · {{ a.n_finais }}F</span>{% else %}<span class="proto">—</span>{% endif %}</td>
                 <td>{% if a and a.nota is not none %}<span class="nota">{{ a.nota }}%</span>{% else %}<span class="proto">—</span>{% endif %}</td>
                 <td>
                   {% if a and a.situacao == 'APROVADO' %}<span class="badge b-ok">APROVADO</span>
@@ -168,7 +169,7 @@
                 <td>
                   <div class="acts">
                     <a class="mini pri" href="/propostas/{{ p.projeto_id }}">Abrir</a>
-                    {% if a %}<a class="mini" href="/projetos/{{ a.id }}/pdf">PDF</a>{% endif %}
+                    {% if a %}<a class="mini" href="/propostas/{{ p.projeto_id }}/parecer_projeto.pdf" target="_blank" rel="noopener" title="Parecer consolidado do projeto">PDF</a>{% endif %}
                   </div>
                 </td>
               </tr>

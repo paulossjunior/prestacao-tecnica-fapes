@@ -81,7 +81,9 @@
           <span class="status {{ 'st-ok' if resumo.situacao == 'APROVADO' else 'st-pend' }}">{{ resumo.situacao }}</span>
         </div>
         <div class="muted" style="margin-bottom:16px">
-          Nota geral da proposta = <b>mediana</b> das notas de {{ resumo.n_docs }} documento{{ '' if resumo.n_docs == 1 else 's' }}.
+          Nota geral = nota do relatório <b>{{ 'final' if resumo.n_finais else 'último (parcial mais recente)' }}</b>
+          ({{ resumo.nota if resumo.nota is not none else '—' }}%). Regra: se há relatório final, vale a nota do final;
+          senão, a do último relatório. Baseado em {{ resumo.n_docs }} documento{{ '' if resumo.n_docs == 1 else 's' }}.
         </div>
 
         <h2 style="margin-top:4px">Notas por documento ({{ por_doc|length }})</h2>
@@ -92,6 +94,7 @@
                 <b>{{ d.tipo_relatorio|title if d.tipo_relatorio and d.tipo_relatorio != 'NÃO INFORMADO' else 'Relatório' }}</b>
                 {% if d.periodo_relatorio and d.periodo_relatorio != 'NÃO INFORMADO' %}<span class="dd">{{ d.periodo_relatorio }}</span>{% endif %}
                 · <b>{{ d.nota if d.nota is not none else '—' }}%</b> · {{ d.situacao }} · {{ d.parecer or '—' }}
+                {% if d.notas_amostras and d.notas_amostras|length > 1 %}<br><span class="dd" title="Notas das {{ d.notas_amostras|length }} rodadas do LLM; a nota é a mediana">histórico: {{ d.notas_amostras|join(' · ') }} → mediana {{ d.nota }}%</span>{% endif %}
                 {% if d.relatorio_nome %}<br><span class="dd">{{ d.relatorio_nome[:48] }}</span>{% endif %}
               </span>
               <span class="dd">{{ d.data[:16].replace('T',' ') }}</span>
@@ -100,8 +103,9 @@
         </div>
 
         <div style="margin-top:14px">
-          <a class="btn" href="/projetos/{{ resumo.id }}" target="_blank" rel="noopener">Ver parecer ({{ resumo.tipo_relatorio|title if resumo.tipo_relatorio and resumo.tipo_relatorio != 'NÃO INFORMADO' else 'representativo' }})</a>
-          <a class="btn ghost" href="/projetos/{{ resumo.id }}/pdf" style="margin-left:6px">PDF</a>
+          <a class="btn primary" href="/propostas/{{ projeto_id }}/parecer_projeto.pdf" target="_blank" rel="noopener">⬇ Parecer do projeto (consolidado)</a>
+          <a class="btn" href="/projetos/{{ resumo.id }}" target="_blank" rel="noopener" style="margin-left:6px">Ver parecer ({{ resumo.tipo_relatorio|title if resumo.tipo_relatorio and resumo.tipo_relatorio != 'NÃO INFORMADO' else 'representativo' }})</a>
+          <a class="btn ghost" href="/projetos/{{ resumo.id }}/pdf" style="margin-left:6px">PDF do doc.</a>
         </div>
 
         {% if historico and historico|length > por_doc|length %}
@@ -125,7 +129,7 @@
         <p class="muted" style="margin-top:12px">
           A avaliação compara o <b>projeto</b> (previsto) com cada <b>relatório técnico</b> (realizado):
           cada relatório parcial e o final recebem nota individual, e a nota geral da proposta é a
-          <b>mediana</b> dessas notas. Falta o relatório técnico da prestação para rodar a análise.
+          nota do <b>relatório final</b> (ou, na ausência dele, a do último relatório). Falta o relatório técnico da prestação para rodar a análise.
         </p>
       {% endif %}
     </div>

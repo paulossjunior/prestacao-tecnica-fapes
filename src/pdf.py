@@ -45,6 +45,7 @@ def html_para_pdf(html: str, out_pdf: str) -> str:
             f.write(html)
         cmd = [
             navegador, "--headless", "--disable-gpu", "--no-sandbox",
+            "--disable-dev-shm-usage",  # evita crash em container (/dev/shm pequeno)
             "--no-pdf-header-footer",
             f"--print-to-pdf={out_pdf}",
             f"--crash-dumps-dir={tmp}",

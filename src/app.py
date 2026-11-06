@@ -148,6 +148,43 @@ _batch_lock = threading.Lock()
 _MAX_EVIDENCIAS = 6
 _EVIDENCIA_MAX_BYTES = 9_000_000
 
+# Estabilização da nota: roda a análise N vezes por documento e usa a MEDIANA das
+# notas (reduz a variância do LLM que, perto do limiar, vira aprova/reprova por
+# ruído). Reaproveita o texto OCR, então o custo extra é só das chamadas ao LLM.
+# Ajustável por env AVAL_AMOSTRAS (1 = sem repetição).
+try:
+    _AVAL_AMOSTRAS = max(1, int(os.getenv("AVAL_AMOSTRAS", "3")))
+except (TypeError, ValueError):
+    _AVAL_AMOSTRAS = 3
+
+
+def _analisar_estavel(projtxt, prest, perfil, n=None):
+    """Roda `analisar` n vezes e devolve UM resultado com a nota = mediana das
+    notas das rodadas (representante = rodada cuja nota é a mais próxima da
+    mediana, p/ o texto casar com o número). n=1 equivale a uma única rodada."""
+    import statistics
+    n = _AVAL_AMOSTRAS if n is None else max(1, n)
+    rodadas = []
+    for _ in range(n):
+        try:
+            rodadas.append(analisar(projtxt, prest, perfil=perfil))
+        except Exception:  # noqa: BLE001 — uma rodada ruim não aborta a estabilização
+            continue
+    if not rodadas:
+        return analisar(projtxt, prest, perfil=perfil)  # deixa o erro propagar
+    notas = [r.get("grau_conformidade_geral") for r in rodadas
+             if isinstance(r.get("grau_conformidade_geral"), (int, float))]
+    if not notas:
+        return rodadas[-1]
+    med = statistics.median(notas)
+    rep = min((r for r in rodadas if isinstance(r.get("grau_conformidade_geral"), (int, float))),
+              key=lambda r: abs(r["grau_conformidade_geral"] - med))
+    # Guarda o histórico das notas amostradas (registro da estabilização).
+    rep["notas_amostras"] = [round(x) for x in notas]
+    rep["nota_mediana"] = round(med)
+    rep["grau_conformidade_geral"] = round(med)
+    return rep
+
 
 def _slug(texto: str) -> str:
     """Nome de arquivo seguro a partir do nome do documento (p/ rótulo no LLM)."""
@@ -220,7 +257,11 @@ def _avaliar_um(projeto_id, prop):
                 prest = ocr.extract_folder_auto(_os.path.join(d, "prestacao"))
             if evid_txt:
                 prest += "\n\n" + evid_txt  # evidências já vêm rotuladas por arquivo
-            resultado = analisar(projtxt, prest, perfil=perfil)
+            resultado = _analisar_estavel(projtxt, prest, perfil)
+            # O NOME do anexo é mais confiável que o palpite do modelo p/ parcial/final.
+            tipo_nome = sigfapes.tipo_relatorio_por_nome(nome_doc, rep.get("descricao", ""))
+            if tipo_nome:
+                resultado["tipo_relatorio"] = tipo_nome
             tipo = resultado.get("tipo_relatorio", "") or ""
             suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
             # file id do documento = partes unidas, p/ deduplicar como um só doc.
@@ -377,7 +418,8 @@ def _slug_arq(texto: str) -> str:
 
 
 def _coletar_pdfs_projeto(pid, prop):
-    """[(arcname, bytes)] com o projeto + relatório(s) técnico(s) de um projeto."""
+    """[(arcname, bytes)] com o projeto + relatório(s) técnico(s) + o(s) PDF(s) do
+    parecer da avaliação (um por documento avaliado: cada parcial/final)."""
     import tempfile
     base = f"{pid}_{_slug_arq(prop.get('titulo'))}"
     out = []
@@ -398,6 +440,31 @@ def _coletar_pdfs_projeto(pid, prop):
                 sigfapes.baixar_anexo(r["file"], alvo)
                 with open(alvo, "rb") as f:
                     out.append((f"{base}/relatorio_{i}_{_slug_arq(r.get('nome'))}.pdf", f.read()))
+        except Exception:  # noqa: BLE001
+            continue
+    # Parecer CONSOLIDADO do projeto por completo (veredito geral pela mediana).
+    try:
+        cons = store.pdf_path_projeto(pid, titulo=prop.get("titulo"))
+        if cons and os.path.exists(cons):
+            with open(cons, "rb") as f:
+                out.append((f"{base}/parecer_PROJETO_consolidado.pdf", f.read()))
+    except Exception:  # noqa: BLE001
+        pass
+    # Parecer da avaliação (gerado sob demanda e cacheado) — um por documento.
+    try:
+        docs = store.por_documento(pid)
+    except Exception:  # noqa: BLE001
+        docs = []
+    for i, dc in enumerate(docs, 1):
+        try:
+            pdf = store.pdf_path(dc["id"])
+            if not pdf or not os.path.exists(pdf):
+                continue
+            tipo = (dc.get("tipo_relatorio") or "aval")
+            tipo = tipo.title() if tipo and tipo != "NÃO INFORMADO" else "aval"
+            nota = dc.get("nota")
+            with open(pdf, "rb") as f:
+                out.append((f"{base}/parecer_{i}_{_slug_arq(tipo)}_{nota}pct.pdf", f.read()))
         except Exception:  # noqa: BLE001
             continue
     return out
@@ -617,6 +684,21 @@ def proposta_projeto_pdf(projeto_id):
     situ = re.sub(r"[^\wÀ-ÿ -]", "", (prop.get("situacao") or "")).strip().replace(" ", "_")
     nome = f"projeto_{projeto_id}" + (f"_{situ}" if situ else "") + ".pdf"
     return send_file(caminho, mimetype="application/pdf", download_name=nome)
+
+
+@app.route("/propostas/<projeto_id>/parecer_projeto.pdf")
+def proposta_parecer_consolidado(projeto_id):
+    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral pela
+    mediana + resumo do parecer de cada relatório)."""
+    prop = sigfapes.proposta_por_projeto_id(projeto_id) or {}
+    try:
+        caminho = store.pdf_path_projeto(projeto_id, titulo=prop.get("titulo"))
+    except Exception as e:  # noqa: BLE001
+        return jsonify({"erro": str(e)}), 500
+    if not caminho:
+        abort(404, "Projeto sem avaliação para consolidar.")
+    return send_file(caminho, mimetype="application/pdf",
+                     download_name=f"parecer_projeto_{projeto_id}.pdf")
 
 
 @app.route("/projetos")

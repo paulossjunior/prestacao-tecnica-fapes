@@ -280,6 +280,23 @@ _RE_NAO_RELATORIO = re.compile(
 )
 
 
+# Tipo do relatório pelo NOME do anexo — sinal mais confiável que o palpite do LLM
+# (ex.: "Anexo VI - final (2 de 3)" é FINAL; "Relatório Técnico Parcial" é PARCIAL).
+_RE_REL_FINAL = re.compile(r"\bfinal\b", re.I)
+_RE_REL_PARCIAL = re.compile(r"\bparcial\b|\bparc\b", re.I)
+
+
+def tipo_relatorio_por_nome(nome: str, descricao: str = "") -> str:
+    """'FINAL' | 'PARCIAL' pelo nome/descrição do anexo; '' se indeciso (aí quem
+    decide é o modelo). FINAL tem precedência sobre PARCIAL."""
+    txt = f"{nome or ''} {descricao or ''}"
+    if _RE_REL_FINAL.search(txt):
+        return "FINAL"
+    if _RE_REL_PARCIAL.search(txt):
+        return "PARCIAL"
+    return ""
+
+
 def _eh_relatorio_projeto(doc: dict) -> bool:
     txt = f"{doc.get('nome','')} {doc.get('descricao','')}"
     # "Anexo VI" é rótulo inequívoco do relatório do PROJETO: sempre conta.
