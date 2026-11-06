@@ -81,7 +81,9 @@
           <span class="status {{ 'st-ok' if resumo.situacao == 'APROVADO' else 'st-pend' }}">{{ resumo.situacao }}</span>
         </div>
         <div class="muted" style="margin-bottom:16px">
-          Nota geral da proposta = <b>mediana</b> das notas de {{ resumo.n_docs }} documento{{ '' if resumo.n_docs == 1 else 's' }}.
+          Nota geral = nota do relatório <b>{{ 'final' if resumo.n_finais else 'último (parcial mais recente)' }}</b>
+          ({{ resumo.nota if resumo.nota is not none else '—' }}%). Regra: se há relatório final, vale a nota do final;
+          senão, a do último relatório. Baseado em {{ resumo.n_docs }} documento{{ '' if resumo.n_docs == 1 else 's' }}.
         </div>
 
         <h2 style="margin-top:4px">Notas por documento ({{ por_doc|length }})</h2>
@@ -126,7 +128,7 @@
         <p class="muted" style="margin-top:12px">
           A avaliação compara o <b>projeto</b> (previsto) com cada <b>relatório técnico</b> (realizado):
           cada relatório parcial e o final recebem nota individual, e a nota geral da proposta é a
-          <b>mediana</b> dessas notas. Falta o relatório técnico da prestação para rodar a análise.
+          nota do <b>relatório final</b> (ou, na ausência dele, a do último relatório). Falta o relatório técnico da prestação para rodar a análise.
         </p>
       {% endif %}
     </div>

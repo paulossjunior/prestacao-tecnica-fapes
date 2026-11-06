@@ -188,19 +188,26 @@ def avaliacao_atual(projeto_id: str) -> dict | None:
 
 
 def _resumo_de_docs(projeto_id: str, docs: list[dict]) -> dict | None:
-    """Monta o resumo do projeto a partir das avaliações (uma por documento):
-    nota geral = MEDIANA das notas; `id`/`parecer` apontam para um parecer
-    representativo (o final, senão o mais recente) para abrir/baixar."""
+    """Monta o resumo do projeto a partir das avaliações (uma por documento).
+
+    Nota GERAL do projeto (regra de negócio):
+    - se existe relatório FINAL, vale a nota do relatório final (o mais recente,
+      se houver mais de um);
+    - caso contrário, vale a nota do ÚLTIMO relatório (parcial mais recente).
+    `id`/`parecer`/`tipo` apontam para esse mesmo documento (o que define a nota),
+    usado para abrir/baixar o parecer representativo."""
     if not docs:
         return None
-    med = _mediana([d.get("nota") for d in docs])
+    _recente = lambda m: (m.get("ts", 0.0), m.get("data", ""))  # noqa: E731
     finais = [d for d in docs if (d.get("tipo_relatorio") or "").upper().startswith("FINAL")]
     parciais = [d for d in docs if (d.get("tipo_relatorio") or "").upper().startswith("PARCIAL")]
-    rep = max(finais or docs, key=lambda m: (m.get("ts", 0.0), m.get("data", "")))
+    # Final manda; senão o último relatório (parcial mais recente); senão qualquer.
+    rep = max(finais or parciais or docs, key=_recente)
+    nota = rep.get("nota")
     return {
         "projeto_id": str(projeto_id),
-        "nota": round(med) if med is not None else None,
-        "situacao": situacao(med) if med is not None else "—",
+        "nota": round(nota) if isinstance(nota, (int, float)) else None,
+        "situacao": situacao(nota),
         "n_docs": len(docs),
         "n_parciais": len(parciais),
         "n_finais": len(finais),
@@ -212,13 +219,13 @@ def _resumo_de_docs(projeto_id: str, docs: list[dict]) -> dict | None:
 
 
 def resumo_projeto(projeto_id: str) -> dict | None:
-    """Nota GERAL da proposta = MEDIANA das notas dos documentos (parciais +
-    final). None se não há avaliação."""
+    """Nota GERAL da proposta: a nota do relatório FINAL (se houver), senão a nota
+    do último relatório (parcial mais recente). None se não há avaliação."""
     return _resumo_de_docs(projeto_id, por_documento(projeto_id))
 
 
 def por_projeto() -> dict:
-    """Mapa projeto_id -> RESUMO do projeto (nota geral = mediana dos documentos)."""
+    """Mapa projeto_id -> RESUMO do projeto (nota geral: final, senão último parcial)."""
     por_pid: dict[str, list] = {}
     for m in listar():  # ordenado por data desc
         pid = str(m.get("projeto_id") or "")

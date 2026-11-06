@@ -483,9 +483,9 @@ def _sit_cores(situacao: str):
 
 
 def gerar_html_projeto(titulo: str, resumo: dict, itens: list[dict]) -> str:
-    """Parecer CONSOLIDADO do projeto por completo: veredito geral (nota = mediana
-    das notas dos documentos), tabela de documentos e o resumo do parecer de cada
-    relatório (parcial/final). `itens` = [{tipo, periodo, nota, parecer, resultado}].
+    """Parecer CONSOLIDADO do projeto por completo: veredito geral (nota do
+    relatório final, senão a do último relatório), tabela de documentos e o resumo
+    do parecer de cada relatório. `itens` = [{tipo, periodo, nota, parecer, resultado}].
     """
     r = resumo or {}
     nota = r.get("nota")
@@ -538,6 +538,12 @@ def gerar_html_projeto(titulo: str, resumo: dict, itens: list[dict]) -> str:
 
     sit_fg, sit_bg = _sit_cores(sit)
     n_docs = r.get("n_docs", len(itens))
+    rep_tipo = (r.get("tipo_relatorio") or "").title() if r.get("tipo_relatorio") and r.get("tipo_relatorio") != "NÃO INFORMADO" else "último relatório"
+    rep_per = r.get("periodo_relatorio") or ""
+    regra = (f"Nota geral do projeto = nota do relatório <strong>{_e(rep_tipo)}</strong>"
+             + (f" ({_e(rep_per)})" if rep_per and rep_per != 'NÃO INFORMADO' else "")
+             + ": <strong>" + _e(nota) + "%</strong>. "
+             + "Regra: se há relatório final, vale a nota do final; senão, a do último relatório (parcial mais recente).")
 
     return f"""<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8">
@@ -601,9 +607,9 @@ def gerar_html_projeto(titulo: str, resumo: dict, itens: list[dict]) -> str:
     {_gauge(grau)}
     <div class="verd-main">
       <span class="sit">{_e(sit)}</span>
-      <div class="meta">Nota geral = <strong>mediana</strong> das notas de {n_docs} documento(s):
-        <strong>{_e(nota)}%</strong>. Parecer representativo:
-        {_chip(r.get('parecer') or '—', PARECER_CORES.get(str(r.get('parecer') or '').strip().upper(), ('#687280', '#f1f3f6'))[:2])}</div>
+      <div class="meta">{regra} Parecer:
+        {_chip(r.get('parecer') or '—', PARECER_CORES.get(str(r.get('parecer') or '').strip().upper(), ('#687280', '#f1f3f6'))[:2])}
+        <br><span style="font-size:11px">Baseado em {n_docs} documento(s) avaliado(s).</span></div>
     </div>
   </div>
 
@@ -616,6 +622,7 @@ def gerar_html_projeto(titulo: str, resumo: dict, itens: list[dict]) -> str:
 
   <div class="foot">
     Gerado a partir das avaliações individuais de cada relatório (parcial/final).
-    A nota geral do projeto é a mediana das notas dos documentos; a situação segue o limiar de aprovação.
+    Nota geral = nota do relatório final (se houver), senão a do último relatório;
+    a situação segue o limiar de aprovação.
   </div>
 </div></body></html>"""
