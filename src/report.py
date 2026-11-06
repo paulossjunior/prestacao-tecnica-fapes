@@ -470,3 +470,152 @@ def gerar_html(resultado: dict, client=None, titulo="Prestação de Contas Técn
     <p style="margin:8px 0 0">{_e(d.get('justificativa_parecer'))}</p>
   </div>
 </div></body></html>"""
+
+
+def _sit_cores(situacao: str):
+    """Cores (texto, fundo) p/ a situação APROVADO/REPROVADO."""
+    s = (situacao or "").strip().upper()
+    if s == "APROVADO":
+        return ("#157347", "#e8f3ec")
+    if s == "REPROVADO":
+        return ("#b42318", "#fcecea")
+    return ("#687280", "#f1f3f6")
+
+
+def gerar_html_projeto(titulo: str, resumo: dict, itens: list[dict]) -> str:
+    """Parecer CONSOLIDADO do projeto por completo: veredito geral (nota = mediana
+    das notas dos documentos), tabela de documentos e o resumo do parecer de cada
+    relatório (parcial/final). `itens` = [{tipo, periodo, nota, parecer, resultado}].
+    """
+    r = resumo or {}
+    nota = r.get("nota")
+    grau = int(nota) if isinstance(nota, (int, float)) else 0
+    sit = r.get("situacao", "—")
+    logo_uri = _logo_data_uri()
+
+    def _lista(xs, classe=""):
+        xs = [x for x in (xs or []) if x]
+        if not xs:
+            return '<li class="muted">—</li>'
+        return "".join(f'<li class="{classe}">{_e(x)}</li>' for x in xs)
+
+    # Tabela-resumo dos documentos
+    linhas = "".join(
+        f"""<tr>
+          <td><strong>{_e((it.get('tipo') or 'Relatório').title())}</strong></td>
+          <td>{_e(it.get('periodo'))}</td>
+          <td class="mono">{_e(it.get('nota'))}%</td>
+          <td>{_chip(it.get('parecer') or '—', PARECER_CORES.get(str(it.get('parecer') or '').strip().upper(), ('#687280', '#f1f3f6'))[:2])}</td>
+        </tr>""" for it in itens
+    ) or '<tr><td colspan="4" class="muted">Nenhum documento avaliado.</td></tr>'
+
+    # Seção por documento (resumo do parecer de cada relatório)
+    blocos = []
+    for i, it in enumerate(itens, 1):
+        d = it.get("resultado") or {}
+        pc = PARECER_CORES.get(str(it.get("parecer") or "").strip().upper(),
+                               ("#687280", "#f1f3f6", "#d4d8df"))
+        blocos.append(f"""
+      <div class="docblk">
+        <div class="docblk-hd">
+          <span class="docblk-t">{i}. {_e((it.get('tipo') or 'Relatório').title())}
+            <span class="per">{_e(it.get('periodo'))}</span></span>
+          <span class="docblk-n">
+            {_chip(str(it.get('nota')) + '%', ('#15181e', '#f1f3f6'))}
+            {_chip(it.get('parecer') or '—', pc[:2])}
+          </span>
+        </div>
+        <p class="resumo">{_e(d.get('resumo_executivo'))}</p>
+        <div class="just"><strong>Justificativa do parecer:</strong> {_e(d.get('justificativa_parecer'))}</div>
+        <div class="cols">
+          <div class="col"><div class="sub">⚠ Pendências críticas</div>
+            <ul>{_lista(d.get('pendencias_criticas'), 'crit')}</ul></div>
+          <div class="col"><div class="sub">Pontos de melhoria</div>
+            <ul>{_lista(d.get('pontos_de_melhoria'))}</ul></div>
+        </div>
+      </div>""")
+    docs_html = "".join(blocos)
+
+    sit_fg, sit_bg = _sit_cores(sit)
+    n_docs = r.get("n_docs", len(itens))
+
+    return f"""<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parecer consolidado — {_e(titulo)}</title>
+<style>
+  :root {{ --ink:#15181e; --muted:#687280; --faint:#9aa3b0; --line:#e4e7ec;
+    --bg:#f6f7f9; --surface:#fff; --surface-2:#f1f3f6; --accent:#2458d6; }}
+  * {{ box-sizing:border-box; }}
+  body {{ margin:0; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px; line-height:1.55; }}
+  .page {{ max-width:920px; margin:0 auto; padding:0 28px 28px; background:var(--surface); }}
+  .hd {{ display:flex; align-items:center; gap:11px; padding:18px 0 14px;
+    border-bottom:1px solid var(--line); }}
+  .logo {{ width:38px; height:38px; border-radius:8px; display:grid; place-items:center;
+    background:var(--accent); color:#fff; font-weight:700; font-size:13px; }}
+  .hd .n1 {{ font-weight:650; font-size:14px; }} .hd .n2 {{ font-size:11px; color:var(--muted); }}
+  .kicker {{ letter-spacing:.1em; font-size:10.5px; color:var(--muted);
+    text-transform:uppercase; font-weight:700; margin-top:16px; }}
+  h1 {{ font-size:21px; margin:3px 0 10px; letter-spacing:-.01em; }}
+  h2 {{ font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted);
+    border-bottom:1px solid var(--line); padding-bottom:5px; margin:26px 0 12px; }}
+  .verd {{ display:flex; align-items:center; gap:20px; background:var(--surface-2);
+    border:1px solid var(--line); border-radius:12px; padding:16px 18px; }}
+  .gauge {{ width:92px; height:92px; border-radius:50%; display:grid; place-items:center; flex:0 0 auto; }}
+  .gauge-hole {{ width:66px; height:66px; border-radius:50%; background:var(--surface);
+    display:grid; place-items:center; text-align:center; }}
+  .gauge-num {{ font-weight:700; font-size:19px; }} .gauge-lbl {{ font-size:8.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }}
+  .verd-main .sit {{ display:inline-block; font-weight:700; font-size:14px; padding:4px 12px;
+    border-radius:999px; color:{sit_fg}; background:{sit_bg}; }}
+  .verd-main .meta {{ color:var(--muted); margin-top:7px; }}
+  table {{ width:100%; border-collapse:collapse; margin-top:4px; }}
+  th,td {{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); font-size:12px; }}
+  th {{ font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--faint); }}
+  .mono {{ font-family:ui-monospace,Menlo,Consolas,monospace; font-variant-numeric:tabular-nums; }}
+  .chip {{ display:inline-block; font-weight:650; font-size:10.5px; padding:3px 9px;
+    border-radius:999px; }}
+  .docblk {{ border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:12px; }}
+  .docblk-hd {{ display:flex; justify-content:space-between; align-items:center; gap:10px;
+    margin-bottom:8px; flex-wrap:wrap; }}
+  .docblk-t {{ font-weight:650; font-size:13.5px; }} .docblk-t .per {{ color:var(--muted); font-weight:400; font-size:11.5px; margin-left:6px; }}
+  .docblk-n {{ display:flex; gap:6px; }}
+  .resumo {{ margin:0 0 8px; }} .just {{ font-size:12.5px; color:#333; margin-bottom:10px; }}
+  .cols {{ display:flex; gap:18px; flex-wrap:wrap; }} .col {{ flex:1; min-width:220px; }}
+  .sub {{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:3px; }}
+  ul {{ margin:0; padding-left:18px; }} li {{ margin:2px 0; }} li.crit {{ color:#b42318; }} li.muted,.muted {{ color:var(--faint); }}
+  .foot {{ margin-top:22px; padding-top:12px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; }}
+</style></head><body>
+<div class="page">
+  <div class="hd">
+    <div class="logo">FAP</div>
+    <div><div class="n1">FAPES · Prestação de Contas Técnica</div>
+      <div class="n2">Parecer consolidado do projeto</div></div>
+  </div>
+
+  <div class="kicker">Parecer consolidado</div>
+  <h1>{_e(titulo)}</h1>
+
+  <div class="verd">
+    {_gauge(grau)}
+    <div class="verd-main">
+      <span class="sit">{_e(sit)}</span>
+      <div class="meta">Nota geral = <strong>mediana</strong> das notas de {n_docs} documento(s):
+        <strong>{_e(nota)}%</strong>. Parecer representativo:
+        {_chip(r.get('parecer') or '—', PARECER_CORES.get(str(r.get('parecer') or '').strip().upper(), ('#687280', '#f1f3f6'))[:2])}</div>
+    </div>
+  </div>
+
+  <h2>Documentos avaliados ({len(itens)})</h2>
+  <table><thead><tr><th>Documento</th><th>Período</th><th>Nota</th><th>Parecer</th></tr></thead>
+    <tbody>{linhas}</tbody></table>
+
+  <h2>Parecer por documento</h2>
+  {docs_html}
+
+  <div class="foot">
+    Gerado a partir das avaliações individuais de cada relatório (parcial/final).
+    A nota geral do projeto é a mediana das notas dos documentos; a situação segue o limiar de aprovação.
+  </div>
+</div></body></html>"""

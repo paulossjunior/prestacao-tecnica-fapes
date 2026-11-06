@@ -2,9 +2,16 @@ FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PORT=8000
+    PORT=8000 \
+    CHROME_BIN=/usr/bin/chromium
 
 WORKDIR /app
+
+# Chromium headless: o PDF do parecer é renderizado por navegador (src/pdf.py).
+# Sem ele, os pareceres saem do zip silenciosamente. fonts-liberation p/ layout.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends chromium fonts-liberation \
+    && rm -rf /var/lib/apt/lists/*
 
 # Dependências primeiro (cache de camada)
 COPY requirements.txt .

@@ -266,3 +266,32 @@ def pdf_path(aval_id: str) -> str | None:
     titulo = meta.get("titulo") or "Prestação de Contas Técnica"
     html = gerar_html(resultado, titulo=titulo)
     return html_para_pdf(html, out)
+
+
+def pdf_path_projeto(projeto_id: str, titulo: str | None = None) -> str | None:
+    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral pela
+    mediana + resumo do parecer de cada relatório). Regenera sempre (reflete o
+    estado atual das avaliações). None se o projeto não tem avaliação."""
+    docs = por_documento(projeto_id)
+    resumo = resumo_projeto(projeto_id)
+    if not docs or not resumo:
+        return None
+    itens = [{
+        "tipo": d.get("tipo_relatorio"),
+        "periodo": d.get("periodo_relatorio"),
+        "nota": d.get("nota"),
+        "parecer": d.get("parecer"),
+        "resultado": carregar(d.get("id")) or {},
+    } for d in docs]
+    if not titulo:
+        rep = _meta(resumo.get("id")) or {}
+        # Remove o sufixo de tipo (ex.: " [Final]") do título salvo por documento.
+        titulo = re.sub(r"\s*\[[^\]]+\]\s*$", "", rep.get("titulo") or "").strip() \
+            or f"Projeto {projeto_id}"
+    out_dir = os.path.join(BASE, "_consolidado")
+    os.makedirs(out_dir, exist_ok=True)
+    out = os.path.join(out_dir, f"{projeto_id}.pdf")
+    from pdf import html_para_pdf
+    from report import gerar_html_projeto
+    html = gerar_html_projeto(titulo, resumo, itens)
+    return html_para_pdf(html, out)

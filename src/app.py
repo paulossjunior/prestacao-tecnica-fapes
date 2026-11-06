@@ -377,7 +377,8 @@ def _slug_arq(texto: str) -> str:
 
 
 def _coletar_pdfs_projeto(pid, prop):
-    """[(arcname, bytes)] com o projeto + relatório(s) técnico(s) de um projeto."""
+    """[(arcname, bytes)] com o projeto + relatório(s) técnico(s) + o(s) PDF(s) do
+    parecer da avaliação (um por documento avaliado: cada parcial/final)."""
     import tempfile
     base = f"{pid}_{_slug_arq(prop.get('titulo'))}"
     out = []
@@ -398,6 +399,31 @@ def _coletar_pdfs_projeto(pid, prop):
                 sigfapes.baixar_anexo(r["file"], alvo)
                 with open(alvo, "rb") as f:
                     out.append((f"{base}/relatorio_{i}_{_slug_arq(r.get('nome'))}.pdf", f.read()))
+        except Exception:  # noqa: BLE001
+            continue
+    # Parecer CONSOLIDADO do projeto por completo (veredito geral pela mediana).
+    try:
+        cons = store.pdf_path_projeto(pid, titulo=prop.get("titulo"))
+        if cons and os.path.exists(cons):
+            with open(cons, "rb") as f:
+                out.append((f"{base}/parecer_PROJETO_consolidado.pdf", f.read()))
+    except Exception:  # noqa: BLE001
+        pass
+    # Parecer da avaliação (gerado sob demanda e cacheado) — um por documento.
+    try:
+        docs = store.por_documento(pid)
+    except Exception:  # noqa: BLE001
+        docs = []
+    for i, dc in enumerate(docs, 1):
+        try:
+            pdf = store.pdf_path(dc["id"])
+            if not pdf or not os.path.exists(pdf):
+                continue
+            tipo = (dc.get("tipo_relatorio") or "aval")
+            tipo = tipo.title() if tipo and tipo != "NÃO INFORMADO" else "aval"
+            nota = dc.get("nota")
+            with open(pdf, "rb") as f:
+                out.append((f"{base}/parecer_{i}_{_slug_arq(tipo)}_{nota}pct.pdf", f.read()))
         except Exception:  # noqa: BLE001
             continue
     return out
