@@ -224,6 +224,35 @@ def resumo_projeto(projeto_id: str) -> dict | None:
     return _resumo_de_docs(projeto_id, por_documento(projeto_id))
 
 
+def retag_tipo_por_nome() -> int:
+    """Reclassifica tipo_relatorio (PARCIAL/FINAL) das avaliações já salvas pelo
+    NOME do relatório (mais confiável que o palpite do LLM que gerou o dado). Útil
+    p/ corrigir dados antigos sem re-rodar a análise. Devolve quantas mudaram."""
+    import sigfapes
+    if not os.path.isdir(BASE):
+        return 0
+    n = 0
+    for nome_dir in os.listdir(BASE):
+        mp = os.path.join(BASE, nome_dir, "meta.json")
+        if not os.path.isfile(mp):
+            continue
+        try:
+            with open(mp, encoding="utf-8") as f:
+                m = json.load(f)
+        except (OSError, ValueError):
+            continue
+        tipo = sigfapes.tipo_relatorio_por_nome(m.get("relatorio_nome", ""))
+        if tipo and tipo != (m.get("tipo_relatorio") or ""):
+            m["tipo_relatorio"] = tipo
+            try:
+                with open(mp, "w", encoding="utf-8") as f:
+                    json.dump(m, f, ensure_ascii=False, indent=2)
+                n += 1
+            except OSError:
+                continue  # arquivo sem permissão de escrita: ignora, não aborta
+    return n
+
+
 def por_projeto() -> dict:
     """Mapa projeto_id -> RESUMO do projeto (nota geral: final, senão último parcial)."""
     por_pid: dict[str, list] = {}

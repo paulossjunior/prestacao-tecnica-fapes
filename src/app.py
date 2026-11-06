@@ -221,6 +221,10 @@ def _avaliar_um(projeto_id, prop):
             if evid_txt:
                 prest += "\n\n" + evid_txt  # evidências já vêm rotuladas por arquivo
             resultado = analisar(projtxt, prest, perfil=perfil)
+            # O NOME do anexo é mais confiável que o palpite do modelo p/ parcial/final.
+            tipo_nome = sigfapes.tipo_relatorio_por_nome(nome_doc, rep.get("descricao", ""))
+            if tipo_nome:
+                resultado["tipo_relatorio"] = tipo_nome
             tipo = resultado.get("tipo_relatorio", "") or ""
             suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
             # file id do documento = partes unidas, p/ deduplicar como um só doc.
