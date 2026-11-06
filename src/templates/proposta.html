@@ -100,8 +100,9 @@
         </div>
 
         <div style="margin-top:14px">
-          <a class="btn" href="/projetos/{{ resumo.id }}" target="_blank" rel="noopener">Ver parecer ({{ resumo.tipo_relatorio|title if resumo.tipo_relatorio and resumo.tipo_relatorio != 'NÃO INFORMADO' else 'representativo' }})</a>
-          <a class="btn ghost" href="/projetos/{{ resumo.id }}/pdf" style="margin-left:6px">PDF</a>
+          <a class="btn primary" href="/propostas/{{ projeto_id }}/parecer_projeto.pdf" target="_blank" rel="noopener">⬇ Parecer do projeto (consolidado)</a>
+          <a class="btn" href="/projetos/{{ resumo.id }}" target="_blank" rel="noopener" style="margin-left:6px">Ver parecer ({{ resumo.tipo_relatorio|title if resumo.tipo_relatorio and resumo.tipo_relatorio != 'NÃO INFORMADO' else 'representativo' }})</a>
+          <a class="btn ghost" href="/projetos/{{ resumo.id }}/pdf" style="margin-left:6px">PDF do doc.</a>
         </div>
 
         {% if historico and historico|length > por_doc|length %}

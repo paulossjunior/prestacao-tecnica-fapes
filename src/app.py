@@ -645,6 +645,21 @@ def proposta_projeto_pdf(projeto_id):
     return send_file(caminho, mimetype="application/pdf", download_name=nome)
 
 
+@app.route("/propostas/<projeto_id>/parecer_projeto.pdf")
+def proposta_parecer_consolidado(projeto_id):
+    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral pela
+    mediana + resumo do parecer de cada relatório)."""
+    prop = sigfapes.proposta_por_projeto_id(projeto_id) or {}
+    try:
+        caminho = store.pdf_path_projeto(projeto_id, titulo=prop.get("titulo"))
+    except Exception as e:  # noqa: BLE001
+        return jsonify({"erro": str(e)}), 500
+    if not caminho:
+        abort(404, "Projeto sem avaliação para consolidar.")
+    return send_file(caminho, mimetype="application/pdf",
+                     download_name=f"parecer_projeto_{projeto_id}.pdf")
+
+
 @app.route("/projetos")
 def projetos_endpoint():
     """Compat: a lista de avaliados foi unificada na página /propostas."""
