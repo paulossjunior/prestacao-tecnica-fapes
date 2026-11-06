@@ -195,12 +195,15 @@ def _resumo_de_docs(projeto_id: str, docs: list[dict]) -> dict | None:
         return None
     med = _mediana([d.get("nota") for d in docs])
     finais = [d for d in docs if (d.get("tipo_relatorio") or "").upper().startswith("FINAL")]
+    parciais = [d for d in docs if (d.get("tipo_relatorio") or "").upper().startswith("PARCIAL")]
     rep = max(finais or docs, key=lambda m: (m.get("ts", 0.0), m.get("data", "")))
     return {
         "projeto_id": str(projeto_id),
         "nota": round(med) if med is not None else None,
         "situacao": situacao(med) if med is not None else "—",
         "n_docs": len(docs),
+        "n_parciais": len(parciais),
+        "n_finais": len(finais),
         "id": rep.get("id"),
         "parecer": rep.get("parecer", ""),
         "tipo_relatorio": rep.get("tipo_relatorio", ""),

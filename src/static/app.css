@@ -152,6 +152,7 @@ tr:last-child td{border-bottom:0;} tbody tr:hover{background:var(--surface-2);}
 .ttl-link{color:var(--ink);text-decoration:none;font-weight:600;} .ttl-link:hover{color:var(--accent);}
 .proto{font-family:var(--mono);font-size:11px;color:var(--faint);}
 .pesq{white-space:nowrap;} .nota{font:680 15px var(--mono);font-variant-numeric:tabular-nums;}
+.rel-cnt{font:600 12px var(--mono);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;}
 .acts{display:flex;gap:6px;} .chk-col,.chk{width:34px;text-align:center;}
 .rowchk{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);}
 
