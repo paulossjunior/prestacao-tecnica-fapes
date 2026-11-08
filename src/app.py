@@ -158,6 +158,25 @@ except (TypeError, ValueError):
     _AVAL_AMOSTRAS = 3
 
 
+import re as _re_perfil
+# Detecta o perfil de avaliação pelo edital/título (deixa de usar "inovacao" fixo,
+# que penalizava projetos de pesquisa com critérios de IP/transferência).
+_RE_PERFIL_INOV = _re_perfil.compile(
+    r"inova|tecnol|plataforma|software|conectafapes|pappe|tecnova|startup", _re_perfil.I)
+_RE_PERFIL_EXT = _re_perfil.compile(r"extens[aã]o|populariza|divulga", _re_perfil.I)
+
+
+def _perfil_do_projeto(prop) -> str:
+    """Perfil ('pesquisa' | 'inovacao' | 'extensao') pelo edital/título. Default
+    pesquisa (maioria dos editais FAPES é pesquisa/iniciação científica)."""
+    txt = f"{(prop or {}).get('edital','')} {(prop or {}).get('titulo','')}"
+    if _RE_PERFIL_INOV.search(txt):
+        return "inovacao"
+    if _RE_PERFIL_EXT.search(txt):
+        return "extensao"
+    return "pesquisa"
+
+
 def _analisar_estavel(projtxt, prest, perfil, n=None):
     """Roda `analisar` n vezes e devolve UM resultado com a nota = mediana das
     notas das rodadas (representante = rodada cuja nota é a mais próxima da
@@ -230,7 +249,7 @@ def _avaliar_um(projeto_id, prop):
     if not relatorios:
         raise RuntimeError(f"Relatório técnico (Anexo VI) não encontrado no projeto {projeto_id}.")
     titulo = (prop.get("titulo") or f"Projeto {projeto_id}")[:80]
-    perfil = "inovacao"
+    perfil = _perfil_do_projeto(prop)
     import ocr
     # Evidências complementares: baixa e extrai UMA vez (compartilhado entre os
     # relatórios), evitando re-OCR por relatório.

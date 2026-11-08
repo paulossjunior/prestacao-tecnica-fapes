@@ -59,6 +59,20 @@ def situacao(nota) -> str:
         return "—"
 
 
+def parecer_coerente(nota, parecer: str) -> str:
+    """Reconcilia o parecer (veredito do LLM) com a situação (nota vs limiar) para
+    não exibir contradição: APROVADO nunca mostra REPROVAR/DILIGÊNCIA (vira
+    'APROVAR COM RESSALVAS'); REPROVADO nunca mostra APROVAR/APROVAR COM RESSALVAS
+    (vira 'DILIGÊNCIA'). O parecer bruto do LLM continua salvo no meta/parecer.json."""
+    p = (parecer or "").strip().upper()
+    sit = situacao(nota)
+    if sit == "APROVADO":
+        return "APROVAR COM RESSALVAS" if p in ("REPROVAR", "DILIGÊNCIA", "DILIGENCIA") else (parecer or "APROVAR")
+    if sit == "REPROVADO":
+        return "DILIGÊNCIA" if p in ("APROVAR", "APROVAR COM RESSALVAS") else (parecer or "REPROVAR")
+    return parecer
+
+
 def _dir(aval_id: str) -> str:
     return os.path.join(BASE, aval_id)
 
@@ -170,6 +184,8 @@ def por_documento(projeto_id: str) -> list[dict]:
     """Avaliação atual de CADA documento (relatório) do projeto, em ordem
     cronológica (parciais → final). Uma nota por documento."""
     docs = _latest_por_doc(historico(projeto_id))
+    for m in docs:  # parecer exibido coerente com a nota do documento
+        m["parecer"] = parecer_coerente(m.get("nota"), m.get("parecer"))
     return sorted(docs, key=lambda m: (m.get("ts", 0.0), m.get("data", "")))
 
 
@@ -214,7 +230,7 @@ def _resumo_de_docs(projeto_id: str, docs: list[dict]) -> dict | None:
         "n_parciais": len(parciais),
         "n_finais": len(finais),
         "id": rep.get("id"),
-        "parecer": rep.get("parecer", ""),
+        "parecer": parecer_coerente(nota, rep.get("parecer", "")),
         "tipo_relatorio": rep.get("tipo_relatorio", ""),
         "periodo_relatorio": rep.get("periodo_relatorio", ""),
     }
