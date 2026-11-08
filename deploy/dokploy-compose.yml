@@ -1,0 +1,50 @@
+# Compose de produção para Dokploy (cole no editor "Compose" da aplicação).
+# Usa a imagem publicada no GitHub Packages (ghcr), com login + HTTPS via Traefik.
+# Defina os segredos em Environment do Dokploy: OPENAI_API_KEY, SIGFAPES_USER,
+# SIGFAPES_PASSWORD, APP_PASSWORD, APP_SECRET_KEY, DOMAIN.
+services:
+  web:
+    image: ghcr.io/paulossjunior/prestacao-tecnica-fapes:1.2.0   # ou :latest
+    restart: unless-stopped
+    environment:
+      # ---- LLM (OpenAI) ----
+      LLM_PROVIDER: openai
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: gpt-4o
+      OPENAI_OCR_MODEL: gpt-5.4-nano
+      AVAL_AMOSTRAS: "3"            # rodadas por documento (nota = mediana). 1 = mais barato
+      # ---- Login do SIGFAPES ----
+      SIGFAPES_USER: ${SIGFAPES_USER}
+      SIGFAPES_PASSWORD: ${SIGFAPES_PASSWORD}
+      SIGFAPES_SITE: https://www.sigfapes.es.gov.br
+      # ---- Login da aplicação (tela /login) ----
+      APP_USER: ${APP_USER:-admin}
+      APP_PASSWORD: ${APP_PASSWORD}         # obrigatório p/ exigir login
+      APP_SECRET_KEY: ${APP_SECRET_KEY}     # openssl rand -hex 32 (fixa p/ sessão persistir)
+      SESSION_COOKIE_SECURE: "1"            # cookie só por HTTPS (Dokploy serve TLS)
+      PORT: "8000"
+    volumes:
+      - avaliacoes:/app/avaliacoes   # persiste avaliações/pareceres
+      - cache:/app/cache             # persiste CSV de propostas
+    networks:
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.prestacao.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.prestacao.entrypoints=websecure
+      - traefik.http.routers.prestacao.tls.certresolver=letsencrypt
+      - traefik.http.services.prestacao.loadbalancer.server.port=8000
+      # HTTP -> HTTPS
+      - traefik.http.routers.prestacao-http.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.prestacao-http.entrypoints=web
+      - traefik.http.routers.prestacao-http.middlewares=prestacao-redirect
+      - traefik.http.middlewares.prestacao-redirect.redirectscheme.scheme=https
+
+volumes:
+  avaliacoes:
+  cache:
+
+networks:
+  dokploy-network:
+    external: true

@@ -101,12 +101,32 @@ para `avaliacoes` e `cache`. Acesse **http://localhost:8080**.
 
 ## 5. Deploy no Dokploy
 
-1. **New → Application** → conecte o repositório.
-2. **Build Type: Dockerfile** (detectado automaticamente).
-3. **Port do container:** `8000` (ou deixe o Dokploy injetar `$PORT`).
-4. **Environment:** as variáveis da seção 2 (use `SIGFAPES_USER`/`SIGFAPES_PASSWORD`).
-5. (Opcional) **Volume** em `/app/avaliacoes` (e `/app/cache`) para persistir.
-6. **Deploy.**
+Jeito recomendado: pela **imagem publicada** (ghcr) usando o compose pronto em
+[`deploy/dokploy-compose.yml`](../deploy/dokploy-compose.yml).
+
+1. **New → Application → Compose**.
+2. Cole o conteúdo de `deploy/dokploy-compose.yml` (já traz imagem, volumes, login
+   e labels do Traefik para HTTPS).
+3. Se o package for **privado**, cadastre a credencial do registry em
+   **Registry/Docker**: `ghcr.io`, usuário `paulossjunior`, token com `read:packages`
+   (ou torne o package público no GitHub).
+4. **Environment** — defina os segredos referenciados pelo compose:
+   ```
+   OPENAI_API_KEY=sk-...
+   SIGFAPES_USER=login_sigfapes
+   SIGFAPES_PASSWORD=senha_sigfapes
+   APP_USER=admin
+   APP_PASSWORD=<senha forte>          # exige login
+   APP_SECRET_KEY=<openssl rand -hex 32>
+   DOMAIN=prestacao.seudominio.com.br
+   ```
+   (o compose já fixa `SESSION_COOKIE_SECURE=1`, pois o Dokploy serve HTTPS.)
+5. Aponte o **DNS** de `DOMAIN` para o IP do servidor (p/ o Let's Encrypt emitir).
+6. **Deploy.** Abra o domínio → **/login** → **Sincronizar** → avaliar.
+
+> Rede/entrypoint/certresolver do compose (`dokploy-network`, `websecure`,
+> `letsencrypt`) são os padrões do Dokploy; ajuste se você renomeou algo.
+> Alternativa: **Build Type: Dockerfile** (builda do repo) em vez da imagem.
 
 ---
 
