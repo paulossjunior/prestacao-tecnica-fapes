@@ -89,16 +89,19 @@
         <h2 style="margin-top:4px">Notas por documento ({{ por_doc|length }})</h2>
         <div class="doclist">
           {% for d in por_doc %}
-            <a class="docrow{{ ' rel' if (d.tipo_relatorio or '')|upper == 'FINAL' }}" href="/projetos/{{ d.id }}" target="_blank" rel="noopener">
-              <span class="dn">
+            <div class="docrow{{ ' rel' if (d.tipo_relatorio or '')|upper == 'FINAL' }}">
+              <a class="dn" href="/projetos/{{ d.id }}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
                 <b>{{ d.tipo_relatorio|title if d.tipo_relatorio and d.tipo_relatorio != 'NÃO INFORMADO' else 'Relatório' }}</b>
                 {% if d.periodo_relatorio and d.periodo_relatorio != 'NÃO INFORMADO' %}<span class="dd">{{ d.periodo_relatorio }}</span>{% endif %}
                 · <b>{{ d.nota if d.nota is not none else '—' }}%</b> · {{ d.situacao }} · {{ d.parecer or '—' }}
                 {% if d.notas_amostras and d.notas_amostras|length > 1 %}<br><span class="dd" title="Notas das {{ d.notas_amostras|length }} rodadas do LLM; a nota é a mediana">histórico: {{ d.notas_amostras|join(' · ') }} → mediana {{ d.nota }}%</span>{% endif %}
                 {% if d.relatorio_nome %}<br><span class="dd">{{ d.relatorio_nome[:48] }}</span>{% endif %}
+              </a>
+              <span class="doc-acts">
+                <a class="mini" href="/projetos/{{ d.id }}" target="_blank" rel="noopener">Ver</a>
+                <a class="mini" href="/projetos/{{ d.id }}/pdf" target="_blank" rel="noopener">⬇ PDF</a>
               </span>
-              <span class="dd">{{ d.data[:16].replace('T',' ') }}</span>
-            </a>
+            </div>
           {% endfor %}
         </div>
 
