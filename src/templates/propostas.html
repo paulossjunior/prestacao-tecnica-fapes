@@ -88,8 +88,27 @@
       <button id="btnAvalSel" class="btn-sync btn-eval" type="button" disabled>▶ Avaliar selecionadas (<span id="selCount">0</span>)</button>
       <button id="btnAvalPend" class="btn-sync btn-eval" type="button">▶ Avaliar pendentes</button>
       <button id="btnBaixar" class="btn-sync" type="button" style="background:var(--muted);border-color:var(--muted)">⬇ Baixar PDFs (zip)</button>
-      <button id="btnSync" class="btn-sync" type="button">↻ Sincronizar dados</button>
+      <button id="btnSyncEditais" class="btn-sync btn-eval" type="button" title="Atualiza só a lista de editais (sem baixar propostas)">↻ Sincronizar editais</button>
+      <button id="btnSync" class="btn-sync" type="button">↻ Sincronizar propostas</button>
     </span>
+  </div>
+
+  <div id="syncPanel" class="sync-panel" hidden>
+    <div class="sp-head">
+      <strong>Sincronizar: escolha os editais</strong>
+      <button type="button" id="spClose" class="sp-x" title="Fechar">✕</button>
+    </div>
+    <p class="sp-sub">Baixa só as propostas dos editais marcados (mais rápido). Nenhum marcado = todos.</p>
+    <div class="sp-tools">
+      <input type="search" id="spSearch" placeholder="Filtrar edital por nome ou ano…">
+      <button type="button" id="spReload" class="btn-sync" title="Reconsultar a lista no SIGFAPES">↻ Atualizar lista</button>
+    </div>
+    <label class="sp-all"><input type="checkbox" id="spTodos"> <b>Todos os editais</b> <span class="muted">(baixa tudo)</span></label>
+    <div id="spList" class="sp-list"><div class="muted" style="padding:14px">Carregando editais…</div></div>
+    <div class="sp-foot">
+      <span id="spCount" class="muted">0 selecionado(s)</span>
+      <button type="button" id="spBaixar" class="btn-sync btn-eval">⬇ Baixar propostas</button>
+    </div>
   </div>
 
   <div id="syncBox" class="sync-box" hidden>
@@ -136,7 +155,7 @@
       {% set g_aval = g.propostas|selectattr('aval')|list %}
       {% set g_ok = g_aval|selectattr('aval.situacao','equalto','APROVADO')|list|length %}
       <div class="edital">
-        <h2>{{ g.edital }} <span class="n">{{ g.propostas|length }} proposta{{ '' if g.propostas|length == 1 else 's' }}</span></h2>
+        <h2>{% if g.ano %}<span class="ed-ano">{{ g.ano }}</span> {% endif %}{{ g.edital }} <span class="n">{{ g.propostas|length }} proposta{{ '' if g.propostas|length == 1 else 's' }}</span></h2>
         <div class="edital-body">
           <div class="tiles mini">
             <div class="tile"><div class="v">{{ g.propostas|length }}</div><div class="l">Propostas</div></div>
@@ -194,7 +213,14 @@
     var btn = document.getElementById('btnSync'), msg = document.getElementById('syncMsg');
     var box = document.getElementById('syncBox'), mbEl = document.getElementById('syncMb');
     if (!btn) return;
-    var poll = null;
+    // Painel de editais (passo 1): escolher editais antes de baixar as propostas.
+    var panel=document.getElementById('syncPanel'), spList=document.getElementById('spList');
+    var spSearch=document.getElementById('spSearch'), spReload=document.getElementById('spReload');
+    var spTodos=document.getElementById('spTodos'), spCount=document.getElementById('spCount');
+    var spBaixar=document.getElementById('spBaixar'), spClose=document.getElementById('spClose');
+    var btnEd=document.getElementById('btnSyncEditais');
+    var poll=null, editais=[], carregados=false;
+
     function show(t, c){ msg.textContent=t; msg.className='sync-msg'+(c?' '+c:''); msg.hidden=false; }
     function busy(b){ btn.disabled=b; btn.textContent=b?'↻ Sincronizando…':'↻ Sincronizar dados'; box.hidden=!b; }
     function check(){
@@ -206,9 +232,62 @@
         else if(s.status==='error'){ show('Falha: '+(s.msg||'erro'),'err'); }
       }).catch(function(){});
     }
-    btn.addEventListener('click', function(){
-      busy(true); msg.hidden=true;
-      fetch('/propostas/sincronizar',{method:'POST'}).then(function(r){return r.json();}).then(function(){
+    function selIds(){ return Array.prototype.slice.call(spList.querySelectorAll('.sp-chk:checked')).map(function(c){return c.value;}); }
+    function updCount(){
+      var n=selIds().length;
+      spCount.textContent = spTodos.checked ? 'todos os editais' : (n+' selecionado(s)');
+      spBaixar.textContent = (spTodos.checked||n===0) ? '⬇ Baixar TODOS' : '⬇ Baixar '+n+' edital(is)';
+    }
+    function render(filtro){
+      filtro=(filtro||'').toLowerCase();
+      var html='', vis=0;
+      editais.forEach(function(e){
+        var txt=(e.label+' '+(e.ano||'')).toLowerCase();
+        if(filtro && txt.indexOf(filtro)<0) return;
+        vis++;
+        html+='<label class="sp-item"><input type="checkbox" class="sp-chk" value="'+e.id+'">'
+            +'<span class="sp-ano">'+(e.ano||'—')+'</span>'
+            +'<span class="sp-lbl">'+e.label.replace(/</g,'&lt;')+'</span></label>';
+      });
+      spList.innerHTML = vis ? html : '<div class="muted" style="padding:14px">Nenhum edital encontrado.</div>';
+      spList.querySelectorAll('.sp-chk').forEach(function(c){
+        c.addEventListener('change', function(){ if(c.checked) spTodos.checked=false; updCount(); });
+      });
+      updCount();
+    }
+    function carregarEditais(force){
+      spList.innerHTML='<div class="muted" style="padding:14px">Consultando editais no SIGFAPES…</div>';
+      if(btnEd){ btnEd.disabled=true; btnEd.textContent='↻ Sincronizando editais…'; }
+      return fetch('/propostas/editais'+(force?'?force=1':'')).then(function(r){return r.json();}).then(function(d){
+        if(btnEd){ btnEd.disabled=false; btnEd.textContent='↻ Sincronizar editais'; }
+        if(d.erro){ spList.innerHTML='<div class="sync-msg err" style="margin:10px">Falha: '+d.erro+'</div>'; return; }
+        editais=d.editais||[]; carregados=true; render(spSearch.value);
+        if(force) show(editais.length+' edital(is) atualizados. Escolha e baixe as propostas.','ok');
+      }).catch(function(){
+        if(btnEd){ btnEd.disabled=false; btnEd.textContent='↻ Sincronizar editais'; }
+        spList.innerHTML='<div class="sync-msg err" style="margin:10px">Não foi possível carregar os editais.</div>';
+      });
+    }
+    function abrir(){ panel.hidden=false; msg.hidden=true; if(!carregados) carregarEditais(false); }
+    function fechar(){ panel.hidden=true; }
+
+    btn.addEventListener('click', function(){ panel.hidden ? abrir() : fechar(); });
+    if(btnEd) btnEd.addEventListener('click', function(){
+      // Sincroniza SÓ a lista de editais (sem baixar propostas) e mostra o painel.
+      panel.hidden=false; carregarEditais(true);
+    });
+    spClose.addEventListener('click', fechar);
+    spReload.addEventListener('click', function(){ carregarEditais(true); });
+    spSearch.addEventListener('input', function(){ render(spSearch.value); });
+    spTodos.addEventListener('change', function(){
+      if(spTodos.checked) spList.querySelectorAll('.sp-chk').forEach(function(c){c.checked=false;});
+      updCount();
+    });
+    spBaixar.addEventListener('click', function(){
+      var ids = spTodos.checked ? [] : selIds();
+      fechar(); busy(true); msg.hidden=true;
+      fetch('/propostas/sincronizar',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({edital_ids:ids})}).then(function(r){return r.json();}).then(function(){
         if(!poll) poll=setInterval(check,2000); check();
       }).catch(function(){ busy(false); show('Não foi possível iniciar.','err'); });
     });

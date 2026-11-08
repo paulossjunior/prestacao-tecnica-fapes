@@ -176,27 +176,45 @@ _sync = {"status": "idle", "msg": "", "ts": None}
 _sync_lock = threading.Lock()
 
 
-def _run_sync():
+def _run_sync(edital_ids=None):
     try:
         import datetime
-        caminho = sigfapes.baixar_propostas_csv(force=True)
+        sigfapes.baixar_propostas_csv(force=True, edital_ids=edital_ids)
         n = len(sigfapes.listar_propostas(status=STATUS_PRESTACAO))
+        escopo = "editais selecionados" if edital_ids else "todos os editais"
         with _sync_lock:
             _sync.update(status="done", ts=datetime.datetime.now().isoformat(timespec="seconds"),
-                         msg=f"{n} proposta(s) em prestação de contas.")
+                         msg=f"{n} proposta(s) em prestação de contas ({escopo}).")
     except Exception as e:  # noqa: BLE001
         with _sync_lock:
             _sync.update(status="error", msg=str(e))
 
 
+@app.route("/propostas/editais")
+def propostas_editais():
+    """Lista de editais do SIGFAPES [{id,label,ano}] p/ escolher antes de baixar.
+    ?force=1 refaz a consulta (login + 1 GET); senão usa o cache (editais.json)."""
+    force = request.args.get("force", "").lower() in ("1", "true", "yes")
+    try:
+        editais = sigfapes.listar_editais(force=force)
+        return jsonify({"editais": editais, "total": len(editais)})
+    except Exception as e:  # noqa: BLE001
+        return jsonify({"erro": str(e)}), 502
+
+
 @app.route("/propostas/sincronizar", methods=["POST"])
 def propostas_sincronizar():
-    """Dispara o download das propostas em background (não bloqueia a requisição)."""
+    """Dispara o download das propostas em background (não bloqueia a requisição).
+    Corpo JSON opcional {edital_ids:[...]} baixa só esses editais; vazio = todos."""
+    body = request.get_json(silent=True) or {}
+    edital_ids = [str(i) for i in (body.get("edital_ids") or []) if str(i).strip()]
     with _sync_lock:
         if _sync["status"] == "running":
             return jsonify(_sync), 202
-        _sync.update(status="running", msg="Baixando do SIGFAPES...")
-    threading.Thread(target=_run_sync, daemon=True).start()
+        alvo = f"{len(edital_ids)} edital(is)" if edital_ids else "todos os editais"
+        _sync.update(status="running", msg=f"Baixando do SIGFAPES ({alvo})...")
+    threading.Thread(target=_run_sync, kwargs={"edital_ids": edital_ids or None},
+                     daemon=True).start()
     return jsonify(_sync), 202
 
 
