@@ -516,6 +516,74 @@ def propostas_baixar_status():
         return jsonify(_dl)
 
 
+# Sincronizar DOCUMENTOS das propostas selecionadas: busca na prestação de cada
+# projeto e pré-carrega o cache (projeto PDF + relatório Anexo VI) usado pela
+# tela de detalhe e pela avaliação. Mostra quantos documentos cada projeto tem
+# (0 = projeto sem prestação ainda, ex.: "Em Andamento").
+_docsync = {"status": "idle", "total": 0, "done": 0, "itens": [], "msg": ""}
+_docsync_lock = threading.Lock()
+
+
+def _sincronizar_docs_um(pid):
+    prop = sigfapes.proposta_por_projeto_id(pid) or {}
+    titulo = (prop.get("titulo") or f"Projeto {pid}")[:60]
+    try:
+        docs = sigfapes.listar_documentos_prestacao(pid)
+    except Exception as e:  # noqa: BLE001
+        return {"projeto_id": pid, "titulo": titulo, "ok": False, "status": f"erro: {e}"}
+    try:
+        rel = sigfapes.listar_relatorios(pid)
+    except Exception:  # noqa: BLE001
+        rel = []
+    # Pré-carrega o cache (ignora falhas: o importante é contar os documentos).
+    try:
+        sigfapes.baixar_projeto_pdf(pid)
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        sigfapes.baixar_relatorio_pdf(pid)
+    except Exception:  # noqa: BLE001
+        pass
+    n_doc, n_rel = len(docs), len(rel)
+    status = (f"{n_doc} doc(s) · {n_rel} relatório(s)" if n_doc else "sem documentos")
+    return {"projeto_id": pid, "titulo": titulo, "ok": n_rel > 0,
+            "status": status, "n_docs": n_doc, "n_relatorios": n_rel}
+
+
+def _run_sincronizar_docs(ids):
+    for pid in ids:
+        it = _sincronizar_docs_um(pid)
+        with _docsync_lock:
+            _docsync["done"] += 1
+            _docsync["itens"].append(it)
+    with _docsync_lock:
+        com_rel = sum(1 for i in _docsync["itens"] if i.get("ok"))
+        _docsync["status"] = "done"
+        _docsync["msg"] = (f"{com_rel}/{len(ids)} projeto(s) com relatório técnico; "
+                           "documentos prontos para avaliar.")
+
+
+@app.route("/propostas/sincronizar_docs", methods=["POST"])
+def propostas_sincronizar_docs():
+    """Baixa/atualiza os DOCUMENTOS das propostas selecionadas (corpo {ids:[...]})."""
+    body = request.get_json(silent=True) or {}
+    ids = [str(i) for i in (body.get("ids") or []) if str(i).strip()]
+    if not ids:
+        return jsonify({"erro": "Selecione uma ou mais propostas."}), 400
+    with _docsync_lock:
+        if _docsync["status"] == "running":
+            return jsonify(_docsync), 202
+        _docsync.update(status="running", total=len(ids), done=0, itens=[], msg="")
+    threading.Thread(target=_run_sincronizar_docs, args=(ids,), daemon=True).start()
+    return jsonify({"status": "running", "total": len(ids)}), 202
+
+
+@app.route("/propostas/sincronizar_docs_status")
+def propostas_sincronizar_docs_status():
+    with _docsync_lock:
+        return jsonify(_docsync)
+
+
 def _slug_arq(texto: str) -> str:
     """Nome de arquivo/pasta seguro (preserva acentos, troca o resto por _)."""
     import re as _re
