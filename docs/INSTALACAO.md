@@ -35,6 +35,9 @@ técnico (Anexo VI) de cada projeto, gerando pareceres em PDF.
 | `SIGFAPES_PASSWORD` | sim | — | Senha do SIGFAPES. |
 | `SIGFAPES_SITE` | não | `https://www.sigfapes.es.gov.br` | Base do SIGFAPES. |
 | `AVAL_AMOSTRAS` | não | `3` | Nº de rodadas do LLM por documento; a nota é a **mediana**. `1` desliga (mais barato). |
+| `APP_PASSWORD` | não | — | Define para **exigir login**. Vazio = app aberta (sem auth). |
+| `APP_USER` | não | `admin` | Usuário do login (quando `APP_PASSWORD` definido). |
+| `APP_SECRET_KEY` | não | aleatória | Chave da sessão; defina (string fixa) p/ o login sobreviver a restart. |
 | `PORT` | não | `8000` | Porta HTTP (a plataforma costuma injetar). |
 
 ¹ Uma das duas chaves, conforme o `LLM_PROVIDER`.

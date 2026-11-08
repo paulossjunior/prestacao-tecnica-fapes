@@ -13,6 +13,10 @@ services:
       - LLM_PROVIDER=${LLM_PROVIDER:-openai}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
       - OPENAI_OCR_MODEL=${OPENAI_OCR_MODEL:-gpt-5.4-nano}
+      # Login (opcional): defina APP_PASSWORD p/ exigir login. Vazio = sem auth.
+      - APP_USER=${APP_USER:-admin}
+      - APP_PASSWORD=${APP_PASSWORD:-}
+      - APP_SECRET_KEY=${APP_SECRET_KEY:-}
     volumes:
       - avaliacoes:/app/avaliacoes   # persiste avaliações entre recriações
       - cache:/app/cache             # persiste o CSV de propostas (cache)
