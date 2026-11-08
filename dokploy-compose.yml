@@ -1,0 +1,45 @@
+# Compose de produção para Dokploy (serviço tipo "Compose", buildando do repo).
+# Fica na RAIZ do repo de propósito: assim context/Dockerfile/.env ficam todos
+# relativos à raiz (sem "..") e o Dokploy grava o .env ao lado deste arquivo.
+#
+# No Dokploy: Provider = GitHub (repo/branch main), Compose Path = dokploy-compose.yml
+#
+# Aba Environment (vão para o container via env_file .env, gravado pelo Dokploy):
+#   OPENAI_API_KEY, SIGFAPES_USER, SIGFAPES_PASSWORD, APP_PASSWORD, APP_SECRET_KEY
+#   (opcional APP_USER — default "admin")
+#
+# Domínio/HTTPS pela aba "Domains" (Service: web, Port: 8000). Sem labels de Traefik
+# aqui (o Dokploy injeta as dele; labels manuais conflitam).
+#
+# Alternativa sem build (imagem publicada): comente "build:" e descomente "image:".
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # image: ghcr.io/paulossjunior/prestacao-tecnica-fapes:latest
+    restart: unless-stopped
+    env_file:
+      - .env                 # Dokploy grava aqui as vars do Environment (segredos)
+    environment:
+      # defaults NÃO-secretos (os segredos vêm do env_file acima)
+      LLM_PROVIDER: openai
+      OPENAI_MODEL: gpt-4o
+      OPENAI_OCR_MODEL: gpt-5.4-nano
+      SIGFAPES_SITE: https://www.sigfapes.es.gov.br
+      AVAL_AMOSTRAS: "3"               # rodadas por documento (nota = mediana); 1 = mais barato
+      SESSION_COOKIE_SECURE: "1"       # cookie só por HTTPS (domínio do Dokploy é TLS)
+      PORT: "8000"
+    volumes:
+      - avaliacoes:/app/avaliacoes     # persiste avaliações/pareceres
+      - cache:/app/cache               # persiste CSV de propostas
+    networks:
+      - dokploy-network
+
+volumes:
+  avaliacoes:
+  cache:
+
+networks:
+  dokploy-network:
+    external: true
