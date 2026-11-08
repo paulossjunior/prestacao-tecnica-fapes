@@ -103,12 +103,12 @@ para `avaliacoes` e `cache`. Acesse **http://localhost:8080**.
 
 Use o tipo **Compose** (persiste volumes; o Application-Dockerfile não expõe mounts
 em algumas versões). O compose pronto está em
-[`deploy/dokploy-compose.yml`](../deploy/dokploy-compose.yml) e **builda do repo**
+[`dokploy-compose.yml`](../dokploy-compose.yml) (na raiz do repo) e **builda do repo**
 (sem precisar de credencial de registry).
 
 1. **Create → Compose**.
 2. **Provider: GitHub** → repositório `prestacao-tecnica-fapes` → branch `main`.
-3. **Compose Path:** `deploy/dokploy-compose.yml`.
+3. **Compose Path:** `dokploy-compose.yml` (sem barra inicial; o arquivo está na raiz).
 4. **Environment** — defina os segredos referenciados pelo compose:
    ```
    OPENAI_API_KEY=sk-...
@@ -119,9 +119,9 @@ em algumas versões). O compose pronto está em
    APP_SECRET_KEY=<openssl rand -hex 32>
    ```
    (o compose já fixa `SESSION_COOKIE_SECURE=1`; vale quando o domínio é HTTPS.)
-   > O Dokploy grava essas variáveis num `.env` **na pasta do compose** (`deploy/`);
-   > o compose as carrega com `env_file: .env`. Por isso **não** use `${VAR}` aqui —
-   > a interpolação procuraria o `.env` na raiz e viria em branco.
+   > O Dokploy grava essas variáveis num `.env` **ao lado do compose** (raiz do repo);
+   > o compose as carrega com `env_file: .env` (por isso o arquivo fica na raiz, e
+   > não usamos `${VAR}`, que viria em branco).
 5. **Deploy** (builda do repo).
 6. **Domains** → **Generate Domain** (ou adicione o seu): **Service = `web`**,
    **Container Port = `8000`**, **HTTPS = On** (Let's Encrypt). O domínio gerado
