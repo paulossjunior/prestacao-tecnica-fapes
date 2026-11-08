@@ -1,10 +1,19 @@
-# Compose de produção para Dokploy (cole no editor "Compose" da aplicação).
-# Usa a imagem publicada no GitHub Packages (ghcr), com login + HTTPS via Traefik.
+# Compose de produção para Dokploy (serviço tipo "Compose", buildando do repo).
+# No Dokploy: Provider = GitHub (repo/branch main), Compose Path = deploy/dokploy-compose.yml.
+# O ROTEAMENTO/DOMÍNIO é feito pela aba "Domains" do Dokploy (Service: web,
+# Port: 8000, HTTPS). NÃO coloque labels do Traefik aqui — o Dokploy injeta as dele
+# e labels manuais conflitam. Conecte só à rede dokploy-network.
 # Defina os segredos em Environment do Dokploy: OPENAI_API_KEY, SIGFAPES_USER,
-# SIGFAPES_PASSWORD, APP_PASSWORD, APP_SECRET_KEY, DOMAIN.
+# SIGFAPES_PASSWORD, APP_PASSWORD, APP_SECRET_KEY.
+#
+# Alternativa sem build (usar imagem já publicada): comente o bloco "build:" e
+# descomente a linha "image:" (precisa de credencial do ghcr se o package for privado).
 services:
   web:
-    image: ghcr.io/paulossjunior/prestacao-tecnica-fapes:1.2.0   # ou :latest
+    build:
+      context: ..            # raiz do repo (este arquivo está em deploy/)
+      dockerfile: Dockerfile
+    # image: ghcr.io/paulossjunior/prestacao-tecnica-fapes:latest
     restart: unless-stopped
     environment:
       # ---- LLM (OpenAI) ----
@@ -28,18 +37,8 @@ services:
       - cache:/app/cache             # persiste CSV de propostas
     networks:
       - dokploy-network
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=dokploy-network
-      - traefik.http.routers.prestacao.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.prestacao.entrypoints=websecure
-      - traefik.http.routers.prestacao.tls.certresolver=letsencrypt
-      - traefik.http.services.prestacao.loadbalancer.server.port=8000
-      # HTTP -> HTTPS
-      - traefik.http.routers.prestacao-http.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.prestacao-http.entrypoints=web
-      - traefik.http.routers.prestacao-http.middlewares=prestacao-redirect
-      - traefik.http.middlewares.prestacao-redirect.redirectscheme.scheme=https
+    # Sem labels de Traefik: o domínio/HTTPS é configurado na aba "Domains" do
+    # Dokploy (Service: web, Container Port: 8000).
 
 volumes:
   avaliacoes:
