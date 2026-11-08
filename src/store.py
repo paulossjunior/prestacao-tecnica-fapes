@@ -7,7 +7,7 @@ Cada avaliação é uma pasta em `avaliacoes/<id>/` com:
 
 A "nota" é o grau de conformidade geral (0-100); o veredito é o campo `parecer`
 (APROVAR / APROVAR COM RESSALVAS / DILIGÊNCIA / REPROVAR). A "situação" é
-derivada da nota pela regra de negócio (>= LIMIAR_APROVACAO = APROVADO).
+derivada da nota pela regra de negócio (>= limiar = APROVADO).
 """
 import datetime as _dt
 import json
@@ -45,10 +45,6 @@ def set_limiar(valor) -> int:
     with open(_CONFIG, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
     return n
-
-
-# Compat: alguns pontos referenciam a constante; reflete o valor atual.
-LIMIAR_APROVACAO = get_limiar()
 
 
 def situacao(nota) -> str:
@@ -189,22 +185,6 @@ def por_documento(projeto_id: str) -> list[dict]:
     return sorted(docs, key=lambda m: (m.get("ts", 0.0), m.get("data", "")))
 
 
-def _mediana(nums: list) -> float | None:
-    vals = sorted(float(n) for n in nums if isinstance(n, (int, float)))
-    if not vals:
-        return None
-    meio = len(vals) // 2
-    if len(vals) % 2:
-        return vals[meio]
-    return (vals[meio - 1] + vals[meio]) / 2
-
-
-def avaliacao_atual(projeto_id: str) -> dict | None:
-    """A avaliação mais recente de um projeto (ou None). Para referência pontual."""
-    h = historico(projeto_id)
-    return h[0] if h else None
-
-
 def _resumo_de_docs(projeto_id: str, docs: list[dict]) -> dict | None:
     """Monta o resumo do projeto a partir das avaliações (uma por documento).
 
@@ -323,9 +303,9 @@ def pdf_path(aval_id: str) -> str | None:
 
 
 def pdf_path_projeto(projeto_id: str, titulo: str | None = None) -> str | None:
-    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral pela
-    mediana + resumo do parecer de cada relatório). Regenera sempre (reflete o
-    estado atual das avaliações). None se o projeto não tem avaliação."""
+    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral = nota do
+    relatório final, senão do último relatório + resumo do parecer de cada
+    relatório). Regenera sempre (reflete o estado atual). None se não há avaliação."""
     docs = por_documento(projeto_id)
     resumo = resumo_projeto(projeto_id)
     if not docs or not resumo:

@@ -220,7 +220,10 @@ def _coletar_evidencias(projeto_id, destino_dir):
     evid = sigfapes.listar_evidencias_complementares(projeto_id)
     incluidos = []
     for doc in evid[:_MAX_EVIDENCIAS]:
-        alvo = _os.path.join(destino_dir, f"evidencia__{_slug(doc.get('nome'))}.pdf")
+        # file id no nome evita colisão quando dois anexos têm nomes iguais
+        # (ex.: "Cópia Artigo" x2): sem isso, baixar_anexo pularia o 2º (arquivo já
+        # existe) e o 1º seria contado duas vezes.
+        alvo = _os.path.join(destino_dir, f"evidencia__{_slug(doc.get('nome'))}__{doc.get('file')}.pdf")
         try:
             sigfapes.baixar_anexo(doc["file"], alvo)
             if _os.path.getsize(alvo) > _EVIDENCIA_MAX_BYTES:
@@ -465,7 +468,7 @@ def _coletar_pdfs_projeto(pid, prop):
                     out.append((f"{base}/relatorio_{i}_{_slug_arq(r.get('nome'))}.pdf", f.read()))
         except Exception:  # noqa: BLE001
             continue
-    # Parecer CONSOLIDADO do projeto por completo (veredito geral pela mediana).
+    # Parecer CONSOLIDADO do projeto (veredito geral = final, senão último relatório).
     try:
         cons = store.pdf_path_projeto(pid, titulo=prop.get("titulo"))
         if cons and os.path.exists(cons):
@@ -651,10 +654,10 @@ def proposta_detalhe(projeto_id):
     if prop is None:
         abort(404)
     # Avaliação por documento (um projeto tem vários parciais + final) + nota
-    # geral (mediana) + histórico completo.
+    # geral (final, senão último relatório) + histórico completo.
     hist = store.historico(projeto_id)
     por_doc = store.por_documento(projeto_id)   # nota atual de cada documento
-    resumo = store.resumo_projeto(projeto_id)   # nota geral = mediana
+    resumo = store.resumo_projeto(projeto_id)   # nota geral (final/último relatório)
     aval = resumo                               # resumo é a "avaliação" do projeto
     # Documentos da prestação (Informações → Projeto Contratado → Documentos).
     documentos, tem_relatorio = [], False
@@ -711,8 +714,8 @@ def proposta_projeto_pdf(projeto_id):
 
 @app.route("/propostas/<projeto_id>/parecer_projeto.pdf")
 def proposta_parecer_consolidado(projeto_id):
-    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral pela
-    mediana + resumo do parecer de cada relatório)."""
+    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral = final,
+    senão último relatório + resumo do parecer de cada relatório)."""
     prop = sigfapes.proposta_por_projeto_id(projeto_id) or {}
     try:
         caminho = store.pdf_path_projeto(projeto_id, titulo=prop.get("titulo"))

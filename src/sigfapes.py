@@ -420,8 +420,10 @@ def listar_relatorios(projeto_id: str) -> list[dict]:
 
 
 # "(1 de 3)", "(2 de 3)", "parte 2/3"… — relatório único partido em vários PDFs.
+# Exige colchete/parêntese OU a palavra "parte" antes dos números, para NÃO casar
+# datas no fim do nome (ex.: "... 01/11/2023 a 31/10/2024" viraria "parte 10 de 2024").
 _RE_PARTE = re.compile(
-    r"\s*[\(\[]?\s*(?:parte\s*)?(\d+)\s*(?:de|/)\s*(\d+)\s*[\)\]]?\s*$", re.I)
+    r"\s*(?:[\(\[]\s*(?:parte\s*)?|parte\s+)(\d+)\s*(?:de|/)\s*(\d+)\s*[\)\]]?\s*$", re.I)
 
 
 def agrupar_relatorios(relatorios: list[dict]) -> list[list[dict]]:
