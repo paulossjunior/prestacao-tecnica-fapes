@@ -101,15 +101,14 @@ para `avaliacoes` e `cache`. Acesse **http://localhost:8080**.
 
 ## 5. Deploy no Dokploy
 
-Jeito recomendado: pela **imagem publicada** (ghcr) usando o compose pronto em
-[`deploy/dokploy-compose.yml`](../deploy/dokploy-compose.yml).
+Use o tipo **Compose** (persiste volumes; o Application-Dockerfile não expõe mounts
+em algumas versões). O compose pronto está em
+[`deploy/dokploy-compose.yml`](../deploy/dokploy-compose.yml) e **builda do repo**
+(sem precisar de credencial de registry).
 
-1. **New → Application → Compose**.
-2. Cole o conteúdo de `deploy/dokploy-compose.yml` (já traz imagem, volumes, login
-   e labels do Traefik para HTTPS).
-3. Se o package for **privado**, cadastre a credencial do registry em
-   **Registry/Docker**: `ghcr.io`, usuário `paulossjunior`, token com `read:packages`
-   (ou torne o package público no GitHub).
+1. **Create → Compose**.
+2. **Provider: GitHub** → repositório `prestacao-tecnica-fapes` → branch `main`.
+3. **Compose Path:** `deploy/dokploy-compose.yml`.
 4. **Environment** — defina os segredos referenciados pelo compose:
    ```
    OPENAI_API_KEY=sk-...
@@ -124,9 +123,13 @@ Jeito recomendado: pela **imagem publicada** (ghcr) usando o compose pronto em
 5. Aponte o **DNS** de `DOMAIN` para o IP do servidor (p/ o Let's Encrypt emitir).
 6. **Deploy.** Abra o domínio → **/login** → **Sincronizar** → avaliar.
 
+Os volumes `prestacao_avaliacoes` e `prestacao_cache` (definidos no compose)
+persistem as avaliações entre deploys.
+
 > Rede/entrypoint/certresolver do compose (`dokploy-network`, `websecure`,
 > `letsencrypt`) são os padrões do Dokploy; ajuste se você renomeou algo.
-> Alternativa: **Build Type: Dockerfile** (builda do repo) em vez da imagem.
+> Alternativa sem build: no compose, comente o bloco `build:` e descomente
+> `image:` (precisa de credencial do ghcr se o package for privado).
 
 ---
 

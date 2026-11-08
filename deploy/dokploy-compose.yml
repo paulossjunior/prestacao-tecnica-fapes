@@ -1,10 +1,16 @@
-# Compose de produção para Dokploy (cole no editor "Compose" da aplicação).
-# Usa a imagem publicada no GitHub Packages (ghcr), com login + HTTPS via Traefik.
+# Compose de produção para Dokploy (serviço tipo "Compose", buildando do repo).
+# No Dokploy: Provider = GitHub (repo/branch main), Compose Path = deploy/dokploy-compose.yml.
 # Defina os segredos em Environment do Dokploy: OPENAI_API_KEY, SIGFAPES_USER,
 # SIGFAPES_PASSWORD, APP_PASSWORD, APP_SECRET_KEY, DOMAIN.
+#
+# Alternativa sem build (usar imagem já publicada): comente o bloco "build:" e
+# descomente a linha "image:" (precisa de credencial do ghcr se o package for privado).
 services:
   web:
-    image: ghcr.io/paulossjunior/prestacao-tecnica-fapes:1.2.0   # ou :latest
+    build:
+      context: ..            # raiz do repo (este arquivo está em deploy/)
+      dockerfile: Dockerfile
+    # image: ghcr.io/paulossjunior/prestacao-tecnica-fapes:latest
     restart: unless-stopped
     environment:
       # ---- LLM (OpenAI) ----
