@@ -28,7 +28,8 @@ services:
       OPENAI_OCR_MODEL: gpt-5.4-nano
       SIGFAPES_SITE: https://www.sigfapes.es.gov.br
       AVAL_AMOSTRAS: "3"               # rodadas por documento (nota = mediana); 1 = mais barato
-      SESSION_COOKIE_SECURE: "1"       # cookie só por HTTPS (domínio do Dokploy é TLS)
+      # SESSION_COOKIE_SECURE desligado por padrão (domínios sslip.io são HTTP).
+      # Em domínio HTTPS real, defina SESSION_COOKIE_SECURE=1 na aba Environment.
       PORT: "8000"
     volumes:
       - avaliacoes:/app/avaliacoes     # persiste avaliações/pareceres
