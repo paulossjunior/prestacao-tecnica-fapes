@@ -7,7 +7,7 @@ Cada avaliação é uma pasta em `avaliacoes/<id>/` com:
 
 A "nota" é o grau de conformidade geral (0-100); o veredito é o campo `parecer`
 (APROVAR / APROVAR COM RESSALVAS / DILIGÊNCIA / REPROVAR). A "situação" é
-derivada da nota pela regra de negócio (>= LIMIAR_APROVACAO = APROVADO).
+derivada da nota pela regra de negócio (>= limiar = APROVADO).
 """
 import datetime as _dt
 import json
@@ -47,16 +47,26 @@ def set_limiar(valor) -> int:
     return n
 
 
-# Compat: alguns pontos referenciam a constante; reflete o valor atual.
-LIMIAR_APROVACAO = get_limiar()
-
-
 def situacao(nota) -> str:
     """APROVADO se nota >= limiar atual; REPROVADO se abaixo; — se sem nota."""
     try:
         return "APROVADO" if float(nota) >= get_limiar() else "REPROVADO"
     except (TypeError, ValueError):
         return "—"
+
+
+def parecer_coerente(nota, parecer: str) -> str:
+    """Reconcilia o parecer (veredito do LLM) com a situação (nota vs limiar) para
+    não exibir contradição: APROVADO nunca mostra REPROVAR/DILIGÊNCIA (vira
+    'APROVAR COM RESSALVAS'); REPROVADO nunca mostra APROVAR/APROVAR COM RESSALVAS
+    (vira 'DILIGÊNCIA'). O parecer bruto do LLM continua salvo no meta/parecer.json."""
+    p = (parecer or "").strip().upper()
+    sit = situacao(nota)
+    if sit == "APROVADO":
+        return "APROVAR COM RESSALVAS" if p in ("REPROVAR", "DILIGÊNCIA", "DILIGENCIA") else (parecer or "APROVAR")
+    if sit == "REPROVADO":
+        return "DILIGÊNCIA" if p in ("APROVAR", "APROVAR COM RESSALVAS") else (parecer or "REPROVAR")
+    return parecer
 
 
 def _dir(aval_id: str) -> str:
@@ -170,23 +180,9 @@ def por_documento(projeto_id: str) -> list[dict]:
     """Avaliação atual de CADA documento (relatório) do projeto, em ordem
     cronológica (parciais → final). Uma nota por documento."""
     docs = _latest_por_doc(historico(projeto_id))
+    for m in docs:  # parecer exibido coerente com a nota do documento
+        m["parecer"] = parecer_coerente(m.get("nota"), m.get("parecer"))
     return sorted(docs, key=lambda m: (m.get("ts", 0.0), m.get("data", "")))
-
-
-def _mediana(nums: list) -> float | None:
-    vals = sorted(float(n) for n in nums if isinstance(n, (int, float)))
-    if not vals:
-        return None
-    meio = len(vals) // 2
-    if len(vals) % 2:
-        return vals[meio]
-    return (vals[meio - 1] + vals[meio]) / 2
-
-
-def avaliacao_atual(projeto_id: str) -> dict | None:
-    """A avaliação mais recente de um projeto (ou None). Para referência pontual."""
-    h = historico(projeto_id)
-    return h[0] if h else None
 
 
 def _resumo_de_docs(projeto_id: str, docs: list[dict]) -> dict | None:
@@ -214,7 +210,7 @@ def _resumo_de_docs(projeto_id: str, docs: list[dict]) -> dict | None:
         "n_parciais": len(parciais),
         "n_finais": len(finais),
         "id": rep.get("id"),
-        "parecer": rep.get("parecer", ""),
+        "parecer": parecer_coerente(nota, rep.get("parecer", "")),
         "tipo_relatorio": rep.get("tipo_relatorio", ""),
         "periodo_relatorio": rep.get("periodo_relatorio", ""),
     }
@@ -307,9 +303,9 @@ def pdf_path(aval_id: str) -> str | None:
 
 
 def pdf_path_projeto(projeto_id: str, titulo: str | None = None) -> str | None:
-    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral pela
-    mediana + resumo do parecer de cada relatório). Regenera sempre (reflete o
-    estado atual das avaliações). None se o projeto não tem avaliação."""
+    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral = nota do
+    relatório final, senão do último relatório + resumo do parecer de cada
+    relatório). Regenera sempre (reflete o estado atual). None se não há avaliação."""
     docs = por_documento(projeto_id)
     resumo = resumo_projeto(projeto_id)
     if not docs or not resumo:

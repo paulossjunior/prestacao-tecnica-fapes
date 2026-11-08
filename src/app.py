@@ -158,6 +158,25 @@ except (TypeError, ValueError):
     _AVAL_AMOSTRAS = 3
 
 
+import re as _re_perfil
+# Detecta o perfil de avaliação pelo edital/título (deixa de usar "inovacao" fixo,
+# que penalizava projetos de pesquisa com critérios de IP/transferência).
+_RE_PERFIL_INOV = _re_perfil.compile(
+    r"inova|tecnol|plataforma|software|conectafapes|pappe|tecnova|startup", _re_perfil.I)
+_RE_PERFIL_EXT = _re_perfil.compile(r"extens[aã]o|populariza|divulga", _re_perfil.I)
+
+
+def _perfil_do_projeto(prop) -> str:
+    """Perfil ('pesquisa' | 'inovacao' | 'extensao') pelo edital/título. Default
+    pesquisa (maioria dos editais FAPES é pesquisa/iniciação científica)."""
+    txt = f"{(prop or {}).get('edital','')} {(prop or {}).get('titulo','')}"
+    if _RE_PERFIL_INOV.search(txt):
+        return "inovacao"
+    if _RE_PERFIL_EXT.search(txt):
+        return "extensao"
+    return "pesquisa"
+
+
 def _analisar_estavel(projtxt, prest, perfil, n=None):
     """Roda `analisar` n vezes e devolve UM resultado com a nota = mediana das
     notas das rodadas (representante = rodada cuja nota é a mais próxima da
@@ -201,7 +220,10 @@ def _coletar_evidencias(projeto_id, destino_dir):
     evid = sigfapes.listar_evidencias_complementares(projeto_id)
     incluidos = []
     for doc in evid[:_MAX_EVIDENCIAS]:
-        alvo = _os.path.join(destino_dir, f"evidencia__{_slug(doc.get('nome'))}.pdf")
+        # file id no nome evita colisão quando dois anexos têm nomes iguais
+        # (ex.: "Cópia Artigo" x2): sem isso, baixar_anexo pularia o 2º (arquivo já
+        # existe) e o 1º seria contado duas vezes.
+        alvo = _os.path.join(destino_dir, f"evidencia__{_slug(doc.get('nome'))}__{doc.get('file')}.pdf")
         try:
             sigfapes.baixar_anexo(doc["file"], alvo)
             if _os.path.getsize(alvo) > _EVIDENCIA_MAX_BYTES:
@@ -230,7 +252,7 @@ def _avaliar_um(projeto_id, prop):
     if not relatorios:
         raise RuntimeError(f"Relatório técnico (Anexo VI) não encontrado no projeto {projeto_id}.")
     titulo = (prop.get("titulo") or f"Projeto {projeto_id}")[:80]
-    perfil = "inovacao"
+    perfil = _perfil_do_projeto(prop)
     import ocr
     # Evidências complementares: baixa e extrai UMA vez (compartilhado entre os
     # relatórios), evitando re-OCR por relatório.
@@ -262,6 +284,10 @@ def _avaliar_um(projeto_id, prop):
             tipo_nome = sigfapes.tipo_relatorio_por_nome(nome_doc, rep.get("descricao", ""))
             if tipo_nome:
                 resultado["tipo_relatorio"] = tipo_nome
+            elif len(grupos) == 1:
+                # Único relatório do projeto e nome não diz "parcial/final": é o
+                # relatório técnico do projeto todo → trata como FINAL.
+                resultado["tipo_relatorio"] = "FINAL"
             tipo = resultado.get("tipo_relatorio", "") or ""
             suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
             # file id do documento = partes unidas, p/ deduplicar como um só doc.
@@ -442,7 +468,7 @@ def _coletar_pdfs_projeto(pid, prop):
                     out.append((f"{base}/relatorio_{i}_{_slug_arq(r.get('nome'))}.pdf", f.read()))
         except Exception:  # noqa: BLE001
             continue
-    # Parecer CONSOLIDADO do projeto por completo (veredito geral pela mediana).
+    # Parecer CONSOLIDADO do projeto (veredito geral = final, senão último relatório).
     try:
         cons = store.pdf_path_projeto(pid, titulo=prop.get("titulo"))
         if cons and os.path.exists(cons):
@@ -628,10 +654,10 @@ def proposta_detalhe(projeto_id):
     if prop is None:
         abort(404)
     # Avaliação por documento (um projeto tem vários parciais + final) + nota
-    # geral (mediana) + histórico completo.
+    # geral (final, senão último relatório) + histórico completo.
     hist = store.historico(projeto_id)
     por_doc = store.por_documento(projeto_id)   # nota atual de cada documento
-    resumo = store.resumo_projeto(projeto_id)   # nota geral = mediana
+    resumo = store.resumo_projeto(projeto_id)   # nota geral (final/último relatório)
     aval = resumo                               # resumo é a "avaliação" do projeto
     # Documentos da prestação (Informações → Projeto Contratado → Documentos).
     documentos, tem_relatorio = [], False
@@ -688,8 +714,8 @@ def proposta_projeto_pdf(projeto_id):
 
 @app.route("/propostas/<projeto_id>/parecer_projeto.pdf")
 def proposta_parecer_consolidado(projeto_id):
-    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral pela
-    mediana + resumo do parecer de cada relatório)."""
+    """PDF do parecer CONSOLIDADO do projeto por completo (veredito geral = final,
+    senão último relatório + resumo do parecer de cada relatório)."""
     prop = sigfapes.proposta_por_projeto_id(projeto_id) or {}
     try:
         caminho = store.pdf_path_projeto(projeto_id, titulo=prop.get("titulo"))
