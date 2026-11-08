@@ -119,6 +119,9 @@ em algumas versões). O compose pronto está em
    APP_SECRET_KEY=<openssl rand -hex 32>
    ```
    (o compose já fixa `SESSION_COOKIE_SECURE=1`; vale quando o domínio é HTTPS.)
+   > O Dokploy grava essas variáveis num `.env` **na pasta do compose** (`deploy/`);
+   > o compose as carrega com `env_file: .env`. Por isso **não** use `${VAR}` aqui —
+   > a interpolação procuraria o `.env` na raiz e viria em branco.
 5. **Deploy** (builda do repo).
 6. **Domains** → **Generate Domain** (ou adicione o seu): **Service = `web`**,
    **Container Port = `8000`**, **HTTPS = On** (Let's Encrypt). O domínio gerado

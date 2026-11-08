@@ -1,13 +1,20 @@
 # Compose de produção para Dokploy (serviço tipo "Compose", buildando do repo).
 # No Dokploy: Provider = GitHub (repo/branch main), Compose Path = deploy/dokploy-compose.yml.
-# O ROTEAMENTO/DOMÍNIO é feito pela aba "Domains" do Dokploy (Service: web,
-# Port: 8000, HTTPS). NÃO coloque labels do Traefik aqui — o Dokploy injeta as dele
-# e labels manuais conflitam. Conecte só à rede dokploy-network.
-# Defina os segredos em Environment do Dokploy: OPENAI_API_KEY, SIGFAPES_USER,
-# SIGFAPES_PASSWORD, APP_PASSWORD, APP_SECRET_KEY.
 #
-# Alternativa sem build (usar imagem já publicada): comente o bloco "build:" e
-# descomente a linha "image:" (precisa de credencial do ghcr se o package for privado).
+# IMPORTANTE (env): o Dokploy grava as variáveis da aba "Environment" num arquivo
+# .env NA MESMA PASTA deste compose (deploy/). Por isso usamos `env_file: .env`
+# (caminho relativo a esta pasta) em vez de `${VAR}` — interpolação ${VAR} lê o
+# .env do project-directory (raiz) e ficaria em branco.
+#
+# Defina na aba Environment do Dokploy (vão para o container via env_file):
+#   OPENAI_API_KEY, SIGFAPES_USER, SIGFAPES_PASSWORD, APP_PASSWORD, APP_SECRET_KEY
+#   (opcional APP_USER — default "admin")
+#
+# O domínio/HTTPS é feito pela aba "Domains" (Service: web, Port: 8000). Sem labels
+# de Traefik aqui (o Dokploy injeta as dele; labels manuais conflitam).
+#
+# Alternativa sem build (imagem já publicada): comente "build:" e descomente "image:"
+# (precisa de credencial do ghcr se o package for privado).
 services:
   web:
     build:
@@ -15,30 +22,22 @@ services:
       dockerfile: Dockerfile
     # image: ghcr.io/paulossjunior/prestacao-tecnica-fapes:latest
     restart: unless-stopped
+    env_file:
+      - .env                 # Dokploy grava aqui as vars do Environment (segredos)
     environment:
-      # ---- LLM (OpenAI) ----
+      # defaults NÃO-secretos (os segredos vêm do env_file acima)
       LLM_PROVIDER: openai
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: gpt-4o
       OPENAI_OCR_MODEL: gpt-5.4-nano
-      AVAL_AMOSTRAS: "3"            # rodadas por documento (nota = mediana). 1 = mais barato
-      # ---- Login do SIGFAPES ----
-      SIGFAPES_USER: ${SIGFAPES_USER}
-      SIGFAPES_PASSWORD: ${SIGFAPES_PASSWORD}
       SIGFAPES_SITE: https://www.sigfapes.es.gov.br
-      # ---- Login da aplicação (tela /login) ----
-      APP_USER: ${APP_USER:-admin}
-      APP_PASSWORD: ${APP_PASSWORD}         # obrigatório p/ exigir login
-      APP_SECRET_KEY: ${APP_SECRET_KEY}     # openssl rand -hex 32 (fixa p/ sessão persistir)
-      SESSION_COOKIE_SECURE: "1"            # cookie só por HTTPS (Dokploy serve TLS)
+      AVAL_AMOSTRAS: "3"               # rodadas por documento (nota = mediana); 1 = mais barato
+      SESSION_COOKIE_SECURE: "1"       # cookie só por HTTPS (domínio do Dokploy é TLS)
       PORT: "8000"
     volumes:
-      - avaliacoes:/app/avaliacoes   # persiste avaliações/pareceres
-      - cache:/app/cache             # persiste CSV de propostas
+      - avaliacoes:/app/avaliacoes     # persiste avaliações/pareceres
+      - cache:/app/cache               # persiste CSV de propostas
     networks:
       - dokploy-network
-    # Sem labels de Traefik: o domínio/HTTPS é configurado na aba "Domains" do
-    # Dokploy (Service: web, Container Port: 8000).
 
 volumes:
   avaliacoes:
