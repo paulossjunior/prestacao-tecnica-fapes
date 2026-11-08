@@ -262,6 +262,10 @@ def _avaliar_um(projeto_id, prop):
             tipo_nome = sigfapes.tipo_relatorio_por_nome(nome_doc, rep.get("descricao", ""))
             if tipo_nome:
                 resultado["tipo_relatorio"] = tipo_nome
+            elif len(grupos) == 1:
+                # Único relatório do projeto e nome não diz "parcial/final": é o
+                # relatório técnico do projeto todo → trata como FINAL.
+                resultado["tipo_relatorio"] = "FINAL"
             tipo = resultado.get("tipo_relatorio", "") or ""
             suf = f" [{tipo.title()}]" if tipo and tipo != "NÃO INFORMADO" else ""
             # file id do documento = partes unidas, p/ deduplicar como um só doc.
