@@ -117,19 +117,22 @@ em algumas versões). O compose pronto está em
    APP_USER=admin
    APP_PASSWORD=<senha forte>          # exige login
    APP_SECRET_KEY=<openssl rand -hex 32>
-   DOMAIN=prestacao.seudominio.com.br
    ```
-   (o compose já fixa `SESSION_COOKIE_SECURE=1`, pois o Dokploy serve HTTPS.)
-5. Aponte o **DNS** de `DOMAIN` para o IP do servidor (p/ o Let's Encrypt emitir).
-6. **Deploy.** Abra o domínio → **/login** → **Sincronizar** → avaliar.
+   (o compose já fixa `SESSION_COOKIE_SECURE=1`; vale quando o domínio é HTTPS.)
+5. **Deploy** (builda do repo).
+6. **Domains** → **Generate Domain** (ou adicione o seu): **Service = `web`**,
+   **Container Port = `8000`**, **HTTPS = On** (Let's Encrypt). O domínio gerado
+   pelo Dokploy (`*.traefik.me`) já vem com HTTPS.
+7. Abra o domínio → **/login** (admin / `APP_PASSWORD`) → **Sincronizar** → avaliar.
 
 Os volumes `prestacao_avaliacoes` e `prestacao_cache` (definidos no compose)
 persistem as avaliações entre deploys.
 
-> Rede/entrypoint/certresolver do compose (`dokploy-network`, `websecure`,
-> `letsencrypt`) são os padrões do Dokploy; ajuste se você renomeou algo.
-> Alternativa sem build: no compose, comente o bloco `build:` e descomente
-> `image:` (precisa de credencial do ghcr se o package for privado).
+> O roteamento/HTTPS é feito pela aba **Domains** do Dokploy — por isso o compose
+> **não** traz labels do Traefik (evita conflito). Se o domínio ficar só em HTTP,
+> remova `SESSION_COOKIE_SECURE` (senão o cookie de login não é enviado).
+> Alternativa sem build: no compose, comente `build:` e descomente `image:`
+> (precisa de credencial do ghcr se o package for privado).
 
 ---
 
