@@ -3,6 +3,9 @@
 Aplicação Flask que lista as propostas do SIGFAPES e avalia por LLM o relatório
 técnico (Anexo VI) de cada projeto, gerando pareceres em PDF.
 
+> **Primeira vez?** Siga o passo a passo em [TUTORIAL.md](TUTORIAL.md) (do zero ao
+> primeiro parecer). Este arquivo é a **referência** de instalação (todas as opções).
+
 > A aplicação **acessa o SIGFAPES autenticado** (faz login com usuário/senha) e
 > chama a **API da OpenAI** (ou Mistral). Precisa de rede até o SIGFAPES e de uma
 > chave de LLM. Não há dado embutido: as propostas são sincronizadas em runtime.
