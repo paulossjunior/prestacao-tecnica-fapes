@@ -17,6 +17,8 @@ services:
       - APP_USER=${APP_USER:-admin}
       - APP_PASSWORD=${APP_PASSWORD:-}
       - APP_SECRET_KEY=${APP_SECRET_KEY:-}
+      # Em produção atrás de HTTPS: defina SESSION_COOKIE_SECURE=1.
+      - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-}
     volumes:
       - avaliacoes:/app/avaliacoes   # persiste avaliações entre recriações
       - cache:/app/cache             # persiste o CSV de propostas (cache)

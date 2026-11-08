@@ -21,6 +21,14 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 30 * 1024 * 1024  # 30 MB por requisição
 # Sessão (login). Defina APP_SECRET_KEY p/ as sessões sobreviverem a restart.
 app.secret_key = os.getenv("APP_SECRET_KEY") or secrets.token_hex(32)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    # SameSite=Lax: o cookie NÃO vai em POST cross-site -> mitiga CSRF nas rotas
+    # de mudança de estado (avaliar, config/limiar, sincronizar...).
+    SESSION_COOKIE_SAMESITE="Lax",
+    # Em produção (HTTPS) defina SESSION_COOKIE_SECURE=1 p/ o cookie só ir por TLS.
+    SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "").lower() in ("1", "true", "yes"),
+)
 
 # Login opcional: só é EXIGIDO quando APP_PASSWORD está definido (não quebra
 # deploys sem auth). Usuário padrão "admin"; ajuste com APP_USER/APP_PASSWORD.
@@ -48,8 +56,9 @@ def _auth_guard():
 
 
 def _destino_seguro(dest: str) -> str:
-    """Evita open-redirect: só aceita caminho local (começa com '/' e não '//')."""
-    if dest and dest.startswith("/") and not dest.startswith("//"):
+    """Evita open-redirect: só aceita caminho local. Rejeita '//evil' e '/\\evil'
+    (navegadores normalizam '\\'->'/', virando '//')."""
+    if dest and dest.startswith("/") and (len(dest) < 2 or dest[1] not in ("/", "\\")):
         return dest
     return "/propostas"
 

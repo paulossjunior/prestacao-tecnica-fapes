@@ -38,6 +38,7 @@ técnico (Anexo VI) de cada projeto, gerando pareceres em PDF.
 | `APP_PASSWORD` | não | — | Define para **exigir login**. Vazio = app aberta (sem auth). |
 | `APP_USER` | não | `admin` | Usuário do login (quando `APP_PASSWORD` definido). |
 | `APP_SECRET_KEY` | não | aleatória | Chave da sessão; defina (string fixa) p/ o login sobreviver a restart. |
+| `SESSION_COOKIE_SECURE` | não | `0` | Em produção com **HTTPS**, defina `1` (cookie só por TLS). O cookie já é HttpOnly + SameSite=Lax. |
 | `PORT` | não | `8000` | Porta HTTP (a plataforma costuma injetar). |
 
 ¹ Uma das duas chaves, conforme o `LLM_PROVIDER`.
