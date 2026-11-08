@@ -1,11 +1,12 @@
 """POC web: avaliação técnica de prestação de contas (FAPES/IFES) via Mistral."""
 import os
+import secrets
 import threading
 import uuid
 
 from dotenv import load_dotenv
-from flask import (Flask, Response, abort, jsonify, render_template, request,
-                   send_file)
+from flask import (Flask, Response, abort, jsonify, redirect, render_template,
+                   request, session, send_file, url_for)
 
 import sigfapes
 import store
@@ -18,6 +19,67 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 30 * 1024 * 1024  # 30 MB por requisição
+# Sessão (login). Defina APP_SECRET_KEY p/ as sessões sobreviverem a restart.
+app.secret_key = os.getenv("APP_SECRET_KEY") or secrets.token_hex(32)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    # SameSite=Lax: o cookie NÃO vai em POST cross-site -> mitiga CSRF nas rotas
+    # de mudança de estado (avaliar, config/limiar, sincronizar...).
+    SESSION_COOKIE_SAMESITE="Lax",
+    # Em produção (HTTPS) defina SESSION_COOKIE_SECURE=1 p/ o cookie só ir por TLS.
+    SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "").lower() in ("1", "true", "yes"),
+)
+
+# Login opcional: só é EXIGIDO quando APP_PASSWORD está definido (não quebra
+# deploys sem auth). Usuário padrão "admin"; ajuste com APP_USER/APP_PASSWORD.
+_APP_USER = os.getenv("APP_USER", "admin")
+_APP_PASSWORD = os.getenv("APP_PASSWORD", "")
+
+
+@app.context_processor
+def _inject_auth():
+    return {"auth_on": bool(_APP_PASSWORD), "logged_in": bool(session.get("auth"))}
+
+
+@app.before_request
+def _auth_guard():
+    """Exige login em tudo quando APP_PASSWORD está definido (exceto /login e estáticos)."""
+    if not _APP_PASSWORD:
+        return  # auth desativada
+    if request.endpoint == "login" or (request.endpoint == "static"):
+        return
+    if request.path.startswith("/static/"):
+        return
+    if session.get("auth"):
+        return
+    return redirect(url_for("login", next=request.path))
+
+
+def _destino_seguro(dest: str) -> str:
+    """Evita open-redirect: só aceita caminho local. Rejeita '//evil' e '/\\evil'
+    (navegadores normalizam '\\'->'/', virando '//')."""
+    if dest and dest.startswith("/") and (len(dest) < 2 or dest[1] not in ("/", "\\")):
+        return dest
+    return "/propostas"
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    erro = ""
+    if request.method == "POST":
+        u = request.form.get("usuario", "")
+        p = request.form.get("senha", "")
+        if _APP_PASSWORD and u == _APP_USER and secrets.compare_digest(p, _APP_PASSWORD):
+            session["auth"] = True
+            return redirect(_destino_seguro(request.args.get("next", "")))
+        erro = "Usuário ou senha inválidos."
+    return render_template("login.html", erro=erro)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 
 # Processamento assíncrono: a análise leva minutos; não segura a conexão HTTP.
 # Job store em memória (ok para 1 worker + threads; POC sem persistência).
