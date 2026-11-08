@@ -19,6 +19,7 @@ Uso (programático):
 import csv
 import http.cookiejar
 import io
+import json
 import os
 import re
 import socket
@@ -49,6 +50,15 @@ SENHA = _cfg("PASSWORD")
 
 _CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache")
 CSV_CACHE = os.path.join(_CACHE_DIR, "propostas.csv")
+# Lista de editais (nome + ano), extraída do formulário de busca do SIGFAPES.
+EDITAIS_CACHE = os.path.join(_CACHE_DIR, "editais.json")
+# Escopo do último CSV baixado: quais editais (ids) ele contém ("" = Todos).
+# Serve para re-baixar quando o usuário troca a seleção de editais.
+_SCOPE_CACHE = os.path.join(_CACHE_DIR, "propostas.scope.json")
+
+# Campo do <select> de EDITAL no formulário de busca (admin/admin.php?id=5).
+# É um array ("46[]"); vários valores = união (OR) dos editais no export.
+_CAMPO_EDITAL = "46"
 
 # Colunas da planilha de propostas que interessam para a lista.
 _COLS = {
@@ -81,10 +91,17 @@ def login(opener: urllib.request.OpenerDirector | None = None,
     return opener
 
 
-def _preparar_busca(opener, timeout: int = 90) -> None:
+def _preparar_busca(opener, edital_ids=None, timeout: int = 90) -> None:
     """Prime a sessão: o csv.php exporta conforme a última busca feita.
-    Uma busca 'Todos' (5[]=0) coloca todas as propostas no escopo do export."""
-    dados = urllib.parse.urlencode({"5[]": "0", "submit": "Buscar"}).encode()
+    Sem `edital_ids`, faz uma busca 'Todos' (5[]=0) e exporta todas as propostas.
+    Com `edital_ids` (lista de ids do <select> de edital), filtra por esses editais
+    (campo 46[], aceita vários = união), reduzindo o export ao escopo escolhido."""
+    ids = [str(i).strip() for i in (edital_ids or []) if str(i).strip() and str(i) != "0"]
+    if ids:
+        pares = [(f"{_CAMPO_EDITAL}[]", i) for i in ids] + [("submit", "Buscar")]
+    else:
+        pares = [("5[]", "0"), ("submit", "Buscar")]
+    dados = urllib.parse.urlencode(pares).encode()
     req = urllib.request.Request(f"{SITE}/admin/admin.php?id=5", data=dados)
     with opener.open(req, timeout=timeout) as resp:
         resp.read()  # descarta o HTML da busca; o que importa é o estado na sessão
@@ -119,16 +136,35 @@ def _baixar_stream(opener, url: str, destino: str, read_timeout: int = 180,
     return total
 
 
+def _escopo_normalizado(edital_ids=None) -> list[str]:
+    """Lista de ids de edital (ordenada, sem '0'/vazios) que define o escopo."""
+    return sorted({str(i).strip() for i in (edital_ids or [])
+                   if str(i).strip() and str(i) != "0"})
+
+
+def _gravar_escopo(escopo: list[str]) -> None:
+    """Registra (informativo) quais editais o CSV atual contém; '' = todos."""
+    try:
+        os.makedirs(_CACHE_DIR, exist_ok=True)
+        with open(_SCOPE_CACHE, "w", encoding="utf-8") as f:
+            json.dump({"edital_ids": escopo}, f)
+    except OSError:
+        pass
+
+
 def baixar_propostas_csv(force: bool = False, tentativas: int = 4,
-                         read_timeout: int = 180) -> str:
-    """Baixa TODAS as propostas (CSV) para o cache, tratando timeout com
-    streaming + retentativas (backoff). Reusa o cache se já existir e !force.
-    Em falha total, mantém um cache anterior se houver."""
+                         read_timeout: int = 180, edital_ids=None) -> str:
+    """Baixa as propostas (CSV) para o cache, tratando timeout com streaming +
+    retentativas (backoff). Com `edital_ids`, baixa só esses editais (campo 46[]);
+    sem eles, baixa TODAS. `edital_ids` só tem efeito ao BAIXAR (force=True ou cache
+    ausente): uma simples leitura (force=False, cache existe) reusa o CSV como está,
+    sem rede — quem define o escopo é a ação de Sincronizar. Em falha, mantém cache."""
     if os.path.exists(CSV_CACHE) and not force:
         return CSV_CACHE
+    escopo = _escopo_normalizado(edital_ids)
     url = f"{SITE}/admin/csv/csv.php"
     opener = login()
-    _preparar_busca(opener)
+    _preparar_busca(opener, edital_ids=escopo)
     erro = None
     for i in range(1, tentativas + 1):
         try:
@@ -136,6 +172,7 @@ def baixar_propostas_csv(force: bool = False, tentativas: int = 4,
                                min_bytes=1000)  # não sobrescreve cache bom com resposta curta
             if n < 1000:  # resposta curta demais = sessão caiu / vazio
                 raise RuntimeError(f"CSV muito curto ({n} bytes); sessão expirada?")
+            _gravar_escopo(escopo)
             return CSV_CACHE
         except (socket.timeout, TimeoutError, urllib.error.URLError,
                 RuntimeError, ConnectionError) as e:
@@ -146,7 +183,7 @@ def baixar_propostas_csv(force: bool = False, tentativas: int = 4,
             time.sleep(espera)
             try:
                 opener = login()
-                _preparar_busca(opener)
+                _preparar_busca(opener, edital_ids=escopo)
             except Exception as le:  # noqa: BLE001
                 erro = le
     if os.path.exists(CSV_CACHE):
@@ -158,10 +195,11 @@ def baixar_propostas_csv(force: bool = False, tentativas: int = 4,
 def _ler_csv(caminho: str) -> list[dict]:
     with open(caminho, "rb") as f:
         bruto = f.read()
-    # Produção (sigfapes.es.gov.br) é UTF-8; o IP antigo era latin-1. Tenta UTF-8
-    # e cai para latin-1 (que nunca falha) preservando os acentos corretos.
+    # Produção (sigfapes.es.gov.br) é UTF-8 (com BOM no 1º cabeçalho → usa
+    # utf-8-sig p/ não virar "﻿EDITAL" e sumir a 1ª coluna); o IP antigo era
+    # latin-1. Tenta UTF-8(-sig) e cai para latin-1 (que nunca falha).
     try:
-        texto = bruto.decode("utf-8")
+        texto = bruto.decode("utf-8-sig")
     except UnicodeDecodeError:
         texto = bruto.decode("latin-1")
     linhas = texto.splitlines()
@@ -171,10 +209,11 @@ def _ler_csv(caminho: str) -> list[dict]:
     return out
 
 
-def listar_propostas(status=None, force: bool = False) -> list[dict]:
+def listar_propostas(status=None, force: bool = False, edital_ids=None) -> list[dict]:
     """Propostas do cache (baixa se faltar). `status` pode ser uma string ou uma
-    lista de status; filtra pelas situações exatas dadas (vazio = todas)."""
-    caminho = baixar_propostas_csv(force=force)
+    lista de status; filtra pelas situações exatas dadas (vazio = todas).
+    `edital_ids` restringe o download aos editais escolhidos (ver baixar_propostas_csv)."""
+    caminho = baixar_propostas_csv(force=force, edital_ids=edital_ids)
     props = _ler_csv(caminho)
     if status:
         alvos = [status] if isinstance(status, str) else list(status)
@@ -226,6 +265,75 @@ def editais_disponiveis() -> list[dict]:
         return []
     cont = collections.Counter(p["edital"] for p in _ler_csv(CSV_CACHE) if p["edital"])
     return [{"edital": e, "n": cont[e]} for e in sorted(cont, key=str.casefold)]
+
+
+# Opções do <select name="46[]"> na página de busca: value=id, texto="NNN/AAAA - ...".
+_RE_SELECT_EDITAL = re.compile(
+    r'<select[^>]*\bname\s*=\s*["\']' + re.escape(_CAMPO_EDITAL)
+    + r'\[\]["\'][^>]*>(.*?)</select>', re.I | re.S)
+_RE_OPTION = re.compile(r'<option[^>]*\bvalue\s*=\s*["\']([^"\']*)["\'][^>]*>(.*?)</option>',
+                        re.I | re.S)
+_RE_ANO_EDITAL = re.compile(r"\d{1,4}\s*/\s*((?:19|20)\d{2})")
+_RE_ANO_QUALQUER = re.compile(r"\b((?:19|20)\d{2})\b")
+
+
+def _ano_do_edital(label: str) -> str:
+    """Extrai o ano do rótulo do edital ('002/2018 - ...' → '2018'). '' se não achar."""
+    m = _RE_ANO_EDITAL.search(label or "") or _RE_ANO_QUALQUER.search(label or "")
+    return m.group(1) if m else ""
+
+
+def _parse_editais_html(html: str) -> list[dict]:
+    """Extrai [{id, label, ano}] do <select> de edital da página de busca."""
+    bloco = _RE_SELECT_EDITAL.search(html or "")
+    if not bloco:
+        return []
+    out = []
+    for valor, texto in _RE_OPTION.findall(bloco.group(1)):
+        vid = (valor or "").strip()
+        if not vid or vid == "0":  # "0" = Todos
+            continue
+        label = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", texto)).strip()
+        out.append({"id": vid, "label": label, "ano": _ano_do_edital(label)})
+    # Mais recentes primeiro (ano desc), depois rótulo.
+    out.sort(key=lambda e: (e["ano"] or "0", e["label"].casefold()), reverse=True)
+    return out
+
+
+def listar_editais(force: bool = False, timeout: int = 60) -> list[dict]:
+    """Lista de editais do SIGFAPES [{id, label, ano}], para o usuário escolher
+    ANTES de baixar as propostas. Faz login + 1 GET na página de busca e extrai o
+    <select> de edital. Cacheia em editais.json (reusa se existir e !force)."""
+    if not force:
+        try:
+            with open(EDITAIS_CACHE, encoding="utf-8") as f:
+                dados = json.load(f)
+            if dados:
+                return dados
+        except (OSError, ValueError):
+            pass
+    opener = login()
+    req = urllib.request.Request(f"{SITE}/admin/admin.php?id=5")
+    with opener.open(req, timeout=timeout) as resp:
+        html = resp.read().decode("utf-8", "replace")
+    editais = _parse_editais_html(html)
+    if editais:
+        try:
+            os.makedirs(_CACHE_DIR, exist_ok=True)
+            with open(EDITAIS_CACHE, "w", encoding="utf-8") as f:
+                json.dump(editais, f, ensure_ascii=False)
+        except OSError:
+            pass
+    return editais
+
+
+def editais_em_cache() -> list[dict]:
+    """Editais já baixados (editais.json), sem disparar rede. [] se não há."""
+    try:
+        with open(EDITAIS_CACHE, encoding="utf-8") as f:
+            return json.load(f) or []
+    except (OSError, ValueError):
+        return []
 
 
 def projeto_id_do_protocolo(protocolo: str) -> str:
@@ -473,12 +581,17 @@ def baixar_relatorio_pdf(projeto_id: str, force: bool = False) -> str:
 
 
 def agrupar_por_edital(props: list[dict]) -> list[dict]:
-    """Agrupa numa lista [{edital, propostas:[...]}], editais em ordem alfabética."""
+    """Agrupa em [{edital, ano, propostas:[...]}]. `ano` é extraído do nome do
+    edital (p/ exibir na frente do título). Ordena por ano desc (recentes primeiro),
+    depois pelo nome."""
     grupos: dict[str, list] = {}
     for p in props:
         grupos.setdefault(p["edital"] or "(sem edital)", []).append(p)
-    return [{"edital": ed, "propostas": grupos[ed]}
-            for ed in sorted(grupos, key=str.casefold)]
+    saida = [{"edital": ed, "ano": _ano_do_edital(ed), "propostas": grupos[ed]}
+             for ed in grupos]
+    saida.sort(key=lambda g: g["edital"].casefold())          # nome asc
+    saida.sort(key=lambda g: g["ano"] or "0", reverse=True)   # ano desc (estável)
+    return saida
 
 
 if __name__ == "__main__":
