@@ -82,14 +82,53 @@
     {% if q %}<span class="status-chip" style="color:var(--brand);background:var(--surface);border-color:var(--line)">“{{ q }}”</span>{% endif %}
   </div>
 
+  <section id="guia" class="guia" hidden>
+    <div class="guia-head">
+      <h3>Como avaliar — 3 passos</h3>
+      <button type="button" id="guiaClose" class="guia-x" title="Ocultar">Entendi ✕</button>
+    </div>
+    <ol class="guia-steps">
+      <li class="guia-step">
+        <span class="gs-num">1</span>
+        <div class="gs-txt">
+          <b>Carregue os editais</b>
+          <span>Clique em <em>↻ Sincronizar propostas</em>: abre o painel e lista os editais. Use <em>↻ Atualizar lista</em> para buscar os mais novos no SIGFAPES.</span>
+        </div>
+      </li>
+      <li class="guia-step">
+        <span class="gs-num">2</span>
+        <div class="gs-txt">
+          <b>Baixe as propostas</b>
+          <span>No painel, marque os editais (busque pelo ano) e clique em <em>⬇ Baixar propostas</em>.</span>
+        </div>
+      </li>
+      <li class="guia-step">
+        <span class="gs-num">3</span>
+        <div class="gs-txt">
+          <b>Baixe os documentos</b>
+          <span>Marque as propostas e clique em <em>⟱ Sincronizar docs selecionadas</em> para trazer relatórios e anexos.</span>
+        </div>
+      </li>
+      <li class="guia-step">
+        <span class="gs-num">4</span>
+        <div class="gs-txt">
+          <b>Avalie</b>
+          <span>Com os documentos prontos, clique em <em>▶ Avaliar selecionadas</em> e acompanhe a nota.</span>
+        </div>
+      </li>
+    </ol>
+    <p class="guia-tip">Dica: projeto sem relatório técnico (ex.: “Em Andamento”) aparece como <b>sem documentos</b> e não pode ser avaliado — prefira editais já em prestação de contas.</p>
+  </section>
+
   <div class="bar">
-    <span style="font-size:12.5px;color:var(--muted)"><b style="color:var(--ink)">{{ total }}</b> proposta{{ '' if total == 1 else 's' }} no filtro</span>
+    <span style="font-size:12.5px;color:var(--muted)"><b style="color:var(--ink)">{{ total }}</b> proposta{{ '' if total == 1 else 's' }} no filtro
+      <a href="#" id="guiaAbrir" class="guia-abrir" hidden>· como avaliar?</a></span>
     <span style="display:flex;gap:8px;flex-wrap:wrap">
+      <button id="btnSyncDocs" class="btn-sync btn-eval" type="button" disabled title="Baixa os documentos (relatórios/anexos) das propostas marcadas">⟱ Sincronizar docs selecionadas (<span id="docSelCount">0</span>)</button>
       <button id="btnAvalSel" class="btn-sync btn-eval" type="button" disabled>▶ Avaliar selecionadas (<span id="selCount">0</span>)</button>
       <button id="btnAvalPend" class="btn-sync btn-eval" type="button">▶ Avaliar pendentes</button>
       <button id="btnBaixar" class="btn-sync" type="button" style="background:var(--muted);border-color:var(--muted)">⬇ Baixar PDFs (zip)</button>
-      <button id="btnSyncEditais" class="btn-sync btn-eval" type="button" title="Atualiza só a lista de editais (sem baixar propostas)">↻ Sincronizar editais</button>
-      <button id="btnSync" class="btn-sync" type="button">↻ Sincronizar propostas</button>
+      <button id="btnSync" class="btn-sync" type="button" title="Escolhe os editais e baixa as propostas">↻ Sincronizar propostas</button>
     </span>
   </div>
 
@@ -119,6 +158,11 @@
     <div class="sync-head"><span id="batchLabel">Avaliando…</span><span id="batchCount">0 / 0</span></div>
     <div class="progress"><div class="progress-bar" id="batchBar" style="position:static;width:0;animation:none;transition:width .3s"></div></div>
     <ul id="batchItens" class="batch-itens"></ul>
+  </div>
+  <div id="docBox" class="sync-box" hidden>
+    <div class="sync-head"><span id="docLabel">Sincronizando documentos…</span><span id="docCount">0 / 0</span></div>
+    <div class="progress"><div class="progress-bar" id="docBar" style="position:static;width:0;animation:none;transition:width .3s"></div></div>
+    <ul id="docItens" class="batch-itens"></ul>
   </div>
   <div id="dlBox" class="sync-box" hidden>
     <div class="sync-head"><span id="dlLabel">Preparando download…</span></div>
@@ -209,6 +253,18 @@
 
 </div>
 <script>
+  // ---- Guia de passos (mostra por padrão; lembra se o usuário ocultou) ----
+  (function(){
+    var g=document.getElementById('guia'), x=document.getElementById('guiaClose'), ab=document.getElementById('guiaAbrir');
+    if(!g) return;
+    var K='fapes_guia_oculto';
+    var oculto=false; try{ oculto=localStorage.getItem(K)==='1'; }catch(e){}
+    function set(h){ g.hidden=h; if(ab) ab.hidden=!h; try{ localStorage.setItem(K, h?'1':'0'); }catch(e){} }
+    set(oculto);
+    if(x) x.addEventListener('click', function(){ set(true); });
+    if(ab) ab.addEventListener('click', function(e){ e.preventDefault(); set(false); g.scrollIntoView({behavior:'smooth',block:'nearest'}); });
+  })();
+
   (function () {
     var btn = document.getElementById('btnSync'), msg = document.getElementById('syncMsg');
     var box = document.getElementById('syncBox'), mbEl = document.getElementById('syncMb');
@@ -218,7 +274,6 @@
     var spSearch=document.getElementById('spSearch'), spReload=document.getElementById('spReload');
     var spTodos=document.getElementById('spTodos'), spCount=document.getElementById('spCount');
     var spBaixar=document.getElementById('spBaixar'), spClose=document.getElementById('spClose');
-    var btnEd=document.getElementById('btnSyncEditais');
     var poll=null, editais=[], carregados=false;
 
     function show(t, c){ msg.textContent=t; msg.className='sync-msg'+(c?' '+c:''); msg.hidden=false; }
@@ -257,14 +312,13 @@
     }
     function carregarEditais(force){
       spList.innerHTML='<div class="muted" style="padding:14px">Consultando editais no SIGFAPES…</div>';
-      if(btnEd){ btnEd.disabled=true; btnEd.textContent='↻ Sincronizando editais…'; }
+      if(force){ spReload.disabled=true; spReload.textContent='↻ Atualizando…'; }
       return fetch('/propostas/editais'+(force?'?force=1':'')).then(function(r){return r.json();}).then(function(d){
-        if(btnEd){ btnEd.disabled=false; btnEd.textContent='↻ Sincronizar editais'; }
+        spReload.disabled=false; spReload.textContent='↻ Atualizar lista';
         if(d.erro){ spList.innerHTML='<div class="sync-msg err" style="margin:10px">Falha: '+d.erro+'</div>'; return; }
         editais=d.editais||[]; carregados=true; render(spSearch.value);
-        if(force) show(editais.length+' edital(is) atualizados. Escolha e baixe as propostas.','ok');
       }).catch(function(){
-        if(btnEd){ btnEd.disabled=false; btnEd.textContent='↻ Sincronizar editais'; }
+        spReload.disabled=false; spReload.textContent='↻ Atualizar lista';
         spList.innerHTML='<div class="sync-msg err" style="margin:10px">Não foi possível carregar os editais.</div>';
       });
     }
@@ -272,10 +326,6 @@
     function fechar(){ panel.hidden=true; }
 
     btn.addEventListener('click', function(){ panel.hidden ? abrir() : fechar(); });
-    if(btnEd) btnEd.addEventListener('click', function(){
-      // Sincroniza SÓ a lista de editais (sem baixar propostas) e mostra o painel.
-      panel.hidden=false; carregarEditais(true);
-    });
     spClose.addEventListener('click', fechar);
     spReload.addEventListener('click', function(){ carregarEditais(true); });
     spSearch.addEventListener('input', function(){ render(spSearch.value); });
@@ -346,6 +396,46 @@
     var STATUS_SEL = {{ status_sel|tojson }};
     btnSel.addEventListener('click', function(){ var ids=selected(); if(ids.length) dispatch({ids:ids}); });
     btnPend.addEventListener('click', function(){ dispatch({pendentes:true, status:STATUS_SEL}); });
+    refresh();
+  })();
+
+  // ---- Sincronizar DOCUMENTOS das propostas selecionadas ----
+  (function(){
+    var btn=document.getElementById('btnSyncDocs'); if(!btn) return;
+    var cntLbl=document.getElementById('docSelCount');
+    var box=document.getElementById('docBox'), bar=document.getElementById('docBar');
+    var cnt=document.getElementById('docCount'), lst=document.getElementById('docItens'), lbl=document.getElementById('docLabel');
+    var msg=document.getElementById('syncMsg');
+    var rows=Array.prototype.slice.call(document.querySelectorAll('.chk-row'));
+    var poll=null;
+    function selIds(){ return rows.filter(function(c){return c.checked;}).map(function(c){return c.value;}); }
+    function refresh(){ var n=selIds().length; cntLbl.textContent=n; btn.disabled=n===0; }
+    rows.forEach(function(c){ c.addEventListener('change', refresh); });
+    Array.prototype.forEach.call(document.querySelectorAll('.chk-all'), function(a){ a.addEventListener('change', refresh); });
+    function render(s){
+      var pct=s.total?Math.round(100*s.done/s.total):0; bar.style.width=pct+'%'; cnt.textContent=s.done+' / '+s.total;
+      lst.innerHTML=(s.itens||[]).map(function(it){
+        return '<li class="'+(it.ok?'ok':'err')+'"><span>'+(it.titulo||it.projeto_id).slice(0,52)+'</span><span class="r">'+(it.status||'')+'</span></li>';
+      }).join('');
+    }
+    function startPoll(){
+      if(poll) return;
+      poll=setInterval(function(){
+        fetch('/propostas/sincronizar_docs_status').then(function(r){return r.json();}).then(function(s){
+          render(s); lbl.textContent=s.status==='running'?'Sincronizando documentos…':'Concluído';
+          if(s.status!=='running'){ clearInterval(poll); poll=null; refresh();
+            msg.textContent=s.msg||'Concluído.'; msg.className='sync-msg ok'; msg.hidden=false; }
+        }).catch(function(){});
+      }, 2000);
+    }
+    btn.addEventListener('click', function(){
+      var ids=selIds(); if(!ids.length) return;
+      btn.disabled=true; box.hidden=false; lst.innerHTML=''; bar.style.width='0'; cnt.textContent='0 / '+ids.length; msg.hidden=true;
+      fetch('/propostas/sincronizar_docs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:ids})})
+        .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+        .then(function(res){ if(!res.ok){ box.hidden=true; msg.textContent=res.j.erro||'Falha.'; msg.className='sync-msg err'; msg.hidden=false; refresh(); return; } startPoll(); })
+        .catch(function(){ box.hidden=true; refresh(); });
+    });
     refresh();
   })();
 
