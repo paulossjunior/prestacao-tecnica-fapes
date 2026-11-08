@@ -105,11 +105,12 @@
           {% endfor %}
         </div>
 
-        <div style="margin-top:14px">
+        <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:6px">
           <a class="btn primary" href="/propostas/{{ projeto_id }}/parecer_projeto.pdf" target="_blank" rel="noopener">⬇ Parecer do projeto (consolidado)</a>
-          <a class="btn" href="/projetos/{{ resumo.id }}" target="_blank" rel="noopener" style="margin-left:6px">Ver parecer ({{ resumo.tipo_relatorio|title if resumo.tipo_relatorio and resumo.tipo_relatorio != 'NÃO INFORMADO' else 'representativo' }})</a>
-          <a class="btn ghost" href="/projetos/{{ resumo.id }}/pdf" style="margin-left:6px">PDF do doc.</a>
+          <a class="btn" href="/propostas/baixar.zip?ids={{ projeto_id }}" target="_blank" rel="noopener">⬇ Baixar todos os PDFs (zip)</a>
+          <a class="btn" href="/projetos/{{ resumo.id }}" target="_blank" rel="noopener">Ver parecer ({{ resumo.tipo_relatorio|title if resumo.tipo_relatorio and resumo.tipo_relatorio != 'NÃO INFORMADO' else 'representativo' }})</a>
         </div>
+        <div class="muted" style="margin-top:6px;font-size:11px">O zip traz: projeto + relatório(s) + parecer de cada relatório + parecer consolidado.</div>
 
         {% if historico and historico|length > por_doc|length %}
           <details style="margin-top:18px">
